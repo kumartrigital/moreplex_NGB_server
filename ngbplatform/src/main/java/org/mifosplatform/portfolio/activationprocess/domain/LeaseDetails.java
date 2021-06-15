@@ -45,6 +45,12 @@ public class LeaseDetails {
 	@Column(name = "country")
 	private String country;
 
+	@Column(name = "status")
+	private String Status;
+
+	@Column(name = "otp")
+	private String otp;
+
 	public Long getId() {
 		return id;
 	}
@@ -131,6 +137,22 @@ public class LeaseDetails {
 
 	public void setCountry(String country) {
 		this.country = country;
+	}
+
+	public String getStatus() {
+		return Status;
+	}
+
+	public void setStatus(String status) {
+		Status = status;
+	}
+
+	public String getOtp() {
+		return otp;
+	}
+
+	public void setOtp(String otp) {
+		this.otp = otp;
 	}
 
 }

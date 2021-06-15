@@ -10,22 +10,22 @@ import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 
 public interface ActivationProcessWritePlatformService {
 
-    CommandProcessingResult activationProcess(JsonCommand command);
+	CommandProcessingResult activationProcess(JsonCommand command);
 
 	CommandProcessingResult selfRegistrationProcess(JsonCommand command);
 
 	CommandProcessingResult createSimpleActivation(JsonCommand command);
-	
+
 	CommandProcessingResult createLeaseDetails(JsonCommand command);
 
 	CommandProcessingResult createClientSimpleActivation(JsonCommand command, Long clientId);
 
 	CommandProcessingResult createCustomerActivation(JsonCommand command);
- 
+
 	CommandProcessingResult createServiceActivationWithoutDevice(JsonCommand command, Long clientId);
 
 	CommandProcessingResult validateKey_NIN(JsonCommand command, Long NINId);
 
-	
-	
+	CommandProcessingResult validateMobileAndNIN(JsonCommand command);
+
 }

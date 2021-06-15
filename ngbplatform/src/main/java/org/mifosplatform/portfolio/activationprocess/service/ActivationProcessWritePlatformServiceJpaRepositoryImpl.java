@@ -8,12 +8,14 @@ package org.mifosplatform.portfolio.activationprocess.service;
 import java.math.BigDecimal;
 import java.rmi.activation.ActivateFailedException;
 import java.rmi.activation.ActivationException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Random;
 import java.util.Set;
 
 import org.json.JSONArray;
@@ -75,6 +77,8 @@ import org.mifosplatform.organisation.office.exception.OfficeNotFoundException;
 import org.mifosplatform.organisation.redemption.api.RedemptionApiResource;
 import org.mifosplatform.organisation.voucher.domain.VoucherDetailsRepository;
 import org.mifosplatform.organisation.voucher.service.VoucherReadPlatformService;
+import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
+import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
 import org.mifosplatform.portfolio.activationprocess.exception.ClientAlreadyCreatedException;
 import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
 import org.mifosplatform.portfolio.activationprocess.exception.NINVerificationException;
@@ -180,6 +184,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 	private final NetworkElementReadPlatformService networkElementReadPlatformService;
 	private final VoucherDetailsRepository voucherDetailsRepository;
 	private final ChargingOrderWritePlatformService chargingOrderWritePlatformService;
+	private final LeaseDetailsRepository leaseDetailsRepository;
 	static JSONObject activation = new JSONObject();
 	static org.json.simple.JSONArray address = new org.json.simple.JSONArray();
 	static org.json.simple.JSONArray client = new org.json.simple.JSONArray();
@@ -253,7 +258,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			final VoucherReadPlatformService voucherReadPlatformService, final OfficeRepository officeRepository,
 			final NetworkElementReadPlatformService networkElementReadPlatformService,
 			final VoucherDetailsRepository voucherDetailsRepository,
-			final ChargingOrderWritePlatformService chargingOrderWritePlatformService)
+			final ChargingOrderWritePlatformService chargingOrderWritePlatformService,
+			final LeaseDetailsRepository leaseDetailsRepository)
 
 	{
 
@@ -304,6 +310,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		this.networkElementReadPlatformService = networkElementReadPlatformService;
 		this.voucherDetailsRepository = voucherDetailsRepository;
 		this.chargingOrderWritePlatformService = chargingOrderWritePlatformService;
+		this.leaseDetailsRepository = leaseDetailsRepository;
 	}
 
 	private void handleDataIntegrityIssues(final JsonCommand command, final DataIntegrityViolationException dve) {
@@ -1830,13 +1837,13 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 	}
 
-	public ResponseEntity<String> validationNIN(Long txid, JSONObject requestPayload) {
+	public ResponseEntity<String> validationNIN(Long NIN, JSONObject requestPayload) {
 		ResponseEntity<String> result = null;
 
 		try {
 			RestTemplate restTemplate = new RestTemplate();
 
-			String VERIFY_ENDPOINT = "https://vapi.verifyme.ng/v1/verifications/identities/nin/" + txid;
+			String VERIFY_ENDPOINT = "https://vapi.verifyme.ng/v1/verifications/identities/nin/" + NIN;
 			HttpHeaders headers = new HttpHeaders();
 			headers.add("Authorization",
 					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE");
@@ -1880,23 +1887,68 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		return result;
 	}
 
-	public void call_function(String value) {
-
-		if (value.equals("Otp_Pending")) {
-			this.OTP_MESSAGE("8686558974", "909090");
-		} else if (value.equals("NIN_Pending")) {
-			this.validationNIN(null, null);
-		} else if (value.equals("Activation_Pending")) {
-			this.createSimpleActivation(null);
-		}
-	}
-
 	@Override
 	public CommandProcessingResult createLeaseDetails(JsonCommand command) {
 
-		
-		
-		return null;
+		LeaseDetails details = new LeaseDetails();
+		try {
+			details.setFirstName(command.stringValueOfParameterName("forename"));
+			details.setLastName(command.stringValueOfParameterName("surname"));
+			details.setEmail(command.stringValueOfParameterName("email"));
+			details.setMobileNumber(command.stringValueOfParameterName("mobile"));
+			details.setNIN(command.stringValueOfParameterName("NIN"));
+			details.setOfficeId(command.longValueOfParameterNamed("officeId"));
+			details.setCity(command.stringValueOfParameterName("city"));
+			details.setState(command.stringValueOfParameterName("state"));
+			details.setCountry(command.stringValueOfParameterName("country"));
+			details.setStatus("Otp_Pending");
+			String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
+			details.setOtp(otp);
+			this.OTP_MESSAGE(details.getMobileNumber(), otp);
+			return CommandProcessingResult.parsingResult(leaseDetailsRepository.saveAndFlush(details));
+
+		} catch (Exception e) {
+			return new CommandProcessingResult(e.getLocalizedMessage());
+		}
+
+	}
+
+	public CommandProcessingResult validateMobileAndNIN(JsonCommand command) {
+
+		Long leaseCustomerId = command.longValueOfParameterNamed("id");
+		String otp = command.stringValueOfParameterName("otp");
+		LeaseDetails leaseDetails = leaseDetailsRepository.findOne(leaseCustomerId);
+
+		if (leaseDetails.getStatus().equals("Otp_Pending")) {
+			if (otp.equals(leaseDetails.getOtp())) {
+				leaseDetails.setStatus("NIN_Pending");
+			}
+			return CommandProcessingResult.parsingResult("otp verified");
+
+		} else if (leaseDetails.getStatus().equals("NIN_Pending")) {
+
+			JSONObject requestPayload = new JSONObject();
+			try {
+				requestPayload.put("firstname", leaseDetails.getFirstName());
+				requestPayload.put("lastname", leaseDetails.getLastName());
+				requestPayload.put("phone", leaseDetails.getMobileNumber());
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return new CommandProcessingResult(e.getLocalizedMessage());
+			}
+			ResponseEntity<String> apiResponse = this.validationNIN(Long.parseLong(leaseDetails.getNIN()),
+					requestPayload);
+			if (!apiResponse.getStatusCode().equals(HttpStatus.CREATED)) {
+				throw new NINVerificationException("NIN Id is Not verified");
+			}
+			leaseDetails.setStatus("Registration_Pending");
+			leaseDetailsRepository.save(leaseDetails);
+			return CommandProcessingResult.parsingResult("NIN verified");
+		} else if (leaseDetails.getStatus().equals("Registration_Pending")) {
+			return CommandProcessingResult.parsingResult(leaseDetails);
+		} else {
+			return new CommandProcessingResult(Long.valueOf(-1));
+		}
 	}
 
 }
