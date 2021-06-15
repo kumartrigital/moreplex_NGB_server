@@ -1025,6 +1025,10 @@ public class CommandWrapper {
 		return this.entityName.equalsIgnoreCase("REVPAY");
 	}
 
+	public boolean isNINResource() {
+		return this.entityName.equalsIgnoreCase("NIN");
+	}
+
 	public boolean isCreditDistributionResource() {
 		return this.entityName.equalsIgnoreCase("CREDITDISTRIBUTION");
 	}
@@ -1427,6 +1431,13 @@ public class CommandWrapper {
 
 		return this.actionName.equalsIgnoreCase("COMPLETE") && this.entityName.equalsIgnoreCase("REVPAY");
 	}
+	
+
+	public boolean isVerifyNIN() {
+
+		return this.actionName.equalsIgnoreCase("VERIFY") && this.entityName.equalsIgnoreCase("NIN");
+	}
+	
 	// command type annotation functionality implemented,please refer once
 
 }

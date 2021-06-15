@@ -389,40 +389,4 @@ public class AppUserWritePlatformServiceJpaRepositoryImpl implements AppUserWrit
 
 	}
 
-	public CommandProcessingResult validateKey_NIN(final Long userId, JsonCommand command) {
-
-		JSONObject payload = new JSONObject();
-		try {
-			payload.put("", "");
-			payload.put("", "");
-			payload.put("", "");
-			payload.put("", "");
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-
-		String apiResponse = this.validationNIN(userId, payload);
-
-		return new CommandProcessingResultBuilder().withEntityId(userId).build();
-
-	}
-
-	public String validationNIN(Long txid, JSONObject requestPayload) {
-		ResponseEntity<String> result = null;
-		RestTemplate restTemplate = new RestTemplate();
-
-		String VERIFY_ENDPOINT = "https://vapi.verifyme.ng/v1/verifications/identities/nin/" + txid;
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("X-Obs-Platform-TenantId", "default");
-		headers.add("Authorization",
-				"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE");
-		headers.add("Content-Type", "application/json");
-		HttpEntity<String> request = new HttpEntity<>(requestPayload.toString(), headers);
-
-		restTemplate.exchange(VERIFY_ENDPOINT, HttpMethod.POST, request, String.class);
-
-		return result.toString();
-
-	}
-
 }

@@ -6,6 +6,8 @@
 package org.mifosplatform.portfolio.activationprocess.service;
 
 import java.math.BigDecimal;
+import java.rmi.activation.ActivateFailedException;
+import java.rmi.activation.ActivationException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -75,6 +77,7 @@ import org.mifosplatform.organisation.voucher.domain.VoucherDetailsRepository;
 import org.mifosplatform.organisation.voucher.service.VoucherReadPlatformService;
 import org.mifosplatform.portfolio.activationprocess.exception.ClientAlreadyCreatedException;
 import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
+import org.mifosplatform.portfolio.activationprocess.exception.NINVerificationException;
 import org.mifosplatform.portfolio.activationprocess.serialization.ActivationProcessCommandFromApiJsonDeserializer;
 import org.mifosplatform.portfolio.client.api.ClientsApiResource;
 import org.mifosplatform.portfolio.client.data.ClientBillInfoData;
@@ -111,8 +114,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -338,6 +347,20 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			// CONVERT INVIEW FORMAT TO NGB FORMAT
 			Configuration isPaywizard = configurationRepository
 					.findOneByName(ConfigurationConstants.PAYWIZARD_INTEGRATION);
+
+			Configuration NINVerification = configurationRepository
+					.findOneByName(ConfigurationConstants.NIN_VERIFICATION);
+
+			if (null != NINVerification && NINVerification.isEnabled()) {
+
+				Long NINId = newcommand.longValueOfParameterNamed("NIN");
+
+				try {
+					this.validateKey_NIN(newcommand, NINId);
+				} catch (Exception e) {
+					throw new NINVerificationException("NIN Id is Not verified");
+				}
+			}
 
 			if (null != isPaywizard && isPaywizard.isEnabled()) {
 
@@ -1774,6 +1797,106 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		} catch (JSONException dve) {
 			throw new PlatformDataIntegrityException("error.msg.client.jsonexception.", "JSON Exception Occured");
 		}
+	}
+
+	@Override
+	public CommandProcessingResult validateKey_NIN(JsonCommand command, Long NINId) {
+
+		JSONObject payload = new JSONObject();
+		try {
+			payload.put("firstname", command.stringValueOfParameterName("forename"));
+			payload.put("lastname", command.stringValueOfParameterName("surname"));
+			payload.put("phone", command.stringValueOfParameterName("mobile"));
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		ResponseEntity<String> apiResponse = this.validationNIN(NINId, payload);
+		JSONObject result = null;
+		try {
+			result = new JSONObject(apiResponse.getBody());
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		HttpStatus statuscode = apiResponse.getStatusCode();
+
+		if (statuscode.value() == 201) {
+			return CommandProcessingResult.parsingResult(result);
+
+		} else {
+			throw new NINVerificationException("NIN Id is Not verified");
+		}
+
+	}
+
+	public ResponseEntity<String> validationNIN(Long txid, JSONObject requestPayload) {
+		ResponseEntity<String> result = null;
+
+		try {
+			RestTemplate restTemplate = new RestTemplate();
+
+			String VERIFY_ENDPOINT = "https://vapi.verifyme.ng/v1/verifications/identities/nin/" + txid;
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("Authorization",
+					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE");
+			headers.add("Content-Type", "application/json");
+			HttpEntity<String> request = new HttpEntity<>(requestPayload.toString(), headers);
+
+			result = restTemplate.exchange(VERIFY_ENDPOINT, HttpMethod.POST, request, String.class);
+		} catch (Exception e) {
+			throw new NINVerificationException("NIN Id is Not verified");
+
+		}
+		return result;
+	}
+
+	public ResponseEntity<String> OTP_MESSAGE(String mobileNo, String Otp) {
+		ResponseEntity<String> result = null;
+
+		try {
+			RestTemplate restTemplate = new RestTemplate();
+
+			String VERIFY_ENDPOINT = "https://termii.com/api/sms/send";
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("Content-Type", "application/json");
+
+			JSONObject requestpayload = new JSONObject();
+			requestpayload.put("to", mobileNo);
+			requestpayload.put("from", "Moreplex tv");
+			requestpayload.put("sms", "otp verification " + Otp);
+			requestpayload.put("type", "plain");
+			requestpayload.put("channel", "generic");
+			requestpayload.put("api_key", "TLISRdXrYknFK30dLcvfmtqGTdXHozF1QY0hhAe1JBcJDqRLr2Mwej3Q5We7J1");
+
+			HttpEntity<String> request = new HttpEntity<>(requestpayload.toString(), headers);
+
+			result = restTemplate.exchange(VERIFY_ENDPOINT, HttpMethod.POST, request, String.class);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new NINVerificationException("something went wrong " + e.getLocalizedMessage());
+
+		}
+		return result;
+	}
+
+	public void call_function(String value) {
+
+		if (value.equals("Otp_Pending")) {
+			this.OTP_MESSAGE("8686558974", "909090");
+		} else if (value.equals("NIN_Pending")) {
+			this.validationNIN(null, null);
+		} else if (value.equals("Activation_Pending")) {
+			this.createSimpleActivation(null);
+		}
+	}
+
+	@Override
+	public CommandProcessingResult createLeaseDetails(JsonCommand command) {
+
+		
+		
+		return null;
 	}
 
 }

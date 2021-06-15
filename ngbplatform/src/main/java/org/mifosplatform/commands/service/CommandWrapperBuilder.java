@@ -3762,7 +3762,22 @@ public class CommandWrapperBuilder {
 		this.href = "/activationprocess/serviceactivationwod/" + clientId;
 		return this;
 	}
+	public CommandWrapperBuilder verifyNIN(Long NINID) {
+		this.actionName = "VERIFY";
+		this.entityName = "NIN";
+		this.entityId = NINID;
+		this.href = "/activationprocess/verifyNIN/" + NINID;
+		return this;
+	}
 
+	
+	public CommandWrapperBuilder leaseActivation() {
+		this.actionName = "Create";
+		this.entityName = "NIN";
+		this.href = "/activationprocess/lease";
+		return this;
+	}
+	
 	public CommandWrapperBuilder createQuote() {
 		this.actionName = "CREATE";
 		this.entityName = "QUOTES";

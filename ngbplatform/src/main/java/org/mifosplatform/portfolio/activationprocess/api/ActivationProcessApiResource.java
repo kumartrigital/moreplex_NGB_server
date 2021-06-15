@@ -25,144 +25,173 @@ import org.springframework.stereotype.Component;
 @Scope("singleton")
 public class ActivationProcessApiResource {
 
-    private final ToApiJsonSerializer<ClientData> toApiJsonSerializer;
-    private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
-    private final ItemDetailsReadPlatformService itemDetailsReadPlatformService;
-    private final static Logger logger = LoggerFactory.getLogger(ActivationProcessApiResource.class);
+	private final ToApiJsonSerializer<ClientData> toApiJsonSerializer;
+	private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
+	private final ItemDetailsReadPlatformService itemDetailsReadPlatformService;
+	private final static Logger logger = LoggerFactory.getLogger(ActivationProcessApiResource.class);
 
-    @Autowired
-    public ActivationProcessApiResource(final ToApiJsonSerializer<ClientData> toApiJsonSerializer,
-            final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService,
-            final ItemDetailsReadPlatformService itemDetailsReadPlatformService) {
-        this.toApiJsonSerializer = toApiJsonSerializer;
-        this.commandsSourceWritePlatformService = commandsSourceWritePlatformService;
-        this.itemDetailsReadPlatformService = itemDetailsReadPlatformService;
-  
-    }
+	@Autowired
+	public ActivationProcessApiResource(final ToApiJsonSerializer<ClientData> toApiJsonSerializer,
+			final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService,
+			final ItemDetailsReadPlatformService itemDetailsReadPlatformService) {
+		this.toApiJsonSerializer = toApiJsonSerializer;
+		this.commandsSourceWritePlatformService = commandsSourceWritePlatformService;
+		this.itemDetailsReadPlatformService = itemDetailsReadPlatformService;
 
-    @POST
-    @Consumes({ MediaType.APPLICATION_JSON }) 
-    @Produces({ MediaType.APPLICATION_JSON })
-    public String create(final String apiRequestBodyAsJson) {
+	}
 
-        final CommandWrapper commandRequest = new CommandWrapperBuilder() //
-                .activateProcess() //
-                .withJson(apiRequestBodyAsJson) //
-                .build(); //
+	@POST
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String create(final String apiRequestBodyAsJson) {
 
-        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		final CommandWrapper commandRequest = new CommandWrapperBuilder() //
+				.activateProcess() //
+				.withJson(apiRequestBodyAsJson) //
+				.build(); //
 
-        return this.toApiJsonSerializer.serialize(result);
-    }
-    
-    @POST
-    @Path("selfregistration")
-    @Consumes({ MediaType.APPLICATION_JSON }) 
-    @Produces({ MediaType.APPLICATION_JSON })
-    public String createSelfRegistration(final String apiRequestBodyAsJson) {
-    	
-    	logger.info("selfregistration: "+apiRequestBodyAsJson);
-    	
+		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 
-        final CommandWrapper commandRequest = new CommandWrapperBuilder().selfRegistrationProcess().withJson(apiRequestBodyAsJson).build();
+		return this.toApiJsonSerializer.serialize(result);
+	}
 
-        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        logger.info("result: "+result);
-        return this.toApiJsonSerializer.serialize(result);
-    }
+	@POST
+	@Path("selfregistration")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String createSelfRegistration(final String apiRequestBodyAsJson) {
 
+		logger.info("selfregistration: " + apiRequestBodyAsJson);
 
-    @POST
-    @Path("simpleactivation")
-    @Consumes({ MediaType.APPLICATION_JSON }) 
-    @Produces({ MediaType.APPLICATION_JSON })
-    public String createSimpleActivation(final String apiRequestBodyAsJson) {
+		final CommandWrapper commandRequest = new CommandWrapperBuilder().selfRegistrationProcess()
+				.withJson(apiRequestBodyAsJson).build();
 
-        logger.info("Simple Activation starting");
-    	final CommandWrapper commandRequest = new CommandWrapperBuilder() //
-                .createSimpleActivation() //
-                .withJson(apiRequestBodyAsJson) //
-                .build(); //
-        
+		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		logger.info("result: " + result);
+		return this.toApiJsonSerializer.serialize(result);
+	}
 
-        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+	@POST
+	@Path("simpleactivation")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String createSimpleActivation(final String apiRequestBodyAsJson) {
 
-        return this.toApiJsonSerializer.serialize(result);
-    }
-    
-    /**
-     * this api is used to add device,add plan and active that plan to customer
-     */
-    @POST
-    @Path("simpleactivation/{clientId}")
-    @Consumes({ MediaType.APPLICATION_JSON }) 
-    @Produces({ MediaType.APPLICATION_JSON })
-    public String createSimpleActivation(final String apiRequestBodyAsJson,@PathParam("clientId") final Long clientId) {
+		logger.info("Simple Activation starting");
+		final CommandWrapper commandRequest = new CommandWrapperBuilder() //
+				.createSimpleActivation() //
+				.withJson(apiRequestBodyAsJson) //
+				.build(); //
 
-        final CommandWrapper commandRequest = new CommandWrapperBuilder() //
-                .createClientSimpleActivation(clientId) //
-                .withClientId(clientId).withJson(apiRequestBodyAsJson) //
-                .build(); //
+		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 
-        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		return this.toApiJsonSerializer.serialize(result);
+	}
 
-        return this.toApiJsonSerializer.serialize(result);
-    }
-    
-    
-    /**
-     * this api is used to add device,add plan and active that plan to customer
-     */
-    @POST
-    @Path("hardwareplanactivation/{clientId}")
-    @Consumes({ MediaType.APPLICATION_JSON }) 
-    @Produces({ MediaType.APPLICATION_JSON })
-    public String createHardwarePlanActivation(final String apiRequestBodyAsJson,@PathParam("clientId") final Long clientId) {
+	/**
+	 * this api is used to add device,add plan and active that plan to customer
+	 */
+	@POST
+	@Path("simpleactivation/{clientId}")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String createSimpleActivation(final String apiRequestBodyAsJson,
+			@PathParam("clientId") final Long clientId) {
 
-        final CommandWrapper commandRequest = new CommandWrapperBuilder() //
-                .createClientHardwarePlanActivation(clientId) //
-                .withJson(apiRequestBodyAsJson) //
-                .build(); //
+		final CommandWrapper commandRequest = new CommandWrapperBuilder() //
+				.createClientSimpleActivation(clientId) //
+				.withClientId(clientId).withJson(apiRequestBodyAsJson) //
+				.build(); //
 
-        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 
-        return this.toApiJsonSerializer.serialize(result);
-    }
-    
-    @POST
-    @Path("customeractivation")
-    @Consumes({ MediaType.APPLICATION_JSON }) 
-    @Produces({ MediaType.APPLICATION_JSON })
-    public String createCActivation(final String apiRequestBodyAsJson) {
+		return this.toApiJsonSerializer.serialize(result);
+	}
 
-        final CommandWrapper commandRequest = new CommandWrapperBuilder() //
-                .createCustomerActivation() //
-                .withJson(apiRequestBodyAsJson) //
-                .build(); //
+	/**
+	 * this api is used to add device,add plan and active that plan to customer
+	 */
+	@POST
+	@Path("hardwareplanactivation/{clientId}")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String createHardwarePlanActivation(final String apiRequestBodyAsJson,
+			@PathParam("clientId") final Long clientId) {
 
-        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		final CommandWrapper commandRequest = new CommandWrapperBuilder() //
+				.createClientHardwarePlanActivation(clientId) //
+				.withJson(apiRequestBodyAsJson) //
+				.build(); //
 
-        return this.toApiJsonSerializer.serialize(result);
-    }
-    
-    
-    /**
-     * this api is used to add device,add plan and active that plan to customer
-     */
-    @POST
-    @Path("serviceactivationwod/{clientId}")
-    @Consumes({ MediaType.APPLICATION_JSON }) 
-    @Produces({ MediaType.APPLICATION_JSON })
-    public String createServiceActivationWithoutDevice(final String apiRequestBodyAsJson,@PathParam("clientId") final Long clientId) {
+		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 
-        final CommandWrapper commandRequest = new CommandWrapperBuilder() //
-                .createServiceActivationWithoutDevice(clientId) //
-                .withClientId(clientId).withJson(apiRequestBodyAsJson) //
-                .build(); //
+		return this.toApiJsonSerializer.serialize(result);
+	}
 
-        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+	@POST
+	@Path("customeractivation")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String createCActivation(final String apiRequestBodyAsJson) {
 
-        return this.toApiJsonSerializer.serialize(result);
-    }
-    
+		final CommandWrapper commandRequest = new CommandWrapperBuilder() //
+				.createCustomerActivation() //
+				.withJson(apiRequestBodyAsJson) //
+				.build(); //
+
+		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+
+		return this.toApiJsonSerializer.serialize(result);
+	}
+
+	/**
+	 * this api is used to add device,add plan and active that plan to customer
+	 */
+	@POST
+	@Path("serviceactivationwod/{clientId}")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String createServiceActivationWithoutDevice(final String apiRequestBodyAsJson,
+			@PathParam("clientId") final Long clientId) {
+
+		final CommandWrapper commandRequest = new CommandWrapperBuilder() //
+				.createServiceActivationWithoutDevice(clientId) //
+				.withClientId(clientId).withJson(apiRequestBodyAsJson) //
+				.build(); //
+
+		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+
+		return this.toApiJsonSerializer.serialize(result);
+	}
+
+	/**
+	 * this api is used to add device,add plan and active that plan to customer
+	 */
+	@POST
+	@Path("verifyNIN/{NINID}")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String verifyNIN(final String apiRequestBodyAsJson, @PathParam("NINID") final Long NINID) {
+
+		final CommandWrapper commandRequest = new CommandWrapperBuilder() //
+				.verifyNIN(NINID) //
+				.withClientId(NINID).withJson(apiRequestBodyAsJson) //
+				.build(); //
+
+		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+
+		return this.toApiJsonSerializer.serialize(result);
+	}
+
+	@POST
+	@Path("lease")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String LeaseActivations(final String apiRequestBodyAsJson) {
+
+		final CommandWrapper commandRequest = new CommandWrapperBuilder().leaseActivation().withJson(apiRequestBodyAsJson).build(); //
+		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+		return this.toApiJsonSerializer.serialize(result);
+	}
+
 }

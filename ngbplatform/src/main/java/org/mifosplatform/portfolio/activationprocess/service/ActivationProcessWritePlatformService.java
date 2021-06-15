@@ -15,6 +15,8 @@ public interface ActivationProcessWritePlatformService {
 	CommandProcessingResult selfRegistrationProcess(JsonCommand command);
 
 	CommandProcessingResult createSimpleActivation(JsonCommand command);
+	
+	CommandProcessingResult createLeaseDetails(JsonCommand command);
 
 	CommandProcessingResult createClientSimpleActivation(JsonCommand command, Long clientId);
 
@@ -22,4 +24,8 @@ public interface ActivationProcessWritePlatformService {
  
 	CommandProcessingResult createServiceActivationWithoutDevice(JsonCommand command, Long clientId);
 
+	CommandProcessingResult validateKey_NIN(JsonCommand command, Long NINId);
+
+	
+	
 }

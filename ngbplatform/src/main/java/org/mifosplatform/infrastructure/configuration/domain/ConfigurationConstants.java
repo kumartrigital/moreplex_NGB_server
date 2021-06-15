@@ -150,6 +150,8 @@ public class ConfigurationConstants {
 	public static final String LEASE_STB_PLANCODE = "leaseStbPlanCode";
 	public static final String CLIENT_INACTIVE_SINCE = "clientInactiveSince";
 	public static final String LEASE_STB_CHARGE_AMOUNT_PLANCODE = "leaseSTBMonthlyCharge";
+	public static final String NIN_VERIFICATION= "NINVerification";
+
 
 
 

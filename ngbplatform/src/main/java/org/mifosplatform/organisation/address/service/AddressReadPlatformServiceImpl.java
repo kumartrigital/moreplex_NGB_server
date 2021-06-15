@@ -340,12 +340,14 @@ public class AddressReadPlatformServiceImpl implements AddressReadPlatformServic
 
 			sqlBuilder.append(extraCriteria);
 
-			if (searchAddresses.isLimited()) {
-				sqlBuilder.append(" limit ").append(searchAddresses.getLimit());
-			}
-			if (searchAddresses.isOffset()) {
-				sqlBuilder.append(" offset ").append(searchAddresses.getOffset());
-			}
+			/*
+			 * if (searchAddresses.isLimited()) {
+			 * sqlBuilder.append(" limit ").append(searchAddresses.getLimit()); }
+			 */
+			/*
+			 * if (searchAddresses.isOffset()) {
+			 * sqlBuilder.append(" offset ").append(searchAddresses.getOffset()); }
+			 */
 			return this.paginationHelper.fetchPage(this.jdbcTemplate, "SELECT FOUND_ROWS()", sqlBuilder.toString(),
 					new Object[] {}, locationMapper);
 		} catch (final EmptyResultDataAccessException e) {
