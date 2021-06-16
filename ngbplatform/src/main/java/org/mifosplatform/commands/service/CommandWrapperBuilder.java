@@ -3772,7 +3772,7 @@ public class CommandWrapperBuilder {
 
 	
 	public CommandWrapperBuilder leaseActivation() {
-		this.actionName = "Create";
+		this.actionName = "CREATE";
 		this.entityName = "LEASE";
 		this.href = "/activationprocess/lease";
 		return this;

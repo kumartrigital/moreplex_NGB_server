@@ -1915,9 +1915,9 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 	public CommandProcessingResult validateMobileAndNIN(JsonCommand command) {
 
-		Long leaseCustomerId = command.longValueOfParameterNamed("id");
+		Long mobileNO = command.longValueOfParameterNamed("mobileNO");
 		String otp = command.stringValueOfParameterName("otp");
-		LeaseDetails leaseDetails = leaseDetailsRepository.findOne(leaseCustomerId);
+		LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNO);
 
 		if (leaseDetails.getStatus().equals("Otp_Pending")) {
 			if (otp.equals(leaseDetails.getOtp())) {
