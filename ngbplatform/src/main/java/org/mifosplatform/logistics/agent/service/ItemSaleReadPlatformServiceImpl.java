@@ -151,7 +151,7 @@ private static final class ItemSaleMappers implements RowMapper<MRNDetailsData> 
 
 	public String schema() {
 		return  " its.id as id,its.purchase_date as requestedDate,(select item_description from b_item_master where id = its.item_id) as item," +
-			    " (select name from m_office where id = 1) as fromOffice,(select name from m_office where id = its.purchase_by) as toOffice," +
+			    " (select name from m_office where id = its.purchase_from) as fromOffice,(select name from m_office where id = its.purchase_by) as toOffice," +
 			    " its.order_quantity as orderdQuantity,its.received_quantity as receivedQuantity, its.status as status from b_itemsale its ";
 			           
 

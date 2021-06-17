@@ -73,6 +73,8 @@ import org.mifosplatform.organisation.office.domain.Office;
 import org.mifosplatform.organisation.office.domain.OfficeRepository;
 import org.mifosplatform.organisation.office.exception.OfficeNotFoundException;
 import org.mifosplatform.organisation.redemption.api.RedemptionApiResource;
+import org.mifosplatform.organisation.redemption.exception.PinNumbersNotAvailableException;
+import org.mifosplatform.organisation.voucher.data.VoucherData;
 import org.mifosplatform.organisation.voucher.domain.VoucherDetailsRepository;
 import org.mifosplatform.organisation.voucher.service.VoucherReadPlatformService;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
@@ -1946,6 +1948,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			if (!apiResponse.getStatusCode().equals(HttpStatus.CREATED)) {
 				throw new NINNOTVerificationException("NIN Id is Not verified");
 			}
+
 			leaseDetails.setStatus("Registration_Pending");
 			leaseDetailsRepository.save(leaseDetails);
 			return CommandProcessingResult.parsingResult("NIN verified");

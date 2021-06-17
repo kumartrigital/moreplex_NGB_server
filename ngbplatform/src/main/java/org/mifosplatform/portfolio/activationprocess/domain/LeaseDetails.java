@@ -48,6 +48,12 @@ public class LeaseDetails {
 	@Column(name = "status")
 	private String Status;
 
+	/*
+	 * @Column(name = "device_id") private String Device;
+	 * 
+	 * @Column(name = "voucher_id") private String voucher;
+	 */
+
 	@Column(name = "otp")
 	private String otp;
 
@@ -154,5 +160,15 @@ public class LeaseDetails {
 	public void setOtp(String otp) {
 		this.otp = otp;
 	}
+
+	/*
+	 * public String getDevice() { return Device; }
+	 * 
+	 * public void setDevice(String device) { Device = device; }
+	 * 
+	 * public String getVoucher() { return voucher; }
+	 * 
+	 * public void setVoucher(String voucher) { this.voucher = voucher; }
+	 */
 
 }
