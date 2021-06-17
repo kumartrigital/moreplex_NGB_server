@@ -6,8 +6,6 @@
 package org.mifosplatform.portfolio.activationprocess.service;
 
 import java.math.BigDecimal;
-import java.rmi.activation.ActivateFailedException;
-import java.rmi.activation.ActivationException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -1889,7 +1887,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 	@Override
 	public CommandProcessingResult createLeaseDetails(JsonCommand command) {
-
+		System.out.println(
+				"ActivationProcessWritePlatformServiceJpaRepositoryImpl.createLeaseDetails()" + command.toString());
 		LeaseDetails details = new LeaseDetails();
 		try {
 			details.setFirstName(command.stringValueOfParameterName("forename"));
@@ -1904,8 +1903,10 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			details.setStatus("Otp_Pending");
 			String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
 			details.setOtp(otp);
-			this.OTP_MESSAGE(details.getMobileNumber(), otp);
-			return CommandProcessingResult.parsingResult(leaseDetailsRepository.saveAndFlush(details));
+			// this.OTP_MESSAGE(details.getMobileNumber(), otp);
+
+			leaseDetailsRepository.saveAndFlush(details);
+			return CommandProcessingResult.parsingResult(details);
 
 		} catch (Exception e) {
 			return new CommandProcessingResult(e.getLocalizedMessage());
@@ -1915,13 +1916,16 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 	public CommandProcessingResult validateMobileAndNIN(JsonCommand command) {
 
-		Long mobileNO = command.longValueOfParameterNamed("mobileNO");
+		String mobileNO = command.stringValueOfParameterName("mobileNO");
 		String otp = command.stringValueOfParameterName("otp");
 		LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNO);
 
 		if (leaseDetails.getStatus().equals("Otp_Pending")) {
 			if (otp.equals(leaseDetails.getOtp())) {
 				leaseDetails.setStatus("NIN_Pending");
+				leaseDetailsRepository.save(leaseDetails);
+			} else {
+				throw new NINVerificationException("OTP is Not verified");
 			}
 			return CommandProcessingResult.parsingResult("otp verified");
 

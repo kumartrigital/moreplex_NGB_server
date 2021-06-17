@@ -1029,6 +1029,18 @@ public class CommandWrapper {
 		return this.entityName.equalsIgnoreCase("NIN");
 	}
 
+	public boolean isLeaseResource() {
+		return this.entityName.equalsIgnoreCase("LEASE");
+	}
+
+	public boolean isCreateLease() {
+		return this.actionName.equalsIgnoreCase("CREATE") && this.entityName.equalsIgnoreCase("LEASE");
+	}
+
+	public boolean isVerificationLease() {
+		return this.actionName.equalsIgnoreCase("VALIDATION") && this.entityName.equalsIgnoreCase("LEASE");
+	}
+
 	public boolean isCreditDistributionResource() {
 		return this.entityName.equalsIgnoreCase("CREDITDISTRIBUTION");
 	}
@@ -1426,18 +1438,16 @@ public class CommandWrapper {
 		return this.actionName.equalsIgnoreCase("UPDATE") && this.entityName.equalsIgnoreCase("REVPAY");
 	}
 
-	
 	public boolean iscompleteRevOrder() {
 
 		return this.actionName.equalsIgnoreCase("COMPLETE") && this.entityName.equalsIgnoreCase("REVPAY");
 	}
-	
 
 	public boolean isVerifyNIN() {
 
 		return this.actionName.equalsIgnoreCase("VERIFY") && this.entityName.equalsIgnoreCase("NIN");
 	}
-	
+
 	// command type annotation functionality implemented,please refer once
 
 }

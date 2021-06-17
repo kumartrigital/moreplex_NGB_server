@@ -1548,6 +1548,13 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
 				handler = applicationContext.getBean("completeRevOrderCommandHandler", NewCommandSourceHandler.class);
 			}
 
+		} else if (wrapper.isLeaseResource()) {
+			if (wrapper.isCreateLease()) {
+				handler = applicationContext.getBean("leaseActivationCommandHandler", NewCommandSourceHandler.class);
+			}
+			if (wrapper.isVerificationLease()) {
+				handler = applicationContext.getBean("leaseValidationCommandHandler", NewCommandSourceHandler.class);
+			}
 		}
 
 		else if (wrapper.isNINResource()) {

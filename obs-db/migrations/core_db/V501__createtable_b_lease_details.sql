@@ -1,6 +1,6 @@
 
 CREATE TABLE `obstenant-default`.`b_lease_details` (
-  `id` INT NOT NULL,
+  `id` INT NOT NULL AUTO_INCREMENT,
   `office_id` BIGINT(15) NULL,
   `salutation` VARCHAR(45) NULL,
   `first_name` VARCHAR(45) NULL,

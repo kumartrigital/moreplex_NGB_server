@@ -13,4 +13,10 @@ public interface ApplicationCurrencyRepository extends
 		JpaSpecificationExecutor<ApplicationCurrency> {
 
 	ApplicationCurrency findOneByCode(String currencyCode);
+	
+	
+	ApplicationCurrency findOneByCountryName(String countryName);
+	
+
+	
 }

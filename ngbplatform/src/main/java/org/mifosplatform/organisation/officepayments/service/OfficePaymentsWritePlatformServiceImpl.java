@@ -85,7 +85,7 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 	@Transactional
 	@Override
 	public CommandProcessingResult createOfficePayment(final JsonCommand command) {
-
+//add currency code
 		try {
 			context.authenticatedUser();
 			this.fromApiJsonDeserializer.validateForCreate(command.json());
