@@ -79,7 +79,8 @@ import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
 import org.mifosplatform.portfolio.activationprocess.exception.ClientAlreadyCreatedException;
 import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
-import org.mifosplatform.portfolio.activationprocess.exception.NINVerificationException;
+import org.mifosplatform.portfolio.activationprocess.exception.NINNOTVerificationException;
+import org.mifosplatform.portfolio.activationprocess.exception.OTPNOTVerificationException;
 import org.mifosplatform.portfolio.activationprocess.serialization.ActivationProcessCommandFromApiJsonDeserializer;
 import org.mifosplatform.portfolio.client.api.ClientsApiResource;
 import org.mifosplatform.portfolio.client.data.ClientBillInfoData;
@@ -363,7 +364,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 				try {
 					this.validateKey_NIN(newcommand, NINId);
 				} catch (Exception e) {
-					throw new NINVerificationException("NIN Id is Not verified");
+					throw new NINNOTVerificationException("NIN Id is Not verified");
 				}
 			}
 
@@ -1830,7 +1831,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			return CommandProcessingResult.parsingResult(result);
 
 		} else {
-			throw new NINVerificationException("NIN Id is Not verified");
+			throw new NINNOTVerificationException("NIN Id is Not verified");
 		}
 
 	}
@@ -1850,7 +1851,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 			result = restTemplate.exchange(VERIFY_ENDPOINT, HttpMethod.POST, request, String.class);
 		} catch (Exception e) {
-			throw new NINVerificationException("NIN Id is Not verified");
+			throw new NINNOTVerificationException("NIN Id is Not verified");
 
 		}
 		return result;
@@ -1879,7 +1880,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			result = restTemplate.exchange(VERIFY_ENDPOINT, HttpMethod.POST, request, String.class);
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new NINVerificationException("something went wrong " + e.getLocalizedMessage());
+			throw new NINNOTVerificationException("something went wrong " + e.getLocalizedMessage());
 
 		}
 		return result;
@@ -1925,7 +1926,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 				leaseDetails.setStatus("NIN_Pending");
 				leaseDetailsRepository.save(leaseDetails);
 			} else {
-				throw new NINVerificationException("OTP is Not verified");
+				throw new OTPNOTVerificationException("OTP is Not verified");
 			}
 			return CommandProcessingResult.parsingResult("otp verified");
 
@@ -1943,7 +1944,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			ResponseEntity<String> apiResponse = this.validationNIN(Long.parseLong(leaseDetails.getNIN()),
 					requestPayload);
 			if (!apiResponse.getStatusCode().equals(HttpStatus.CREATED)) {
-				throw new NINVerificationException("NIN Id is Not verified");
+				throw new NINNOTVerificationException("NIN Id is Not verified");
 			}
 			leaseDetails.setStatus("Registration_Pending");
 			leaseDetailsRepository.save(leaseDetails);
