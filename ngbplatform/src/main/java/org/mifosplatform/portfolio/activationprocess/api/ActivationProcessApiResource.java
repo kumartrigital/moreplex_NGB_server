@@ -36,9 +36,11 @@ import org.springframework.stereotype.Component;
 @Component
 @Scope("singleton")
 public class ActivationProcessApiResource {
-private  final Set<String> RESPONSE_DATA_PARAMETERS = new HashSet<String>(Arrays.asList("id","officeId","salutation","fistName","lastName","email","mobileNumber","NIN","city","state","country","Status","otp"));
-	
-	private final static  String RESOURCE_TYPE = "LEASE";
+	private final Set<String> RESPONSE_DATA_PARAMETERS = new HashSet<String>(
+			Arrays.asList("id", "officeId", "salutation", "fistName", "lastName", "email", "mobileNumber", "NIN",
+					"city", "state", "country", "Status", "otp"));
+
+	private final static String RESOURCE_TYPE = "LEASE";
 
 	private final ToApiJsonSerializer<ClientData> toApiJsonSerializer;
 	private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
@@ -50,13 +52,14 @@ private  final Set<String> RESPONSE_DATA_PARAMETERS = new HashSet<String>(Arrays
 	@Autowired
 	public ActivationProcessApiResource(final ToApiJsonSerializer<ClientData> toApiJsonSerializer,
 			final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService,
-			final ItemDetailsReadPlatformService itemDetailsReadPlatformService,final LeaseDetailsRepository leaseDetailsRepository,final ApiRequestParameterHelper apiRequestParameterHelper)
-	  {
+			final ItemDetailsReadPlatformService itemDetailsReadPlatformService,
+			final LeaseDetailsRepository leaseDetailsRepository,
+			final ApiRequestParameterHelper apiRequestParameterHelper) {
 		this.toApiJsonSerializer = toApiJsonSerializer;
 		this.commandsSourceWritePlatformService = commandsSourceWritePlatformService;
 		this.itemDetailsReadPlatformService = itemDetailsReadPlatformService;
-        this.leaseDetailsRepository =leaseDetailsRepository;
-        this.apiRequestParameterHelper =apiRequestParameterHelper;
+		this.leaseDetailsRepository = leaseDetailsRepository;
+		this.apiRequestParameterHelper = apiRequestParameterHelper;
 	}
 
 	@POST
@@ -208,36 +211,37 @@ private  final Set<String> RESPONSE_DATA_PARAMETERS = new HashSet<String>(Arrays
 	@Produces({ MediaType.APPLICATION_JSON })
 	public String LeaseActivations(final String apiRequestBodyAsJson) {
 
-		final CommandWrapper commandRequest = new CommandWrapperBuilder().leaseActivation().withJson(apiRequestBodyAsJson).build(); //
+		final CommandWrapper commandRequest = new CommandWrapperBuilder().leaseActivation()
+				.withJson(apiRequestBodyAsJson).build(); //
 		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 		return this.toApiJsonSerializer.serialize(result);
 	}
-	
+
 	@POST
 	@Path("leasevalidation")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
 	public String leasevalidation(final String apiRequestBodyAsJson) {
 
-		final CommandWrapper commandRequest = new CommandWrapperBuilder().leaseValidation().withJson(apiRequestBodyAsJson).build(); //
+		final CommandWrapper commandRequest = new CommandWrapperBuilder().leaseValidation()
+				.withJson(apiRequestBodyAsJson).build(); //
 		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 		return this.toApiJsonSerializer.serialize(result);
 	}
-	
+
 	@GET
-	@Path("lease/{mobileNo}")
-	@Consumes({MediaType.APPLICATION_JSON})
-	@Produces({MediaType.APPLICATION_JSON})
-	public String retrieveLeaseDetails(@Context final UriInfo uriInfo ,@PathParam("mobileNo") final String mobileNo){
-		//this.context.authenticatedUser().validateHasReadPermission(this.RESOURCE_TYPE);
-		
-	LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNo);
-		if(leaseDetails==null) {
+	@Path("lease/{mobileNo}") 
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String retrieveLeaseDetails(@Context final UriInfo uriInfo, @PathParam("mobileNo") final String mobileNo) {
+		// this.context.authenticatedUser().validateHasReadPermission(this.RESOURCE_TYPE);
+
+		LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNo);
+		if (leaseDetails == null) {
 			throw new LeaseDetailsNotFoundException("leasedetails not found");
-		}		
-		final ApiRequestJsonSerializationSettings settings = apiRequestParameterHelper.process(uriInfo.getQueryParameters());
+		}
 		return this.toApiJsonSerializer.serialize(leaseDetails);
-		
+
 	}
 
 }

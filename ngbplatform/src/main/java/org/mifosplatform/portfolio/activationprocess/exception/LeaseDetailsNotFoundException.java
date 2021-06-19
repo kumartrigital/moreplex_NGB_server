@@ -10,7 +10,7 @@ public class LeaseDetailsNotFoundException extends AbstractPlatformDomainRuleExc
 	private static final long serialVersionUID = 1L;
 
 	public LeaseDetailsNotFoundException(String mobile) {
-		super("error.msg.NIN", "NIN not verified",mobile);
+		super("error.msg.NIN", "Details Not Found",mobile);
 	}
 
 }
