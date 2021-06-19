@@ -1555,6 +1555,9 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
 			if (wrapper.isVerificationLease()) {
 				handler = applicationContext.getBean("leaseValidationCommandHandler", NewCommandSourceHandler.class);
 			}
+			if (wrapper.isResedOtp()) {
+				handler = applicationContext.getBean("resendOtpMessageCommandHandler", NewCommandSourceHandler.class);
+			}
 		}
 
 		else if (wrapper.isNINResource()) {

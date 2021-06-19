@@ -66,6 +66,7 @@ import org.mifosplatform.logistics.ownedhardware.service.OwnedHardwareWritePlatf
 import org.mifosplatform.organisation.address.data.AddressData;
 import org.mifosplatform.organisation.address.exception.AddressNoRecordsFoundException;
 import org.mifosplatform.organisation.address.service.AddressReadPlatformService;
+import org.mifosplatform.organisation.channel.domain.Channel;
 import org.mifosplatform.organisation.message.domain.BillingMessageRepository;
 import org.mifosplatform.organisation.message.domain.BillingMessageTemplateRepository;
 import org.mifosplatform.organisation.message.service.MessagePlatformEmailService;
@@ -83,6 +84,7 @@ import org.mifosplatform.portfolio.activationprocess.exception.ClientAlreadyCrea
 import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
 import org.mifosplatform.portfolio.activationprocess.exception.NINNOTVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.OTPNOTVerificationException;
+import org.mifosplatform.portfolio.activationprocess.handler.ResendOtpMessageCommandHandler;
 import org.mifosplatform.portfolio.activationprocess.serialization.ActivationProcessCommandFromApiJsonDeserializer;
 import org.mifosplatform.portfolio.client.api.ClientsApiResource;
 import org.mifosplatform.portfolio.client.data.ClientBillInfoData;
@@ -186,6 +188,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 	private final VoucherDetailsRepository voucherDetailsRepository;
 	private final ChargingOrderWritePlatformService chargingOrderWritePlatformService;
 	private final LeaseDetailsRepository leaseDetailsRepository;
+	//private final ResendOtpMessage resendOtpMessage;
+	
 	static JSONObject activation = new JSONObject();
 	static org.json.simple.JSONArray address = new org.json.simple.JSONArray();
 	static org.json.simple.JSONArray client = new org.json.simple.JSONArray();
@@ -312,6 +316,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		this.voucherDetailsRepository = voucherDetailsRepository;
 		this.chargingOrderWritePlatformService = chargingOrderWritePlatformService;
 		this.leaseDetailsRepository = leaseDetailsRepository;
+		//this.resendOtpMessage = resendOtpMessage;
 	}
 
 	private void handleDataIntegrityIssues(final JsonCommand command, final DataIntegrityViolationException dve) {
@@ -1959,4 +1964,33 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		}
 	}
 
+	@Override
+	public CommandProcessingResult ResendOtpMessage(JsonCommand command) {
+	String mobileNO = command.stringValueOfParameterName("mobileNO");
+	LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNO);
+
+		JSONObject requestPayload = new JSONObject();
+		
+		try {
+			requestPayload.put("phone", leaseDetails.getMobileNumber());
+			String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
+			leaseDetails.setOtp(otp);
+			leaseDetailsRepository.saveAndFlush(leaseDetails);
+			return CommandProcessingResult.parsingResult(leaseDetails);
+
+		}catch (JSONException e) {
+			e.printStackTrace();
+			return new CommandProcessingResult(e.getLocalizedMessage());
+		}
+	}
 }
+
+
+		
+
+
+
+
+
+
+

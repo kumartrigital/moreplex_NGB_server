@@ -1040,6 +1040,9 @@ public class CommandWrapper {
 	public boolean isVerificationLease() {
 		return this.actionName.equalsIgnoreCase("VALIDATION") && this.entityName.equalsIgnoreCase("LEASE");
 	}
+	public boolean isResedOtp() {
+		return this.actionName.equalsIgnoreCase("OTPMESSAGE") && this.entityName.equalsIgnoreCase("RESEND");
+	}
 
 	public boolean isCreditDistributionResource() {
 		return this.entityName.equalsIgnoreCase("CREDITDISTRIBUTION");
