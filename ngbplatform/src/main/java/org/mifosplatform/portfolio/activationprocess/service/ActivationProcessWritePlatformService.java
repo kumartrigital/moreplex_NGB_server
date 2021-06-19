@@ -28,4 +28,8 @@ public interface ActivationProcessWritePlatformService {
 
 	CommandProcessingResult validateMobileAndNIN(JsonCommand command);
 
+	CommandProcessingResult ResendOtpMessage(JsonCommand command);
+
+	
+
 }

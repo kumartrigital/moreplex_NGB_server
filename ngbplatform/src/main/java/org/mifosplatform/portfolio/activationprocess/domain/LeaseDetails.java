@@ -1,10 +1,16 @@
 package org.mifosplatform.portfolio.activationprocess.domain;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
+import org.apache.commons.lang.StringUtils;
+import org.mifosplatform.infrastructure.core.api.JsonCommand;
 
 @Entity
 @Table(name = "b_lease_details")
@@ -161,6 +167,8 @@ public class LeaseDetails {
 		this.otp = otp;
 	}
 
+	}
+
 	/*
 	 * public String getDevice() { return Device; }
 	 * 
@@ -171,4 +179,3 @@ public class LeaseDetails {
 	 * public void setVoucher(String voucher) { this.voucher = voucher; }
 	 */
 
-}

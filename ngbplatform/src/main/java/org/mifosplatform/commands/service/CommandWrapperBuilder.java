@@ -4072,4 +4072,12 @@ public class CommandWrapperBuilder {
 		this.href = "/validatekey/"+ userId;
 		return this;
 	}
+
+	public CommandWrapperBuilder resend_Otp_Message() {
+		this.actionName = "OTPMESSAGE";
+		this.entityName = "RESEND";
+		this.href = "/activationprocess/lease";
+		return this;
+		// TODO Auto-generated method stub
+	}
 }
