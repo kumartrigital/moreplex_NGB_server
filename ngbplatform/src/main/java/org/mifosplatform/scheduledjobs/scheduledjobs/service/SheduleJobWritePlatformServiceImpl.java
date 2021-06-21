@@ -2425,14 +2425,14 @@ public class SheduleJobWritePlatformServiceImpl implements SheduleJobWritePlatfo
 							String planCode = null;
 							if (null != isstbLeasePlanCode && isstbLeasePlanCode.isEnabled()) {
 								final JSONObject object = new JSONObject(isstbLeasePlanCode.getValue());
-								 planCode = object.getString("stb_lease_plancode");
-								
+								planCode = object.getString("stb_lease_plancode");
+
 							}
 							Plan plan = this.planRepository.findwithName(planCode);
 							for (Long clientId : clientIds) {
-								
+
 								Order order = this.orderRepository.findOrderByClientIdWithLeasePlanActive(clientId,
-									plan.getId());
+										plan.getId());
 								if (order != null) {
 									fw.append("processing statement: " + clientId + " \r\n");
 									JSONObject jsonObject = new JSONObject();
@@ -2462,8 +2462,8 @@ public class SheduleJobWritePlatformServiceImpl implements SheduleJobWritePlatfo
 
 				fw.flush();
 				fw.close();
-				System.out.println(
-						"LEASE BOX CUSTOMER Job is Completed..." + ThreadLocalContextUtil.getTenant().getTenantIdentifier());
+				System.out.println("LEASE BOX CUSTOMER Job is Completed..."
+						+ ThreadLocalContextUtil.getTenant().getTenantIdentifier());
 			}
 
 		} catch (IOException exception) {
