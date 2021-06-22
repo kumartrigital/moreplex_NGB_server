@@ -10,7 +10,7 @@ public class OTPNOTVerificationException extends AbstractPlatformDomainRuleExcep
 	private static final long serialVersionUID = 1L;
 
 	public OTPNOTVerificationException(String mobile) {
-		super("error.msg.NIN", "NIN not verified",mobile);
+		super("error.msg.NIN", "OTP not verified",mobile);
 	}
 
 }

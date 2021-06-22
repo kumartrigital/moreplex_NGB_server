@@ -1,15 +1,12 @@
 package org.mifosplatform.portfolio.activationprocess.domain;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 
-import org.apache.commons.lang.StringUtils;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 
 @Entity
@@ -54,11 +51,11 @@ public class LeaseDetails {
 	@Column(name = "status")
 	private String Status;
 
-	/*
-	 * @Column(name = "device_id") private String Device;
-	 * 
-	 * @Column(name = "voucher_id") private String voucher;
-	 */
+	@Column(name = "device_id")
+	private String Device;
+
+	@Column(name = "voucher_id")
+	private String voucher;
 
 	@Column(name = "otp")
 	private String otp;
@@ -167,15 +164,56 @@ public class LeaseDetails {
 		this.otp = otp;
 	}
 
+	public String getDevice() {
+		return Device;
 	}
 
-	/*
-	 * public String getDevice() { return Device; }
-	 * 
-	 * public void setDevice(String device) { Device = device; }
-	 * 
-	 * public String getVoucher() { return voucher; }
-	 * 
-	 * public void setVoucher(String voucher) { this.voucher = voucher; }
-	 */
+	public void setDevice(String device) {
+		Device = device;
+	}
 
+	public String getVoucher() {
+		return voucher;
+	}
+
+	public void setVoucher(String voucher) {
+		this.voucher = voucher;
+	}
+
+	public LeaseDetails(Long officeId, String firstName, String lastName, String email, String mobileNumber, String nIN,
+			String city, String state, String country, String device, String voucher) {
+		this.officeId = officeId;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.email = email;
+		this.mobileNumber = mobileNumber;
+		this.NIN = nIN;
+		this.city = city;
+		this.state = state;
+		this.country = country;
+		this.Device = device;
+		this.voucher = voucher;
+	}
+
+	public LeaseDetails() {
+	}
+
+	public LeaseDetails fromjson(JsonCommand command) {
+
+		Long officeId = command.longValueOfParameterNamed("officeId");
+		String firstName = command.stringValueOfParameterName("forename");
+		String lastName = command.stringValueOfParameterName("surname");
+		String email = command.stringValueOfParameterName("email");
+		String mobileNumber = command.stringValueOfParameterName("mobile");
+		String nIN = command.stringValueOfParameterName("NIN");
+		String city = command.stringValueOfParameterName("city");
+		String state = command.stringValueOfParameterName("state");
+		String country = command.stringValueOfParameterName("country");
+		String deviceId = command.stringValueOfParameterName("deviceId");
+		String voucherId = command.stringValueOfParameterName("voucherId");
+
+		return new LeaseDetails(officeId, firstName, lastName, email, mobileNumber, nIN, city, state, country, deviceId,
+				voucherId);
+
+	}
+}

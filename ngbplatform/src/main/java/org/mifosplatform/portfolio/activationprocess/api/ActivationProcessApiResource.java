@@ -19,7 +19,6 @@ import org.mifosplatform.commands.service.CommandWrapperBuilder;
 import org.mifosplatform.commands.service.PortfolioCommandSourceWritePlatformService;
 import org.mifosplatform.infrastructure.core.api.ApiRequestParameterHelper;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
-import org.mifosplatform.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
 import org.mifosplatform.infrastructure.core.serialization.ToApiJsonSerializer;
 import org.mifosplatform.logistics.itemdetails.service.ItemDetailsReadPlatformService;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
@@ -245,7 +244,7 @@ public class ActivationProcessApiResource {
 	}
 
 	@POST
-	@Path("resendotp")
+	@Path("/resendotp")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
 	public String resend_Otp_Message(@PathParam("mobileNo") final String apiRequestBodyAsJson) {

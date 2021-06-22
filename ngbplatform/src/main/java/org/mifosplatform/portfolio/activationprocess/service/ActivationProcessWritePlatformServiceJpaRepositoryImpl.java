@@ -66,7 +66,6 @@ import org.mifosplatform.logistics.ownedhardware.service.OwnedHardwareWritePlatf
 import org.mifosplatform.organisation.address.data.AddressData;
 import org.mifosplatform.organisation.address.exception.AddressNoRecordsFoundException;
 import org.mifosplatform.organisation.address.service.AddressReadPlatformService;
-import org.mifosplatform.organisation.channel.domain.Channel;
 import org.mifosplatform.organisation.message.domain.BillingMessageRepository;
 import org.mifosplatform.organisation.message.domain.BillingMessageTemplateRepository;
 import org.mifosplatform.organisation.message.service.MessagePlatformEmailService;
@@ -74,17 +73,15 @@ import org.mifosplatform.organisation.office.domain.Office;
 import org.mifosplatform.organisation.office.domain.OfficeRepository;
 import org.mifosplatform.organisation.office.exception.OfficeNotFoundException;
 import org.mifosplatform.organisation.redemption.api.RedemptionApiResource;
-import org.mifosplatform.organisation.redemption.exception.PinNumbersNotAvailableException;
-import org.mifosplatform.organisation.voucher.data.VoucherData;
 import org.mifosplatform.organisation.voucher.domain.VoucherDetailsRepository;
 import org.mifosplatform.organisation.voucher.service.VoucherReadPlatformService;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
 import org.mifosplatform.portfolio.activationprocess.exception.ClientAlreadyCreatedException;
+import org.mifosplatform.portfolio.activationprocess.exception.LeaseDetailsNotFoundException;
 import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
 import org.mifosplatform.portfolio.activationprocess.exception.NINNOTVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.OTPNOTVerificationException;
-import org.mifosplatform.portfolio.activationprocess.handler.ResendOtpMessageCommandHandler;
 import org.mifosplatform.portfolio.activationprocess.serialization.ActivationProcessCommandFromApiJsonDeserializer;
 import org.mifosplatform.portfolio.client.api.ClientsApiResource;
 import org.mifosplatform.portfolio.client.data.ClientBillInfoData;
@@ -188,8 +185,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 	private final VoucherDetailsRepository voucherDetailsRepository;
 	private final ChargingOrderWritePlatformService chargingOrderWritePlatformService;
 	private final LeaseDetailsRepository leaseDetailsRepository;
-	//private final ResendOtpMessage resendOtpMessage;
-	
+	// private final ResendOtpMessage resendOtpMessage;
+
 	static JSONObject activation = new JSONObject();
 	static org.json.simple.JSONArray address = new org.json.simple.JSONArray();
 	static org.json.simple.JSONArray client = new org.json.simple.JSONArray();
@@ -316,7 +313,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		this.voucherDetailsRepository = voucherDetailsRepository;
 		this.chargingOrderWritePlatformService = chargingOrderWritePlatformService;
 		this.leaseDetailsRepository = leaseDetailsRepository;
-		//this.resendOtpMessage = resendOtpMessage;
+		// this.resendOtpMessage = resendOtpMessage;
 	}
 
 	private void handleDataIntegrityIssues(final JsonCommand command, final DataIntegrityViolationException dve) {
@@ -1875,7 +1872,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			headers.add("Content-Type", "application/json");
 
 			JSONObject requestpayload = new JSONObject();
-			requestpayload.put("to", mobileNo);
+			requestpayload.put("to", "234" + mobileNo);
 			requestpayload.put("from", "Moreplex tv");
 			requestpayload.put("sms", "otp verification " + Otp);
 			requestpayload.put("type", "plain");
@@ -1895,26 +1892,21 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 	@Override
 	public CommandProcessingResult createLeaseDetails(JsonCommand command) {
-		System.out.println(
-				"ActivationProcessWritePlatformServiceJpaRepositoryImpl.createLeaseDetails()" + command.toString());
 		LeaseDetails details = new LeaseDetails();
 		try {
-			details.setFirstName(command.stringValueOfParameterName("forename"));
-			details.setLastName(command.stringValueOfParameterName("surname"));
-			details.setEmail(command.stringValueOfParameterName("email"));
-			details.setMobileNumber(command.stringValueOfParameterName("mobile"));
-			details.setNIN(command.stringValueOfParameterName("NIN"));
-			details.setOfficeId(command.longValueOfParameterNamed("officeId"));
-			details.setCity(command.stringValueOfParameterName("city"));
-			details.setState(command.stringValueOfParameterName("state"));
-			details.setCountry(command.stringValueOfParameterName("country"));
-			details.setStatus("Otp_Pending");
+
+			if (command.stringValueOfParameterNamed("mobile").length() != 10) {
+				throw new MobileNumberLengthException(command.stringValueOfParameterNamed("mobile"));
+			}
+			LeaseDetails leaseDetails = details.fromjson(command);
 			String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
-			details.setOtp(otp);
+			leaseDetails.setStatus("Otp_Pending");
+			leaseDetails.setOtp(otp);
+
 			// this.OTP_MESSAGE(details.getMobileNumber(), otp);
 
-			leaseDetailsRepository.saveAndFlush(details);
-			return CommandProcessingResult.parsingResult(details);
+			leaseDetailsRepository.saveAndFlush(leaseDetails);
+			return CommandProcessingResult.parsingResult(leaseDetails);
 
 		} catch (Exception e) {
 			return new CommandProcessingResult(e.getLocalizedMessage());
@@ -1958,39 +1950,50 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			leaseDetailsRepository.save(leaseDetails);
 			return CommandProcessingResult.parsingResult("NIN verified");
 		} else if (leaseDetails.getStatus().equals("Registration_Pending")) {
+
+			String result = command.stringValueOfParameterName("ActivationResult");
+
+			if (result.equalsIgnoreCase("Success")) {
+				String deviceId = command.stringValueOfParameterName("deviceId");
+				String voucherId = command.stringValueOfParameterName("voucherId");
+				leaseDetails.setDevice(deviceId);
+				leaseDetails.setVoucher(voucherId);
+				leaseDetails.setStatus("Registration_Success");
+			}
+			if (result.equalsIgnoreCase("Failed")) {
+				leaseDetails.setStatus("Registration_Failed");
+			}
+			leaseDetailsRepository.save(leaseDetails);
+
 			return CommandProcessingResult.parsingResult(leaseDetails);
-		} else {
+		} else if (leaseDetails.getStatus().equals("Registration_Success")) {
+			return CommandProcessingResult.parsingResult(leaseDetails);
+		}
+
+		else {
 			return new CommandProcessingResult(Long.valueOf(-1));
 		}
 	}
 
 	@Override
 	public CommandProcessingResult ResendOtpMessage(JsonCommand command) {
-	String mobileNO = command.stringValueOfParameterName("mobileNO");
-	LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNO);
-
-		JSONObject requestPayload = new JSONObject();
-		
 		try {
-			requestPayload.put("phone", leaseDetails.getMobileNumber());
+			String mobileNO = command.stringValueOfParameterName("mobileNO");
+			LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNO);
+
+			if (leaseDetails == null) {
+				throw new LeaseDetailsNotFoundException(mobileNO);
+			}
+
 			String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
 			leaseDetails.setOtp(otp);
+			// this.OTP_MESSAGE(details.getMobileNumber(), otp);
 			leaseDetailsRepository.saveAndFlush(leaseDetails);
 			return CommandProcessingResult.parsingResult(leaseDetails);
 
-		}catch (JSONException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return new CommandProcessingResult(e.getLocalizedMessage());
 		}
 	}
 }
-
-
-		
-
-
-
-
-
-
-
