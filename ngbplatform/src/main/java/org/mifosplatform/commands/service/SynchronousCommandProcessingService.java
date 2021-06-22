@@ -1561,7 +1561,6 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
 		}
 
 		else if (wrapper.isNINResource()) {
-
 			if (wrapper.isVerifyNIN()) {
 				handler = applicationContext.getBean("verifyNINCommandHandler", NewCommandSourceHandler.class);
 			}

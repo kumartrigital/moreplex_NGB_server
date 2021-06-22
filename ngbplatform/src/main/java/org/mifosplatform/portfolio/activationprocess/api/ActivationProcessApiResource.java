@@ -223,7 +223,7 @@ public class ActivationProcessApiResource {
 	public String leasevalidation(final String apiRequestBodyAsJson) {
 
 		final CommandWrapper commandRequest = new CommandWrapperBuilder().leaseValidation()
-				.withJson(apiRequestBodyAsJson).build(); //
+				.withJson(apiRequestBodyAsJson).build(); 
 		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 		return this.toApiJsonSerializer.serialize(result);
 	}
@@ -247,10 +247,10 @@ public class ActivationProcessApiResource {
 	@Path("/resendotp")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
-	public String resend_Otp_Message(@PathParam("mobileNo") final String apiRequestBodyAsJson) {
+	public String resend_Otp_Message(final String apiRequestBodyAsJson) {
 
-		final CommandWrapper commandRequest = new CommandWrapperBuilder().resend_Otp_Message()
-				.withJson(apiRequestBodyAsJson).build(); //
+		final CommandWrapper commandRequest = new CommandWrapperBuilder().resendOtpMessage()
+				.withJson(apiRequestBodyAsJson).build(); 
 		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 		return this.toApiJsonSerializer.serialize(result);
 	}

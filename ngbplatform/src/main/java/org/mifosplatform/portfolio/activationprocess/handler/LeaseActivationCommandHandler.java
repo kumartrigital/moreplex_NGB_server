@@ -20,8 +20,6 @@ public class LeaseActivationCommandHandler implements NewCommandSourceHandler {
 
 	@Override
 	public CommandProcessingResult processCommand(JsonCommand command) {
-		// TODO Auto-generated method stub
-
 		return this.activationProcessWritePlatformService.createLeaseDetails(command);
 	}
 }

@@ -1041,7 +1041,7 @@ public class CommandWrapper {
 		return this.actionName.equalsIgnoreCase("VALIDATION") && this.entityName.equalsIgnoreCase("LEASE");
 	}
 	public boolean isResedOtp() {
-		return this.actionName.equalsIgnoreCase("OTPMESSAGE") && this.entityName.equalsIgnoreCase("RESEND");
+		return this.actionName.equalsIgnoreCase("OTPMESSAGE") && this.entityName.equalsIgnoreCase("LEASE");
 	}
 
 	public boolean isCreditDistributionResource() {

@@ -4073,9 +4073,9 @@ public class CommandWrapperBuilder {
 		return this;
 	}
 
-	public CommandWrapperBuilder resend_Otp_Message() {
+	public CommandWrapperBuilder resendOtpMessage() {
 		this.actionName = "OTPMESSAGE";
-		this.entityName = "RESEND";
+		this.entityName = "Lease";
 		this.href = "/activationprocess/lease";
 		return this;
 		// TODO Auto-generated method stub

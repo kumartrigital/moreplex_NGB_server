@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@CommandType(entity = "RESEND", action = "OTPMESSAGE")
+@CommandType(entity = "LEASE", action = "OTPMESSAGE")
 public class ResendOtpMessageCommandHandler implements NewCommandSourceHandler  {
 	private final ActivationProcessWritePlatformService activationProcessWritePlatformService;
 
