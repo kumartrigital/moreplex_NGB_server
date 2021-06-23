@@ -5,6 +5,11 @@
  */
 package org.mifosplatform.portfolio.activationprocess.service;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -15,6 +20,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Set;
+
+import javax.xml.bind.DatatypeConverter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -82,6 +89,7 @@ import org.mifosplatform.portfolio.activationprocess.exception.LeaseDetailsNotFo
 import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
 import org.mifosplatform.portfolio.activationprocess.exception.NINNOTVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.OTPNOTVerificationException;
+import org.mifosplatform.portfolio.activationprocess.exception.PhotoNotVerificationException;
 import org.mifosplatform.portfolio.activationprocess.serialization.ActivationProcessCommandFromApiJsonDeserializer;
 import org.mifosplatform.portfolio.client.api.ClientsApiResource;
 import org.mifosplatform.portfolio.client.data.ClientBillInfoData;
@@ -117,14 +125,19 @@ import org.mifosplatform.workflow.eventaction.service.EventActionConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.JsonArray;
@@ -1861,6 +1874,54 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		return result;
 	}
 
+	@Override
+	public Boolean photoVerification(String NIN, String path) {
+		ResponseEntity<String> result = null;
+		Boolean match = null;
+
+		try {
+			System.out.println("ActivationProcessWritePlatformServiceJpaRepositoryImpl.photoVerification()");
+
+			RestTemplate restTemplate = new RestTemplate();
+			restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter());
+
+			String VERIFY_ENDPOINT = "https://vapi.verifyme.ng/v1/verifications/identities/biometrics";
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+			headers.add("Authorization",
+					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE");
+
+			MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
+			params.add("photo", new FileSystemResource(path));
+			params.add("idType", "nin");
+			params.add("idNumber", NIN);
+
+			HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(params, headers);
+
+			result = restTemplate.exchange(VERIFY_ENDPOINT, HttpMethod.POST, requestEntity, String.class);
+
+			JSONObject jsonObject = new JSONObject(result.getBody());
+
+			org.json.JSONObject data = jsonObject.getJSONObject("data");
+
+			org.json.JSONObject photoMatching = data.getJSONObject("photoMatching");
+
+			match = photoMatching.getBoolean("match");
+
+			if (result.getStatusCode() != HttpStatus.CREATED) {
+				throw new PhotoNotVerificationException("Photo is Not verified");
+
+			}
+
+		} catch (Exception e) {
+			throw new PhotoNotVerificationException("Photo is Not verified");
+
+		}
+		return match;
+	}
+
 	public ResponseEntity<String> OTP_MESSAGE(String mobileNo, String Otp) {
 		ResponseEntity<String> result = null;
 
@@ -1902,6 +1963,11 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
 			leaseDetails.setStatus("Otp_Pending");
 			leaseDetails.setOtp(otp);
+			String ImageBase64Encoder = command.stringValueOfParameterNamed("image");
+
+			String path = this.saveImage(ImageBase64Encoder);
+
+			this.photoVerification(leaseDetails.getNIN(), path);
 
 			// this.OTP_MESSAGE(details.getMobileNumber(), otp);
 
@@ -1979,6 +2045,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 	public CommandProcessingResult ResendOtpMessage(JsonCommand command) {
 		try {
 			String mobileNO = command.stringValueOfParameterName("mobileNO");
+			System.out.println("ActivationProcessWritePlatformServiceJpaRepositoryImpl.ResendOtpMessage()");
 			LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNO);
 
 			if (leaseDetails == null) {
@@ -1996,4 +2063,46 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			return new CommandProcessingResult(e.getLocalizedMessage());
 		}
 	}
+
+	@Override
+	public String saveImage(String base64Encoder) {
+		String[] strings = base64Encoder.split(",");
+		String extension;
+		switch (strings[0]) {
+		case "data:image/jpeg;base64":
+			extension = ".jpeg";
+			break;
+		case "data:image/png;base64":
+			extension = ".png";
+			break;
+		default:
+			extension = ".jpg";
+			break;
+		}
+		// convert base64 string to binary data
+		byte[] data = DatatypeConverter.parseBase64Binary(strings[1]);
+		String currentDirectory = System.getProperty("user.dir");
+		currentDirectory = currentDirectory.substring(0, currentDirectory.lastIndexOf("/"));
+
+		String path = currentDirectory + "/Verification_Images/leaseImage" + this.OTP() + extension;
+		File file = new File(path);
+		try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file))) {
+			outputStream.write(data);
+			System.out.println("ActivationProcessWritePlatformServiceJpaRepositoryImpl.saveImage()" + path);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return path;
+	}
+
+	public String OTP() {
+		String numbers = "0123456789";
+		Random rndm_method = new Random();
+		char[] otp = new char[4];
+		for (int i = 0; i < 4; i++) {
+			otp[i] = numbers.charAt(rndm_method.nextInt(numbers.length()));
+		}
+		return otp.toString();
+	}
+
 }

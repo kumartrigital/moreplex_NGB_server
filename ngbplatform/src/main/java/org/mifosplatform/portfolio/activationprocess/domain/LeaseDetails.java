@@ -60,6 +60,9 @@ public class LeaseDetails {
 	@Column(name = "otp")
 	private String otp;
 
+	@Column(name = "image_path")
+	private String imagePath;
+
 	public Long getId() {
 		return id;
 	}
@@ -178,6 +181,14 @@ public class LeaseDetails {
 
 	public void setVoucher(String voucher) {
 		this.voucher = voucher;
+	}
+
+	public String getImagePath() {
+		return imagePath;
+	}
+
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
 	}
 
 	public LeaseDetails(Long officeId, String firstName, String lastName, String email, String mobileNumber, String nIN,

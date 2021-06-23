@@ -7,6 +7,7 @@ package org.mifosplatform.portfolio.activationprocess.service;
 
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
+import org.springframework.http.ResponseEntity;
 
 public interface ActivationProcessWritePlatformService {
 
@@ -29,6 +30,10 @@ public interface ActivationProcessWritePlatformService {
 	CommandProcessingResult validateMobileAndNIN(JsonCommand command);
 
 	CommandProcessingResult ResendOtpMessage(JsonCommand command);
+
+	String saveImage(String imageBase64Encoder);
+
+	Boolean photoVerification(String nin, String path);
 
 	
 
