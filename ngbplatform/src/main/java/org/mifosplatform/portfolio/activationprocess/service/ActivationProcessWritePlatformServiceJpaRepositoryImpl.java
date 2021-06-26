@@ -1882,6 +1882,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 		try {
 			System.out.println("ActivationProcessWritePlatformServiceJpaRepositoryImpl.photoVerification()");
+			
 
 			RestTemplate restTemplate = new RestTemplate();
 			restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter());

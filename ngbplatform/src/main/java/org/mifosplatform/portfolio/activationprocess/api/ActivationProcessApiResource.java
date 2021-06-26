@@ -29,6 +29,7 @@ import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
 import org.mifosplatform.portfolio.activationprocess.exception.LeaseDetailsNotFoundException;
 import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
+import org.mifosplatform.portfolio.activationprocess.exception.PhotoNotFoundException;
 import org.mifosplatform.portfolio.activationprocess.exception.PhotoNotVerificationException;
 import org.mifosplatform.portfolio.activationprocess.service.ActivationProcessWritePlatformService;
 import org.mifosplatform.portfolio.activationprocess.service.ActivationProcessWritePlatformServiceJpaRepositoryImpl;
@@ -272,6 +273,10 @@ public class ActivationProcessApiResource {
 			leaseDetails.setStatus("Otp_Pending");
 			leaseDetails.setOtp(otp);
 			String ImageBase64Encoder = requestPayload.getString("image");
+			
+			if(ImageBase64Encoder == null) {
+				throw new PhotoNotFoundException("photo is required");
+			}
 
 			String path = activationProcessWritePlatformService.saveImage(ImageBase64Encoder);
 			Boolean status = activationProcessWritePlatformService.photoVerification(leaseDetails.getNIN(), path);
