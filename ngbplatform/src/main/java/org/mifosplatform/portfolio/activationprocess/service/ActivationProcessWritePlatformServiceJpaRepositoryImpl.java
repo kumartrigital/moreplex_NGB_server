@@ -1873,6 +1873,28 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		}
 		return result;
 	}
+	
+	
+	public ResponseEntity<String> BvnVerification(Long BVN, JSONObject requestPayload) {
+		ResponseEntity<String> result = null;
+
+		try {
+			RestTemplate restTemplate = new RestTemplate();
+
+			String VERIFY_ENDPOINT = "https://vapi.verifyme.ng/v1/verifications/identities/bvn/:ref" + BVN;
+			HttpHeaders headers = new HttpHeaders();
+			headers.add("Authorization",
+					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE");
+			headers.add("Content-Type", "application/json");
+			HttpEntity<String> request = new HttpEntity<>(requestPayload.toString(), headers);
+
+			result = restTemplate.exchange(VERIFY_ENDPOINT, HttpMethod.POST, request, String.class);
+		} catch (Exception e) {
+			throw new NINNOTVerificationException("NIN Id is Not verified");
+
+		}
+		return result;
+	}
 
 	@Override
 	public Boolean photoVerification(String NIN, String path) {
