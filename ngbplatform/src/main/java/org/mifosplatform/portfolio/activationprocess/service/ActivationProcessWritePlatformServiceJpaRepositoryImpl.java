@@ -84,6 +84,7 @@ import org.mifosplatform.organisation.voucher.domain.VoucherDetailsRepository;
 import org.mifosplatform.organisation.voucher.service.VoucherReadPlatformService;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
+import org.mifosplatform.portfolio.activationprocess.exception.BvnNotVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.ClientAlreadyCreatedException;
 import org.mifosplatform.portfolio.activationprocess.exception.LeaseDetailsNotFoundException;
 import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
@@ -2054,7 +2055,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			ResponseEntity<String> apiResponse = this.BvnVerification(Long.parseLong(leaseDetails.getNIN()),
 					requestPayload);
 			if (!apiResponse.getStatusCode().equals(HttpStatus.CREATED)) {
-				throw new NINNOTVerificationException("BVN Id is Not verified");
+				throw new BvnNotVerificationException("BVN Id is Not verified");
 			}
 			leaseDetails.setStatus("Payment_Pending");
 			leaseDetailsRepository.save(leaseDetails);
