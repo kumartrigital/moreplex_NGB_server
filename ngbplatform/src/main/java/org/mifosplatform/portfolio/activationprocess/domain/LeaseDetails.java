@@ -39,6 +39,9 @@ public class LeaseDetails {
 	@Column(name = "nin_number")
 	private String NIN;
 
+	@Column(name = "bvn_number")
+	private String BVN;
+
 	@Column(name = "city")
 	private String city;
 
@@ -127,6 +130,14 @@ public class LeaseDetails {
 		NIN = nIN;
 	}
 
+	public String getBVN() {
+		return BVN;
+	}
+
+	public void setBVN(String bVN) {
+		BVN = bVN;
+	}
+
 	public String getCity() {
 		return city;
 	}
@@ -192,13 +203,14 @@ public class LeaseDetails {
 	}
 
 	public LeaseDetails(Long officeId, String firstName, String lastName, String email, String mobileNumber, String nIN,
-			String city, String state, String country, String device, String voucher) {
+			String BVN, String city, String state, String country, String device, String voucher) {
 		this.officeId = officeId;
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.email = email;
 		this.mobileNumber = mobileNumber;
 		this.NIN = nIN;
+		this.BVN = BVN;
 		this.city = city;
 		this.state = state;
 		this.country = country;
@@ -216,15 +228,16 @@ public class LeaseDetails {
 		String lastName = command.stringValueOfParameterName("surname");
 		String email = command.stringValueOfParameterName("email");
 		String mobileNumber = command.stringValueOfParameterName("mobile");
-		String nIN = command.stringValueOfParameterName("NIN");
+		String NIN = command.stringValueOfParameterName("NIN");
+		String BVN = command.stringValueOfParameterName("BVN");
 		String city = command.stringValueOfParameterName("city");
 		String state = command.stringValueOfParameterName("state");
 		String country = command.stringValueOfParameterName("country");
 		String deviceId = command.stringValueOfParameterName("deviceId");
 		String voucherId = command.stringValueOfParameterName("voucherId");
 
-		return new LeaseDetails(officeId, firstName, lastName, email, mobileNumber, nIN, city, state, country, deviceId,
-				voucherId);
+		return new LeaseDetails(officeId, firstName, lastName, email, mobileNumber, NIN, BVN, city, state, country,
+				deviceId, voucherId);
 
 	}
 }

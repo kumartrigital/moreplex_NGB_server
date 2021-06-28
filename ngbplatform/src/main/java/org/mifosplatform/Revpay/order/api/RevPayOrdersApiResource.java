@@ -81,7 +81,8 @@ public class RevPayOrdersApiResource {
 			final ItemSaleAPiResource itemSaleAPiResource, final ItemDetailsRepository itemDetailsRepository,
 			final ItemSaleRepository itemSaleRepository, final MRNDetailsApiResource mRNDetailsApiResource,
 			final OfficePaymentsApiResource officePaymentsApiResource,
-			final ActivationProcessApiResource activationProcessApiResource, final LeaseDetailsRepository leaseDetailsRepository) {
+			final ActivationProcessApiResource activationProcessApiResource,
+			final LeaseDetailsRepository leaseDetailsRepository) {
 
 		this.toApiJsonSerializer = apiJsonSerializer;
 		this.apiRequestParameterHelper = apiRequestParameterHelper;
@@ -166,13 +167,15 @@ public class RevPayOrdersApiResource {
 			paymentGatewayRepository.save(revpayOrder);
 			JSONObject paymentJson = new JSONObject();
 			SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
-			
+
 			if (revpayOrder.getType().equalsIgnoreCase("LEASEVERIFICATION_Payment")) {
-				LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(revpayOrder.getDeviceId());
-			        leaseDetails.getStatus().equals("Payment_Pending");
+				LeaseDetails leaseDetails = leaseDetailsRepository
+						.findLeaseDetailsByMobileNo(revpayOrder.getDeviceId());
+
+				if (leaseDetails.getStatus().equals("Payment_Pending")) {
 					leaseDetails.setStatus("Registration_Pending");
 					leaseDetailsRepository.save(leaseDetails);
-					
+				}
 				try {
 					indexPath = new URI("https://billing.moreplextv.com/#/inventory/" + txref);
 				} catch (URISyntaxException e) {
@@ -181,7 +184,7 @@ public class RevPayOrdersApiResource {
 
 			}
 
-			if (revpayOrder.getType().equalsIgnoreCase("SETUPBOX_Payment")) {
+			else if (revpayOrder.getType().equalsIgnoreCase("SETUPBOX_Payment")) {
 				paymentJson.put("paymentCode", 23);
 				paymentJson.put("amountPaid", revpayOrder.getAmountPaid());
 				paymentJson.put("receiptNo", revpayOrder.getReceiptNo());
@@ -200,7 +203,7 @@ public class RevPayOrdersApiResource {
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
-             
+
 			}
 
 			if (revpayOrder.getType().equalsIgnoreCase("Activation_Payment")) {

@@ -1874,8 +1874,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		}
 		return result;
 	}
-	
-	
+
 	public ResponseEntity<String> BvnVerification(Long BVN, JSONObject requestPayload) {
 		ResponseEntity<String> result = null;
 
@@ -2039,16 +2038,28 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 				throw new NINNOTVerificationException("NIN Id is Not verified");
 			}
 
-			leaseDetails.setStatus("Payment_Pending");
+			leaseDetails.setStatus("BVN_Pending");
 			leaseDetailsRepository.save(leaseDetails);
 			return CommandProcessingResult.parsingResult("NIN verified");
-			
-		} else if (leaseDetails.getStatus().equals("Payment_Pending")) {
-			leaseDetails.setStatus("Registration_Pending");
+		} else if (leaseDetails.getStatus().equals("BVN_Pending")) {
+			JSONObject requestPayload = new JSONObject();
+			try {
+				requestPayload.put("firstname", leaseDetails.getFirstName());
+				requestPayload.put("lastname", leaseDetails.getLastName());
+				requestPayload.put("phone", leaseDetails.getMobileNumber());
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return new CommandProcessingResult(e.getLocalizedMessage());
+			}
+			ResponseEntity<String> apiResponse = this.BvnVerification(Long.parseLong(leaseDetails.getNIN()),
+					requestPayload);
+			if (!apiResponse.getStatusCode().equals(HttpStatus.CREATED)) {
+				throw new NINNOTVerificationException("BVN Id is Not verified");
+			}
+			leaseDetails.setStatus("Payment_Pending");
 			leaseDetailsRepository.save(leaseDetails);
-			return CommandProcessingResult.parsingResult("Registration_Pending");
+			return CommandProcessingResult.parsingResult("BVN verified");
 		}
-
 		else if (leaseDetails.getStatus().equals("Registration_Pending")) {
 
 			String result = command.stringValueOfParameterName("ActivationResult");
