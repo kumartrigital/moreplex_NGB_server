@@ -85,6 +85,26 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 						+ PaymentGateway.getPaymentId() + "/");
 			}
 
+			else if (type.equalsIgnoreCase("LEASEVERIFICATION_Payment")) {
+				PaymentGateway.setObsId(command.longValueOfParameterNamed("toOffice"));
+				PaymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
+				PaymentGateway.setPaymentId(getTxid());
+				PaymentGateway.setPartyId(PaymentGateway.getPaymentId());
+				PaymentGateway.setReceiptNo("RAVE_STB_" + PaymentGateway.getPaymentId());
+				PaymentGateway.setStatus("intiated");
+				PaymentGateway.setPaymentDate(new Date());
+				PaymentGateway.setSource("REVPAY");
+				PaymentGateway.setRemarks("NOTHING");
+				PaymentGateway.setType(type);
+				PaymentGateway.setDeviceId(command.stringValueOfParameterName("mobileNo"));
+				paymentGatewayRepository.save(PaymentGateway);
+				revorder = new JSONObject();
+				revorder.put("txid", PaymentGateway.getPaymentId());
+				revorder.put("revorder", "order created sucussfully");
+				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
+						+ PaymentGateway.getPaymentId() + "/");
+			}
+
 			else if (type.equalsIgnoreCase("Activation_Payment")) {
 				revorder = new JSONObject();
 
@@ -108,7 +128,6 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				JSONObject devicejson = new JSONObject();
 				JSONObject purchasePlanjson = new JSONObject();
 				JSONObject basePlanjson = new JSONObject();
-
 
 				activation.put("forename", command.stringValueOfParameterNamed("forename"));
 				activation.put("surname", command.stringValueOfParameterNamed("surname"));
@@ -151,7 +170,6 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				purchasePlanjson.put("planCode", "PURCHASE");
 				plans.add(basePlanjson);
 				plans.add(purchasePlanjson);
-			
 
 				activation.put("salutation", "Mr.");
 				activation.put("address", address);
@@ -161,7 +179,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				PaymentGateway.setType(type);
 				PaymentGateway.setReProcessDetail(activation.toString());
 				PaymentGateway.setDeviceId(itemDetails.getSerialNumber());
-				System.out.println("RevPayOrderWritePlatformServiceImpl.createOrder()"+activation.toString());
+				System.out.println("RevPayOrderWritePlatformServiceImpl.createOrder()" + activation.toString());
 				paymentGatewayRepository.save(PaymentGateway);
 				devices.clear();
 				plans.clear();
@@ -220,8 +238,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 			JSONObject revRequest = new JSONObject();
 			revRequest.put("txref", txid);
 			// FLWPUBK-acb0630ea1c150dabf363efa007d3a0b-X
-			 revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
-			//revRequest.put("SECKEY", "FLWSECK-05da041a69e8b6ac206ae74f8f7c4bd8-X");
+			revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
+			// revRequest.put("SECKEY", "FLWSECK-05da041a69e8b6ac206ae74f8f7c4bd8-X");
 
 			HttpEntity<String> request = new HttpEntity<>(revRequest.toString(), headers);
 			revResponse = rest.postForObject(VERIFY_ENDPOINT, request, String.class);

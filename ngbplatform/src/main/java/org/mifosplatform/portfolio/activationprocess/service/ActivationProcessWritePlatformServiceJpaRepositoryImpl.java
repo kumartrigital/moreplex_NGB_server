@@ -87,6 +87,7 @@ import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsReposito
 import org.mifosplatform.portfolio.activationprocess.exception.ClientAlreadyCreatedException;
 import org.mifosplatform.portfolio.activationprocess.exception.LeaseDetailsNotFoundException;
 import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
+import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberDuplicationException;
 import org.mifosplatform.portfolio.activationprocess.exception.NINNOTVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.OTPNOTVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.PhotoNotVerificationException;
@@ -1977,7 +1978,11 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 	public CommandProcessingResult createLeaseDetails(JsonCommand command) {
 		LeaseDetails details = new LeaseDetails();
 		try {
-
+			LeaseDetails leaseDetailscheck = leaseDetailsRepository
+					.findLeaseDetailsByMobileNo(command.stringValueOfParameterName("mobile"));
+			if (leaseDetailscheck != null) {
+				throw new MobileNumberDuplicationException(command.stringValueOfParameterNamed("mobile"));
+			}
 			if (command.stringValueOfParameterNamed("mobile").length() != 10) {
 				throw new MobileNumberLengthException(command.stringValueOfParameterNamed("mobile"));
 			}
@@ -2034,10 +2039,17 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 				throw new NINNOTVerificationException("NIN Id is Not verified");
 			}
 
-			leaseDetails.setStatus("Registration_Pending");
+			leaseDetails.setStatus("Payment_Pending");
 			leaseDetailsRepository.save(leaseDetails);
 			return CommandProcessingResult.parsingResult("NIN verified");
-		} else if (leaseDetails.getStatus().equals("Registration_Pending")) {
+			
+		} else if (leaseDetails.getStatus().equals("Payment_Pending")) {
+			leaseDetails.setStatus("Registration_Pending");
+			leaseDetailsRepository.save(leaseDetails);
+			return CommandProcessingResult.parsingResult("Registration_Pending");
+		}
+
+		else if (leaseDetails.getStatus().equals("Registration_Pending")) {
 
 			String result = command.stringValueOfParameterName("ActivationResult");
 

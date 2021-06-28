@@ -42,6 +42,8 @@ import org.mifosplatform.logistics.itemdetails.domain.ItemDetailsRepository;
 import org.mifosplatform.logistics.mrn.api.MRNDetailsApiResource;
 import org.mifosplatform.organisation.officepayments.api.OfficePaymentsApiResource;
 import org.mifosplatform.portfolio.activationprocess.api.ActivationProcessApiResource;
+import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
+import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -66,6 +68,7 @@ public class RevPayOrdersApiResource {
 	private final MRNDetailsApiResource mRNDetailsApiResource;
 	private final OfficePaymentsApiResource officePaymentsApiResource;
 	private final ActivationProcessApiResource activationProcessApiResource;
+	private final LeaseDetailsRepository leaseDetailsRepository;
 
 	@Autowired
 	public RevPayOrdersApiResource(final DefaultToApiJsonSerializer<RevpayOrder> apiJsonSerializer,
@@ -78,7 +81,7 @@ public class RevPayOrdersApiResource {
 			final ItemSaleAPiResource itemSaleAPiResource, final ItemDetailsRepository itemDetailsRepository,
 			final ItemSaleRepository itemSaleRepository, final MRNDetailsApiResource mRNDetailsApiResource,
 			final OfficePaymentsApiResource officePaymentsApiResource,
-			final ActivationProcessApiResource activationProcessApiResource) {
+			final ActivationProcessApiResource activationProcessApiResource, final LeaseDetailsRepository leaseDetailsRepository) {
 
 		this.toApiJsonSerializer = apiJsonSerializer;
 		this.apiRequestParameterHelper = apiRequestParameterHelper;
@@ -92,6 +95,7 @@ public class RevPayOrdersApiResource {
 		this.mRNDetailsApiResource = mRNDetailsApiResource;
 		this.officePaymentsApiResource = officePaymentsApiResource;
 		this.activationProcessApiResource = activationProcessApiResource;
+		this.leaseDetailsRepository = leaseDetailsRepository;
 
 	}
 
@@ -162,6 +166,20 @@ public class RevPayOrdersApiResource {
 			paymentGatewayRepository.save(revpayOrder);
 			JSONObject paymentJson = new JSONObject();
 			SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
+			
+			if (revpayOrder.getType().equalsIgnoreCase("LEASEVERIFICATION_Payment")) {
+				LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(revpayOrder.getDeviceId());
+			        leaseDetails.getStatus().equals("Payment_Pending");
+					leaseDetails.setStatus("Registration_Pending");
+					leaseDetailsRepository.save(leaseDetails);
+					
+				try {
+					indexPath = new URI("https://billing.moreplextv.com/#/inventory/" + txref);
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+
+			}
 
 			if (revpayOrder.getType().equalsIgnoreCase("SETUPBOX_Payment")) {
 				paymentJson.put("paymentCode", 23);
@@ -182,7 +200,7 @@ public class RevPayOrdersApiResource {
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
-
+             
 			}
 
 			if (revpayOrder.getType().equalsIgnoreCase("Activation_Payment")) {
