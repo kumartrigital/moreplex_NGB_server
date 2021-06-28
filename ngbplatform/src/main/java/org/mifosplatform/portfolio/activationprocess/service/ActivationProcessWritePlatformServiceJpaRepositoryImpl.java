@@ -1882,7 +1882,6 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 		try {
 			System.out.println("ActivationProcessWritePlatformServiceJpaRepositoryImpl.photoVerification()");
-			
 
 			RestTemplate restTemplate = new RestTemplate();
 			restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter());
@@ -1957,10 +1956,11 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 	public CommandProcessingResult createLeaseDetails(JsonCommand command) {
 		LeaseDetails details = new LeaseDetails();
 		try {
-			LeaseDetails leaseDetailscheck=	leaseDetailsRepository.findLeaseDetailsByMobileNo(command.stringValueOfParameterName("mobile"));
-if(leaseDetailscheck != null) {
-	throw new MobileNumberDuplicationException(command.stringValueOfParameterNamed("mobile"));
-}
+			LeaseDetails leaseDetailscheck = leaseDetailsRepository
+					.findLeaseDetailsByMobileNo(command.stringValueOfParameterName("mobile"));
+			if (leaseDetailscheck != null) {
+				throw new MobileNumberDuplicationException(command.stringValueOfParameterNamed("mobile"));
+			}
 			if (command.stringValueOfParameterNamed("mobile").length() != 10) {
 				throw new MobileNumberLengthException(command.stringValueOfParameterNamed("mobile"));
 			}
@@ -2017,10 +2017,17 @@ if(leaseDetailscheck != null) {
 				throw new NINNOTVerificationException("NIN Id is Not verified");
 			}
 
-			leaseDetails.setStatus("Registration_Pending");
+			leaseDetails.setStatus("Payment_Pending");
 			leaseDetailsRepository.save(leaseDetails);
 			return CommandProcessingResult.parsingResult("NIN verified");
-		} else if (leaseDetails.getStatus().equals("Registration_Pending")) {
+			
+		} else if (leaseDetails.getStatus().equals("Payment_Pending")) {
+			leaseDetails.setStatus("Registration_Pending");
+			leaseDetailsRepository.save(leaseDetails);
+			return CommandProcessingResult.parsingResult("Registration_Pending");
+		}
+
+		else if (leaseDetails.getStatus().equals("Registration_Pending")) {
 
 			String result = command.stringValueOfParameterName("ActivationResult");
 

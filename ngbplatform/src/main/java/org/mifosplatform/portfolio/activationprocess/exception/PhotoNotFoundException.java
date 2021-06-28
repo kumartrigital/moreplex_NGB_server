@@ -7,8 +7,8 @@ public class PhotoNotFoundException  extends AbstractPlatformDomainRuleException
 	
 	private static final long serialVersionUID = 1L;
 
-	public PhotoNotFoundException(String mobile) {
-		super("error.msg.photo", "Photo is required",mobile);
+	public PhotoNotFoundException(String image) {
+		super("error.msg.photo", "Photo is required",image);
 	}
 
 }
