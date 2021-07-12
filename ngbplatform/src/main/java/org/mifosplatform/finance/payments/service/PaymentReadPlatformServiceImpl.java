@@ -89,7 +89,7 @@ public class PaymentReadPlatformServiceImpl implements PaymentReadPlatformServic
 
 	@Override
 	public List<PaymentData> retrivePaymentsData(final Long clientId) {
-		final String sql = "select (select display_name from m_client where id = p.client_id) as clientName, (select code_value from m_code_value where id = p.paymode_id) as payMode, p.payment_date as paymentDate, p.amount_paid as amountPaid, p.is_deleted as isDeleted, p.bill_id as billNumber, p.receipt_no as receiptNo from b_payments p where p.client_id=?";
+		final String sql = "select (select display_name from m_client where id = p.client_id) as clientName, (select code_value from m_code_value where id = p.paymode_id) as payMode, p.payment_date as paymentDate, p.amount_paid as amountPaid, p.is_deleted as isDeleted, p.bill_id as billNumber, p.receipt_no as receiptNo,p.currency as currency from b_payments p where p.client_id=?";
 		final PaymentsMapper pm = new PaymentsMapper();
 		return jdbcTemplate.query(sql, pm, new Object[] { clientId });
 	}
@@ -104,7 +104,8 @@ public class PaymentReadPlatformServiceImpl implements PaymentReadPlatformServic
 			final Boolean isDeleted = rs.getBoolean("isDeleted");
 			final Long billNumber = rs.getLong("billNumber");
 			final String receiptNumber = rs.getString("receiptNo");
-			return new PaymentData(clientName, payMode, paymentDate, amountPaid, isDeleted, billNumber, receiptNumber);
+			final String currency = rs.getString("currency");
+			return new PaymentData(clientName, payMode, paymentDate, amountPaid, isDeleted, billNumber, receiptNumber,currency);
 		}
 	}
 
@@ -150,7 +151,7 @@ public class PaymentReadPlatformServiceImpl implements PaymentReadPlatformServic
 
 		public String schema() {
 			return "  p.id AS id,p.payment_date AS paymentdate,p.amount_paid AS amount,p.receipt_no AS recieptNo,p.amount_paid - (ifnull((SELECT SUM(amount)"
-					+ "  FROM b_credit_distribution WHERE payment_id = p.id),0)) AS availAmount FROM b_payments p left join b_credit_distribution cd on p.client_id = cd.client_id"
+					+ "  FROM b_credit_distribution WHERE payment_id = p.id),0)) AS availAmount,p.currency as currency FROM b_payments p left join b_credit_distribution cd on p.client_id = cd.client_id"
 					+ "  WHERE p.client_id =? AND p.invoice_id IS NULL GROUP BY p.id ";
 		}
 
@@ -162,8 +163,9 @@ public class PaymentReadPlatformServiceImpl implements PaymentReadPlatformServic
 			final BigDecimal amount = rs.getBigDecimal("amount");
 			final BigDecimal availAmount = rs.getBigDecimal("availAmount");
 			final String recieptNo = rs.getString("recieptNo");
+			final String currency=rs.getString("currency");
 
-			return new PaymentData(id, paymentdate, amount, recieptNo, availAmount);
+			return new PaymentData(id, paymentdate, amount, recieptNo, availAmount,currency);
 
 		}
 	}

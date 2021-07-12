@@ -34,7 +34,7 @@ public class PaymentData {
 	private String chequeNo;
 	private String branchName;
 	private String paymentType;
-	
+	private String currency;
 	
 	private String cancelRemark;
 
@@ -47,7 +47,7 @@ public class PaymentData {
 	}
 	
 	
-	public PaymentData(final String clientName, final String payMode,final LocalDate paymentDate, final BigDecimal amountPaid, final Boolean isDeleted, final Long billNumber, final String receiptNumber) {
+	public PaymentData(final String clientName, final String payMode,final LocalDate paymentDate, final BigDecimal amountPaid, final Boolean isDeleted, final Long billNumber, final String receiptNumber,final String currency) {
 		  this.clientName = clientName;
 		  this.payMode = payMode;
 		  this.paymentDate = paymentDate;
@@ -55,16 +55,18 @@ public class PaymentData {
 		  this.isDeleted = isDeleted;
 		  this.billNumber = billNumber;
 		  this.receiptNo = receiptNumber;
+		  this.currency=currency;
 		 }
 
 
-	public PaymentData(final Long id, final LocalDate paymentdate, final BigDecimal amount,final String recieptNo, final BigDecimal availAmount) {
+	public PaymentData(final Long id, final LocalDate paymentdate, final BigDecimal amount,final String recieptNo, final BigDecimal availAmount,final String currency) {
 	
 		this.id=id;
 		this.paymentDate=paymentdate;
 		this.amountPaid=amount;
 		this.receiptNo=recieptNo;
 		this.availAmount=availAmount;
+		this.currency=currency;
 	}
 
 
@@ -77,7 +79,7 @@ public class PaymentData {
     
 	public PaymentData(final LocalDate paymentdate,final String paymentCode,final BigDecimal amountPaid,
 			final String recieptNo,final Long clientPoId,final String bankName,final String chequeNo,
-			final String branchName,final String paymentType) {
+			final String branchName,final String paymentType,String currency) {
 	
 		this.paymentDate=paymentdate;
 		this.paymentCode=paymentCode;
@@ -88,6 +90,7 @@ public class PaymentData {
 		this.chequeNo=chequeNo;
 		this.branchName=branchName;
 		this.paymentType = paymentType;
+		this.currency=currency;
 	}
 	
 	
@@ -152,6 +155,9 @@ public class PaymentData {
 		return receiptNo;
 	}
 
+	public String getCurrency() {
+		return currency;
+	}
 
 	public Long getId() {
 		return id;
@@ -206,8 +212,8 @@ public class PaymentData {
 	}
 
 
-	public void setChequeNo(String chequeNo) {
-		this.chequeNo = chequeNo;
+	public void setCurrency(String currency) {
+		this.currency = currency;
 	}
 
 
@@ -220,7 +226,9 @@ public class PaymentData {
 		this.branchName = branchName;
 	}
 
-	
+	public void setChequeNo(String chequeNo) {
+		this.chequeNo = chequeNo;
+	}
 
 	public static PaymentData fromJsonToPaymentsCelcom(JsonCommand command) {
 		final LocalDate paymentDate = command.localDateValueOfParameterNamed("paymentDate");
@@ -232,8 +240,9 @@ public class PaymentData {
 		final String chequeNo = command.stringValueOfParameterNamed("chequeNo");
 		final String branchName = command.stringValueOfParameterNamed("branchName");
 		final String paymentType = command.stringValueOfParameterNamed("paymentType");
+		final String currency = command.stringValueOfParameterNamed("currency");
 		return new PaymentData(paymentDate, paymentCode, amountPaid, receiptNo, 
-				clientPoId,bankName,chequeNo,branchName,paymentType);
+				clientPoId,bankName,chequeNo,branchName,paymentType,currency);
 	}
 
 

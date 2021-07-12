@@ -191,6 +191,7 @@ public class PaymentWritePlatformServiceImpl implements PaymentWritePlatformServ
 			clientBalanceObject.put("currencyId",ClientBillProfileInfo.getBillCurrency());
 			clientBalanceObject.put("paymentType", "CREDIT");
 			clientBalanceObject.put("locale", "en");
+			clientBalanceObject.put("currency", payment.getCurrency());
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
@@ -271,7 +272,7 @@ public class PaymentWritePlatformServiceImpl implements PaymentWritePlatformServ
 			}
 			
            final Payment cancelPay=new Payment(payment.getClientId(), null, null, payment.getAmountPaid(), null, DateUtils.getLocalDateOfTenant(),payment.getRemarks(), 
-					   payment.getPaymodeId(),null,payment.getReceiptNo(),null,payment.isWalletPayment(),payment.getIsSubscriptionPayment(), payment.getId());
+					   payment.getPaymodeId(),null,payment.getReceiptNo(),null,payment.isWalletPayment(),payment.getIsSubscriptionPayment(), payment.getId(),payment.getCurrency());
 			cancelPay.cancelPayment(command);
 			this.paymentRepository.save(cancelPay);
 			payment.cancelPayment(command);
@@ -509,6 +510,7 @@ public class PaymentWritePlatformServiceImpl implements PaymentWritePlatformServ
 				paymentobject.addProperty("receiptNo", paypalEnquireyUpdate.getPaymentId());
 				paymentobject.addProperty("remarks", remarks);
 				paymentobject.addProperty("paymentCode", 27);
+				paymentobject.addProperty("currency", 1);
 				final String entityName = "PAYMENT";
 				
 				final JsonElement element1 = fromApiJsonHelper.parse(paymentobject.toString());
