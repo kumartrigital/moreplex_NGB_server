@@ -219,7 +219,12 @@ dependencies {
 			// https://mvnrepository.com/artifact/com.opencsv/opencsv
 			// https://mvnrepository.com/artifact/com.opencsv/opencsv
 			[	group: 'com.opencsv', name: 'opencsv', version: '5.1'],
-	
+			// https://mvnrepository.com/artifact/com.itextpdf/itextpdf
+			[ group: 'com.itextpdf', name: 'itextpdf', version: '5.5.13.2' ],
+			[ group: 'org.antlr', name: 'antlr-complete', version: '3.5.2' ],
+			[ group: 'com.itextpdf.tool', name: 'xmlworker', version: '5.5.13.2' ],
+			[ group: 'net.sourceforge.htmlcleaner', name: 'htmlcleaner', version: '2.24' ],
+
 
 			)
 
