@@ -22,6 +22,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.antlr.stringtemplate.StringTemplate;
+import org.antlr.stringtemplate.StringTemplateGroup;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 import org.json.JSONException;
@@ -355,7 +357,7 @@ public class ActivationProcessApiResource {
 		return this.toApiJsonSerializer.serialize(result);
 	}
 	
-	public ST getStringTemplate() {
+	public StringTemplate getStringTemplate() {
 	    final StringTemplateGroup group = new StringTemplateGroup("Generators");
 	    return group.getInstanceOf("agreement");
 	  }
@@ -368,7 +370,7 @@ public class ActivationProcessApiResource {
 	      
 	      LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNo);
 
-	      ST page = getStringTemplate();
+	      StringTemplate page = getStringTemplate();
 	      page.setAttribute("data",leaseDetails);
 	      
 	      String content = page.toString();
