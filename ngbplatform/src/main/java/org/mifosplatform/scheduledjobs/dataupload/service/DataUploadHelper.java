@@ -1621,6 +1621,7 @@ public class DataUploadHelper {
 			if(mobile.length()>10||mobile.length()<10)
 			{
 				clientObject.put("phone", "1234567890");
+				
 			}else {
 				clientObject.put("phone", currentLineData[2]);
 			}
@@ -1720,7 +1721,7 @@ public class DataUploadHelper {
 		//	CodeData codeData = this.codeReadPlatformService.retrieveCodeIdOnCodeNameAndCodeValue("Provisioning",
 					//currentLineData[6]);
 			//clientServiceDetailsObject.put("parameterValue", codeData.getId()); // Hardcoded for ABV
-			clientServiceDetailsObject.put("parameterValue", 4); // Hardcoded for ABV
+			clientServiceDetailsObject.put("parameterValue", 1); // Hardcoded for ABV
 
 			array.put(clientServiceDetailsObject);
 

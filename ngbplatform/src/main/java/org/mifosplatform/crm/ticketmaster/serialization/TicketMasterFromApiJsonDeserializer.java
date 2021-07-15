@@ -24,7 +24,7 @@ import com.google.gson.reflect.TypeToken;
 public class TicketMasterFromApiJsonDeserializer {
 	
 	private final Set<String> supportedParameters = new HashSet<String>(Arrays.asList("priority", "problemCode", "description", "assignedTo", "ticketDate", "ticketTime", "locale", "dateFormat",
-														"subCategory","sourceOfTicket", "dueTime", "ticketURL","status","resolutionDescription", "fileLocation","statusCode","teamCode","teamUserId","title"));
+														"type","subCategory","sourceOfTicket", "dueTime", "ticketURL","status","resolutionDescription", "fileLocation","statusCode","teamCode","teamUserId","title"));
 	private final FromJsonHelper fromApiJsonHelper;
 	
 	@Autowired

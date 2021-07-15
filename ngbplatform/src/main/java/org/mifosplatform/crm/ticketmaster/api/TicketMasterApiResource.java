@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -29,7 +28,6 @@ import org.mifosplatform.commands.domain.CommandWrapper;
 import org.mifosplatform.commands.service.CommandWrapperBuilder;
 import org.mifosplatform.commands.service.PortfolioCommandSourceWritePlatformService;
 import org.mifosplatform.crm.clientprospect.service.SearchSqlQuery;
-import org.mifosplatform.crm.ticketmaster.command.TicketMasterCommand;
 import org.mifosplatform.crm.ticketmaster.data.ClientTicketData;
 import org.mifosplatform.crm.ticketmaster.data.SubCategoryData;
 import org.mifosplatform.crm.ticketmaster.data.TicketMasterData;
@@ -40,7 +38,6 @@ import org.mifosplatform.crm.ticketmaster.service.TicketMasterReadPlatformServic
 import org.mifosplatform.crm.ticketmaster.service.TicketMasterWritePlatformService;
 import org.mifosplatform.crm.ticketmaster.ticketmapping.data.TicketTeamMappingData;
 import org.mifosplatform.crm.ticketmaster.ticketmapping.service.TicketMappingReadPlatformService;
-import org.mifosplatform.crm.ticketmaster.ticketteam.data.TicketTeamData;
 import org.mifosplatform.infrastructure.core.api.ApiConstants;
 import org.mifosplatform.infrastructure.core.api.ApiRequestParameterHelper;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
@@ -51,10 +48,8 @@ import org.mifosplatform.infrastructure.core.serialization.DefaultToApiJsonSeria
 import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.mifosplatform.infrastructure.core.service.FileUtils;
 import org.mifosplatform.infrastructure.core.service.Page;
-import org.mifosplatform.infrastructure.documentmanagement.command.DocumentCommand;
 import org.mifosplatform.infrastructure.documentmanagement.service.DocumentWritePlatformService;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
-import org.mifosplatform.organisation.channel.data.ChannelData;
 import org.mifosplatform.organisation.mcodevalues.api.CodeNameConstants;
 import org.mifosplatform.organisation.mcodevalues.data.MCodeData;
 import org.mifosplatform.organisation.mcodevalues.service.MCodeReadPlatformService;
@@ -256,11 +251,12 @@ public class TicketMasterApiResource {
 		public String assignedAllTickets(@Context final UriInfo uriInfo, @QueryParam("sqlSearch") final String sqlSearch,
 				@QueryParam("limit") final Integer limit, @QueryParam("offset") final Integer offset, @QueryParam("statusType") final String statusType,
 				@QueryParam("fromDate") final String fromDate,
-				@QueryParam("toDate") final String toDate){
+				@QueryParam("toDate") final String toDate,
+				@QueryParam("type") final String type){
 			
 			context.authenticatedUser().validateHasReadPermission(resourceNameForPermission);
 			final SearchSqlQuery searchTicketMaster = SearchSqlQuery.forSearch(sqlSearch, offset,limit );
-		    final Page<ClientTicketData> data = this.ticketMasterReadPlatformService.retrieveAssignedTicketsForNewClient(searchTicketMaster,statusType,fromDate,toDate);
+		    final Page<ClientTicketData> data = this.ticketMasterReadPlatformService.retrieveAssignedTicketsForNewClient(searchTicketMaster,statusType,fromDate,toDate,type);
 		    
 	        return this.clientToApiJsonSerializer.serialize(data);
 		}
@@ -530,6 +526,7 @@ public class TicketMasterApiResource {
 	        	}
 		            
 			} catch (Exception e) {
+				e.printStackTrace();
 				return null;
 			}
 			

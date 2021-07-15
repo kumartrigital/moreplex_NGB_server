@@ -137,47 +137,43 @@ public class RevPayOrdersApiResource {
 		String status = "successful";
 		String result = null;
 
-		String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
+		// String revpayStatus =
+		// revPayOrderWritePlatformService.revTransactionStatus(txref);
 		PaymentGateway revpayOrder = paymentGatewayRepository.findPaymentDetailsByPaymentId(txref.toString());
-		System.out.println("RevPayOrdersApiResource.GetcllBackRavePayOrder()");
-		org.json.JSONObject json;
+		// System.out.println("RevPayOrdersApiResource.GetcllBackRavePayOrder()");
+		// org.json.JSONObject json;
 
-		try {
-			json = new org.json.JSONObject(revpayStatus.toString());
-			org.json.JSONObject data = json.getJSONObject("data");
-			flwrefKey = data.getString("flwref");
-			status = data.getString("status");
-		} catch (JSONException e1) {
-			revpayOrder.setStatus("Transaction Id Not found");
-			revpayOrder.setPartyId(flwrefKey);
-			result = "Transaction Id Not found";
-			paymentGatewayRepository.save(revpayOrder);
-			e1.printStackTrace();
-		}
+		/*
+		 * try { json = new org.json.JSONObject(revpayStatus.toString());
+		 * org.json.JSONObject data = json.getJSONObject("data"); flwrefKey =
+		 * data.getString("flwref"); status = data.getString("status"); } catch
+		 * (JSONException e1) { revpayOrder.setStatus("Transaction Id Not found");
+		 * revpayOrder.setPartyId(flwrefKey); result = "Transaction Id Not found";
+		 * paymentGatewayRepository.save(revpayOrder); e1.printStackTrace(); }
+		 */
 
-		System.out.println("RevPayOrdersApiResource.GetcllBackRavePayOrder()");
 		String locale = "en";
 		String dateFormat = "dd MMMM yyyy";
 
 		if (status.equalsIgnoreCase("successful")) {
+
 			revpayOrder.setStatus("Success");
 			// revpayOrder.setPartyId(flwrefKey);
 			revpayOrder.setPartyId("test");
-
 			paymentGatewayRepository.save(revpayOrder);
 			JSONObject paymentJson = new JSONObject();
 			SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
-
 			if (revpayOrder.getType().equalsIgnoreCase("LEASEVERIFICATION_Payment")) {
 				LeaseDetails leaseDetails = leaseDetailsRepository
 						.findLeaseDetailsByMobileNo(revpayOrder.getDeviceId());
-
-				if (leaseDetails.getStatus().equals("Payment_Pending")) {
-					leaseDetails.setStatus("Registration_Pending");
+				if (leaseDetails.getStatus().equalsIgnoreCase("Payment_pending")) {
+					leaseDetails.setStatus("NIN_Pending");
 					leaseDetailsRepository.save(leaseDetails);
+				}else {
+					leaseDetails.setStatus("something went wrong");
 				}
 				try {
-					indexPath = new URI("https://billing.moreplextv.com/#/inventory/" + txref);
+					indexPath = new URI("https://52.22.65.59:8877/#/Registration/LeaseVerification/"+leaseDetails.getMobileNumber());
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
@@ -206,7 +202,7 @@ public class RevPayOrdersApiResource {
 
 			}
 
-			if (revpayOrder.getType().equalsIgnoreCase("Activation_Payment")) {
+			else if (revpayOrder.getType().equalsIgnoreCase("Activation_Payment")) {
 				String activationResponse = activationProcessApiResource
 						.createSimpleActivation(revpayOrder.getReProcessDetail());
 				paymentJson.put("clientId", revpayOrder.getReffernceId());

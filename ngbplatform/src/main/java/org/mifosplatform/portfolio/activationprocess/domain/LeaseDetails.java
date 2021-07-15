@@ -4,7 +4,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.Table;
 
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
@@ -65,6 +64,9 @@ public class LeaseDetails {
 
 	@Column(name = "image_path")
 	private String imagePath;
+
+	@Column(name = "image_verfication")
+	private String imageVerification;
 
 	public Long getId() {
 		return id;
@@ -202,15 +204,23 @@ public class LeaseDetails {
 		this.imagePath = imagePath;
 	}
 
+	public String getImageVerification() {
+		return imageVerification;
+	}
+
+	public void setImageVerification(String imageVerification) {
+		this.imageVerification = imageVerification;
+	}
+
 	public LeaseDetails(Long officeId, String firstName, String lastName, String email, String mobileNumber, String nIN,
-			String BVN, String city, String state, String country, String device, String voucher) {
+			String bVN, String city, String state, String country, String device, String voucher) {
 		this.officeId = officeId;
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.email = email;
 		this.mobileNumber = mobileNumber;
 		this.NIN = nIN;
-		this.BVN = BVN;
+		this.BVN = bVN;
 		this.city = city;
 		this.state = state;
 		this.country = country;
@@ -222,7 +232,6 @@ public class LeaseDetails {
 	}
 
 	public LeaseDetails fromjson(JsonCommand command) {
-
 		Long officeId = command.longValueOfParameterNamed("officeId");
 		String firstName = command.stringValueOfParameterName("forename");
 		String lastName = command.stringValueOfParameterName("surname");

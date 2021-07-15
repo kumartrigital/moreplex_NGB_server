@@ -92,6 +92,7 @@ import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberDupli
 import org.mifosplatform.portfolio.activationprocess.exception.NINNOTVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.OTPNOTVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.PhotoNotVerificationException;
+import org.mifosplatform.portfolio.activationprocess.exception.SomethingWentWrongException;
 import org.mifosplatform.portfolio.activationprocess.serialization.ActivationProcessCommandFromApiJsonDeserializer;
 import org.mifosplatform.portfolio.client.api.ClientsApiResource;
 import org.mifosplatform.portfolio.client.data.ClientBillInfoData;
@@ -140,6 +141,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.JsonArray;
@@ -507,13 +509,17 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			logger.info("ActivationProcessWritePlatformServiceJpaRepositoryImpl.createSimpleActivation() ending");
 			// condition to avoid first month lease charge for newly activating customers by
 			// crediting after deduction
-			if (null != leaseChargeMonthlyConfiguration && leaseChargeMonthlyConfiguration.isEnabled()) {
-				if (leasePlanCode != null && leasePlanCode.equalsIgnoreCase(object.getString("leaseplanCode")))
-					prepareClientBalanceObject(clientId, object.getLong("leaseplanPrice"));
-				if (null != basePackCode && basePackCode.equalsIgnoreCase(object.getString("basepackplancode")))
-					prepareClientBalanceObject(clientId, object.getLong("baseplanPrice"));
-
-			}
+			/*
+			 * if (null != leaseChargeMonthlyConfiguration &&
+			 * leaseChargeMonthlyConfiguration.isEnabled()) { if (leasePlanCode != null &&
+			 * leasePlanCode.equalsIgnoreCase(object.getString("leaseplanCode")))
+			 * prepareClientBalanceObject(clientId, object.getLong("leaseplanPrice")); if
+			 * (null != basePackCode &&
+			 * basePackCode.equalsIgnoreCase(object.getString("basepackplancode")))
+			 * prepareClientBalanceObject(clientId, object.getLong("baseplanPrice"));
+			 * 
+			 * }
+			 */
 			return result;
 		} catch (DataIntegrityViolationException dve) {
 			handleDataIntegrityIssues(newcommand, dve);
@@ -620,13 +626,15 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 						null, null, null, null, null, null);
 				planCode = deviceComm.stringValueOfParameterName("planCode");
 
-				if (null != leaseChargeMonthlyConfiguration && leaseChargeMonthlyConfiguration.isEnabled()) {
-					object = new JSONObject(leaseChargeMonthlyConfiguration.getValue());
-					if (planCode.equalsIgnoreCase(object.getString("leaseplanCode")))
-						leasePlanCode = planCode;
-					if (planCode.equalsIgnoreCase(object.getString("basepackplancode")))
-						basePackCode = planCode;
-				}
+				/*
+				 * if (null != leaseChargeMonthlyConfiguration &&
+				 * leaseChargeMonthlyConfiguration.isEnabled()) { object = new
+				 * JSONObject(leaseChargeMonthlyConfiguration.getValue()); if
+				 * (planCode.equalsIgnoreCase(object.getString("leaseplanCode"))) leasePlanCode
+				 * = planCode; if
+				 * (planCode.equalsIgnoreCase(object.getString("basepackplancode")))
+				 * basePackCode = planCode; }
+				 */
 
 				PlanData planData1 = planReadPlatformService.retrivePlanByPlanCode(planCode);
 
@@ -1882,16 +1890,15 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		try {
 			RestTemplate restTemplate = new RestTemplate();
 
-			String VERIFY_ENDPOINT = "https://vapi.verifyme.ng/v1/verifications/identities/bvn/:ref" + BVN;
+			String VERIFY_ENDPOINT = "https://vapi.verifyme.ng/v1/verifications/identities/bvn/" + BVN;
 			HttpHeaders headers = new HttpHeaders();
 			headers.add("Authorization",
 					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE");
 			headers.add("Content-Type", "application/json");
 			HttpEntity<String> request = new HttpEntity<>(requestPayload.toString(), headers);
-
 			result = restTemplate.exchange(VERIFY_ENDPOINT, HttpMethod.POST, request, String.class);
 		} catch (Exception e) {
-			throw new NINNOTVerificationException("NIN Id is Not verified");
+			throw new BvnNotVerificationException("BVN Id is Not verified");
 
 		}
 		return result;
@@ -1917,7 +1924,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE");
 
 			MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
-			params.add("photo", new FileSystemResource(path));
+			params.add("photoUrl", path);
 			params.add("idType", "nin");
 			params.add("idNumber", NIN);
 
@@ -1945,16 +1952,20 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		return match;
 	}
 
+	@Override
 	public ResponseEntity<String> OTP_MESSAGE(String mobileNo, String Otp) {
 		ResponseEntity<String> result = null;
 
 		try {
 			RestTemplate restTemplate = new RestTemplate();
 
-			String VERIFY_ENDPOINT = "https://termii.com/api/sms/send";
+			String OTP_ENDPOINT = "https://termii.com/api/sms/send";
 			HttpHeaders headers = new HttpHeaders();
-			headers.add("Content-Type", "application/json");
 
+			headers.add("Content-Type", "application/json");
+			headers.add("Cookie", "termii-sms=64Eq2KHTk3xNkRKHRaxrWA5WbfBp4lMNxHpMcx4Y");
+
+			System.out.println(OTP_ENDPOINT);
 			JSONObject requestpayload = new JSONObject();
 			requestpayload.put("to", "234" + mobileNo);
 			requestpayload.put("from", "Moreplex tv");
@@ -1964,9 +1975,16 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			requestpayload.put("api_key", "TLISRdXrYknFK30dLcvfmtqGTdXHozF1QY0hhAe1JBcJDqRLr2Mwej3Q5We7J1");
 
 			HttpEntity<String> request = new HttpEntity<>(requestpayload.toString(), headers);
+			System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()");
+			result = restTemplate.postForEntity(OTP_ENDPOINT, request, String.class);
+			System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()" + result);
+		} catch (HttpClientErrorException e) {
+			e.printStackTrace();
+			System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()" + result);
+			throw new NINNOTVerificationException("something went wrong " + e.getLocalizedMessage());
 
-			result = restTemplate.exchange(VERIFY_ENDPOINT, HttpMethod.POST, request, String.class);
 		} catch (Exception e) {
+			System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()" + result);
 			e.printStackTrace();
 			throw new NINNOTVerificationException("something went wrong " + e.getLocalizedMessage());
 
@@ -1981,11 +1999,12 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			LeaseDetails leaseDetailscheck = leaseDetailsRepository
 					.findLeaseDetailsByMobileNo(command.stringValueOfParameterName("mobile"));
 			if (leaseDetailscheck != null) {
-				throw new MobileNumberDuplicationException(command.stringValueOfParameterNamed("mobile"));
+				throw new MobileNumberDuplicationException("Mobile Number Not Found ");
 			}
 			if (command.stringValueOfParameterNamed("mobile").length() != 10) {
 				throw new MobileNumberLengthException(command.stringValueOfParameterNamed("mobile"));
 			}
+
 			LeaseDetails leaseDetails = details.fromjson(command);
 			String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
 			leaseDetails.setStatus("Otp_Pending");
@@ -2015,15 +2034,13 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 		if (leaseDetails.getStatus().equals("Otp_Pending")) {
 			if (otp.equals(leaseDetails.getOtp())) {
-				leaseDetails.setStatus("NIN_Pending");
+				leaseDetails.setStatus("Payment_pending");
 				leaseDetailsRepository.save(leaseDetails);
 			} else {
 				throw new OTPNOTVerificationException("OTP is Not verified");
 			}
 			return CommandProcessingResult.parsingResult("otp verified");
-
 		} else if (leaseDetails.getStatus().equals("NIN_Pending")) {
-
 			JSONObject requestPayload = new JSONObject();
 			try {
 				requestPayload.put("firstname", leaseDetails.getFirstName());
@@ -2039,32 +2056,26 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 				throw new NINNOTVerificationException("NIN Id is Not verified");
 			}
 
-			leaseDetails.setStatus("BVN_Pending");
+			leaseDetails.setStatus("Photo_Verification_Pending");
 			leaseDetailsRepository.save(leaseDetails);
 			return CommandProcessingResult.parsingResult("NIN verified");
-		} else if (leaseDetails.getStatus().equals("BVN_Pending")) {
-			JSONObject requestPayload = new JSONObject();
-			try {
-				requestPayload.put("firstname", leaseDetails.getFirstName());
-				requestPayload.put("lastname", leaseDetails.getLastName());
-				requestPayload.put("phone", leaseDetails.getMobileNumber());
-			} catch (JSONException e) {
-				e.printStackTrace();
-				return new CommandProcessingResult(e.getLocalizedMessage());
+		} else if (leaseDetails.getStatus().equals("Photo_Verification_Pending")) {
+			String conformation = command.stringValueOfParameterName("conformation");
+			if (conformation == null) {
+				Boolean status = this.photoVerification(leaseDetails.getNIN(), leaseDetails.getImagePath());
+				if (status == false) {
+					throw new PhotoNotVerificationException("photo Not Verified");
+				}
+				leaseDetails.setImageVerification("API");
+			} else {
+				leaseDetails.setImageVerification("manual");
 			}
-			ResponseEntity<String> apiResponse = this.BvnVerification(Long.parseLong(leaseDetails.getNIN()),
-					requestPayload);
-			if (!apiResponse.getStatusCode().equals(HttpStatus.CREATED)) {
-				throw new BvnNotVerificationException("BVN Id is Not verified");
-			}
-			leaseDetails.setStatus("Payment_Pending");
+			leaseDetails.setStatus("Registration_Pending");
 			leaseDetailsRepository.save(leaseDetails);
-			return CommandProcessingResult.parsingResult("BVN verified");
-		}
-		else if (leaseDetails.getStatus().equals("Registration_Pending")) {
 
+			return CommandProcessingResult.parsingResult(leaseDetails);
+		} else if (leaseDetails.getStatus().equals("Registration_Pending")) {
 			String result = command.stringValueOfParameterName("ActivationResult");
-
 			if (result.equalsIgnoreCase("Success")) {
 				String deviceId = command.stringValueOfParameterName("deviceId");
 				String voucherId = command.stringValueOfParameterName("voucherId");
@@ -2076,15 +2087,13 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 				leaseDetails.setStatus("Registration_Failed");
 			}
 			leaseDetailsRepository.save(leaseDetails);
-
 			return CommandProcessingResult.parsingResult(leaseDetails);
 		} else if (leaseDetails.getStatus().equals("Registration_Success")) {
 			return CommandProcessingResult.parsingResult(leaseDetails);
+		} else {
+			throw new SomethingWentWrongException("something went wrong please contact support team");
 		}
 
-		else {
-			return new CommandProcessingResult(Long.valueOf(-1));
-		}
 	}
 
 	@Override
@@ -2100,7 +2109,15 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 			String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
 			leaseDetails.setOtp(otp);
-			// this.OTP_MESSAGE(details.getMobileNumber(), otp);
+			try {
+				ResponseEntity<String> result = this.OTP_MESSAGE(leaseDetails.getMobileNumber(), otp);
+
+				if (!result.getStatusCode().equals(HttpStatus.OK)) {
+					throw new OTPNOTVerificationException(result.getBody());
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			leaseDetailsRepository.saveAndFlush(leaseDetails);
 			return CommandProcessingResult.parsingResult(leaseDetails);
 
@@ -2130,7 +2147,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		String currentDirectory = System.getProperty("user.dir");
 		currentDirectory = currentDirectory.substring(0, currentDirectory.lastIndexOf("/"));
 
-		String path = currentDirectory + "/Verification_Images/leaseImage" + this.OTP() + extension;
+		String uniqueNumber = this.OTP();
+		String path = currentDirectory + "/webapps/Verification_Images/leaseImage" + uniqueNumber + extension;
 		File file = new File(path);
 		try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file))) {
 			outputStream.write(data);
@@ -2138,7 +2156,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return path;
+		String imagePath = "https://52.22.65.59:8877/Verification_Images/leaseImage" + uniqueNumber + extension;
+		return imagePath;
 	}
 
 	public String OTP() {
@@ -2151,4 +2170,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		return otp.toString();
 	}
 
+	public static void main(String args[]) {
+		ActivationProcessWritePlatformService.OTP_MESSAGEs("8135742906", "123456");
+	}
 }

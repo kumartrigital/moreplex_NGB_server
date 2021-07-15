@@ -91,6 +91,9 @@ public class OfficeTicket {
 
 	@Column(name = "is_escalated")
 	private char isescalated ;
+	
+	@Column(name = "type")
+	private String type;
 
 	public OfficeTicket() {
 		
@@ -113,6 +116,8 @@ public class OfficeTicket {
 		final String sourceOfTicket = command.stringValueOfParameterNamed("sourceOfTicket");
 		final String dueDate = command.stringValueOfParameterNamed("dueTime");
 		final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		final String type = command.stringValueOfParameterNamed("type");
+
 		Date dueTime;
 		if(dueDate.equalsIgnoreCase("")){
 				dueTime=null;
@@ -128,7 +133,7 @@ public class OfficeTicket {
 		
 		
 		return new OfficeTicket(clientId, priority,ticketDate, problemCode,description,statusCode, null, 
-					assignedTo, null, null, null, sourceOfTicket, dueTime,subCategory,ticketno,title);
+					assignedTo, null, null, null, sourceOfTicket, dueTime,subCategory,ticketno,title,type);
 	}
 
 	public OfficeTicket(final Long statusCode, final Long assignedTo) {
@@ -151,7 +156,7 @@ public class OfficeTicket {
 	public OfficeTicket(final Long officeId, final String priority, final Date ticketDate, final Integer problemCode,
 			final String description, final String status, final String resolutionDescription, 
 			final Long assignedTo, final Long statusCode, final Date createdDate, final Integer createdbyId,
-			final String sourceOfTicket, final Date dueTime, final String subCategory,final String ticketno,final String title) {
+			final String sourceOfTicket, final Date dueTime, final String subCategory,final String ticketno,final String title,String type) {
 		
 		this.officeId = officeId;
 		this.priority = priority;
@@ -173,6 +178,7 @@ public class OfficeTicket {
 		this.ticketno=ticketno;
 		this.title=title;
 		this.isescalated='0';
+		this.type = type;
 		
 	}
 

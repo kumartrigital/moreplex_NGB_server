@@ -2,6 +2,7 @@ package org.mifosplatform.portfolio.activationprocess.api;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -14,6 +15,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.json.JSONException;
@@ -28,27 +30,20 @@ import org.mifosplatform.logistics.itemdetails.service.ItemDetailsReadPlatformSe
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
 import org.mifosplatform.portfolio.activationprocess.exception.LeaseDetailsNotFoundException;
+import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberDuplicationException;
 import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
+import org.mifosplatform.portfolio.activationprocess.exception.OTPNOTVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.PhotoNotFoundException;
-import org.mifosplatform.portfolio.activationprocess.exception.PhotoNotVerificationException;
 import org.mifosplatform.portfolio.activationprocess.service.ActivationProcessWritePlatformService;
-import org.mifosplatform.portfolio.activationprocess.service.ActivationProcessWritePlatformServiceJpaRepositoryImpl;
 import org.mifosplatform.portfolio.client.data.ClientData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 @Path("/activationprocess")
 @Component
@@ -224,38 +219,28 @@ public class ActivationProcessApiResource {
 
 		return this.toApiJsonSerializer.serialize(result);
 	}
-	/*
-	 * @POST
-	 * 
-	 * @Path("lease")
-	 * 
-	 * @Consumes({ MediaType.APPLICATION_JSON })
-	 * 
-	 * @Produces({ MediaType.APPLICATION_JSON }) public String
-	 * LeaseActivations(final String apiRequestBodyAsJson) {
-	 * 
-	 * final CommandWrapper commandRequest = new
-	 * CommandWrapperBuilder().leaseActivation()
-	 * .withJson(apiRequestBodyAsJson).build(); // final CommandProcessingResult
-	 * result =
-	 * this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-	 * return this.toApiJsonSerializer.serialize(result); }
-	 */
 
 	@POST
 	@Path("lease")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
-	public String LeaseActivations(final String apiRequestBodyAsJson) {
+	public Response LeaseActivations(final String apiRequestBodyAsJson) {
 		LeaseDetails leaseDetails = new LeaseDetails();
+		HashMap<String, String> response = new HashMap<String, String>();
 
 		try {
 
 			JSONObject requestPayload = new JSONObject(apiRequestBodyAsJson);
 			String mobile = requestPayload.getString("mobile");
+			LeaseDetails leaseDetailscheck = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobile);
 
+			if (leaseDetailscheck != null) {
+				response.put("message", "Mobile Number Alredy present");
+				return Response.status(400).entity(response).build();
+			}
 			if (mobile.length() != 10) {
-				throw new MobileNumberLengthException(mobile);
+				response.put("message", "Mobile Number less than 10 Digits");
+				return Response.status(400).entity(response).build();
 			}
 
 			leaseDetails.setOfficeId(requestPayload.getLong("officeId"));
@@ -263,9 +248,10 @@ public class ActivationProcessApiResource {
 			leaseDetails.setLastName(requestPayload.getString("surname"));
 			leaseDetails.setEmail(requestPayload.getString("email"));
 			leaseDetails.setMobileNumber(requestPayload.getString("mobile"));
-			leaseDetails.setNIN(requestPayload.getString("NIN"));
-			leaseDetails.setCity(requestPayload.getString("city"));
 
+			leaseDetails.setNIN(requestPayload.getString("NIN"));
+			// leaseDetails.setBVN(requestPayload.getString("BVN"));
+			leaseDetails.setCity(requestPayload.getString("city"));
 			leaseDetails.setState(requestPayload.getString("state"));
 			leaseDetails.setCountry(requestPayload.getString("country"));
 
@@ -273,31 +259,38 @@ public class ActivationProcessApiResource {
 			leaseDetails.setStatus("Otp_Pending");
 			leaseDetails.setOtp(otp);
 			String ImageBase64Encoder = requestPayload.getString("image");
-			
-			if(ImageBase64Encoder == null) {
-				throw new PhotoNotFoundException("photo is required");
+			if (ImageBase64Encoder == null) {
+				response.put("message", "Image is Required");
+				return Response.status(400).entity(response).build();
 			}
-
 			String path = activationProcessWritePlatformService.saveImage(ImageBase64Encoder);
-			Boolean status = activationProcessWritePlatformService.photoVerification(leaseDetails.getNIN(), path);
-
-			if (status == false) {
-				throw new PhotoNotVerificationException("photo Not Verified");
-			}
-
 			leaseDetails.setImagePath(path);
+			try {
+				ResponseEntity<String> result = activationProcessWritePlatformService
+						.OTP_MESSAGE(leaseDetails.getMobileNumber(), otp);
 
-			// this.OTP_MESSAGE(details.getMobileNumber(), otp);
+				if (!result.getStatusCode().equals(HttpStatus.OK)) {
+
+					return Response.status(400).entity(result.getBody()).build();
+				}
+			} catch (Exception e) {
+				response.put("message", "Please Check Your Mobile Number");
+				return Response.status(400).entity(response).build();
+			}
 			leaseDetailsRepository.saveAndFlush(leaseDetails);
 
 		} catch (JSONException e) {
 			e.printStackTrace();
-			return this.toApiJsonSerializer.serialize(e.getLocalizedMessage());
+			response.put("message", "Mobile Number less than 10 Digits");
+
+			return Response.status(500).entity(response).build();
 		} catch (Exception e) {
 			e.printStackTrace();
-			return this.toApiJsonSerializer.serialize(e.getLocalizedMessage());
+			response.put("message", "Mobile Number less than 10 Digits");
+
+			return Response.status(500).entity(response).build();
 		}
-		return this.toApiJsonSerializer.serialize(leaseDetails);
+		return Response.status(200).entity(leaseDetails).build();
 
 	}
 
@@ -339,5 +332,7 @@ public class ActivationProcessApiResource {
 		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 		return this.toApiJsonSerializer.serialize(result);
 	}
+	
+
 
 }

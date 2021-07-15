@@ -23,6 +23,7 @@ public class ClientTicketData {
 	private String managerEmail;
 	private Long escalation;
 	private String ticketNo;
+	private String type;
 	
 	public ClientTicketData(long id, String status, long escalation, String managerName, String managerEmail, String ticketNo , LocalDate ticketDate){
 		this.id = id;
@@ -60,7 +61,7 @@ public class ClientTicketData {
 	}
 	public ClientTicketData(final Long id, final String priority, final String status, final Long assignedTo, final LocalDate ticketDate,
 			final String lastComment, final String problemDescription, final String userName, final Long clientId,
-			final String timeElapsed, final String clientName, final String createUser, final String closedByuser) {
+			final String timeElapsed, final String clientName, final String createUser, final String closedByuser ,String type) {
 	
 		this.id = id;
 		this.priority = priority;
@@ -75,6 +76,7 @@ public class ClientTicketData {
 		this.clientName = clientName;
 		this.createUser = createUser;
 		this.closedByuser = closedByuser;
+		this.type  =  type;
 	}
 
 	/**

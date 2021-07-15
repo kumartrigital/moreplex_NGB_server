@@ -191,7 +191,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 
 			}
 
-			else {
+			else if (type.equalsIgnoreCase("redemption")) {
 				PaymentGateway.setDeviceId(command.stringValueOfParameterName("stbNo"));
 				PaymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
 				PaymentGateway.setPaymentId(getTxid());
@@ -211,6 +211,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
 						+ PaymentGateway.getPaymentId() + "/");
 			}
+
 			return new CommandProcessingResult(revorder);
 
 		} catch (Exception e) {

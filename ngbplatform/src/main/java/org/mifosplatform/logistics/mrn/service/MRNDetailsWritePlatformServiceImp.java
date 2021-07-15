@@ -210,7 +210,8 @@ public class MRNDetailsWritePlatformServiceImp implements MRNDetailsWritePlatfor
 
 			final Long itemId = command.longValueOfParameterNamed("itemId");
 			final String serialNumber = command.stringValueOfParameterNamed("serialNumber");
-			ItemSale mrnDetails = itemSaleRepository.findOne(itemId);
+			final ItemSale itemSale = itemSaleRepository.findOne(itemId);
+
 			final List<String> serialNumbers = mrnDetailsReadPlatformService.retriveSerialNumbersForItems(itemId,
 					serialNumber);
 			if (serialNumbers == null || serialNumbers.isEmpty()) {
@@ -218,29 +219,31 @@ public class MRNDetailsWritePlatformServiceImp implements MRNDetailsWritePlatfor
 			}
 
 			final ItemDetails details = inventoryItemDetailsRepository.getInventoryItemDetailBySerialNum(serialNumber);
-			details.setOfficeId(mrnDetails.getPurchaseBy());
+			details.setOfficeId(itemSale.getPurchaseBy());
 			details.setItemsaleId(itemId);
 
-			if (mrnDetails.getReceivedQuantity() < mrnDetails.getOrderQuantity()) {
-				mrnDetails.setReceivedQuantity(mrnDetails.getReceivedQuantity() + 1);
-				mrnDetails.setStatus("Pending");
+			if (itemSale.getReceivedQuantity() < itemSale.getOrderQuantity()) {
+				itemSale.setReceivedQuantity(itemSale.getReceivedQuantity() + 1);
+				itemSale.setStatus("Pending");
 
-			} else if (mrnDetails.getReceivedQuantity().equals(mrnDetails.getOrderQuantity())) {
+			} else if (itemSale.getReceivedQuantity().equals(itemSale.getOrderQuantity())) {
 				throw new PlatformDataIntegrityException("received.quantity.is.full", "received.quantity.is.full",
 						"received.quantity.is.full");
 			}
 
 			InventoryTransactionHistory transactionHistory = InventoryTransactionHistory.logTransaction(
-					DateUtils.getDateOfTenant(), itemId, "Move ItemSale", serialNumber, mrnDetails.getItemId(),
-					mrnDetails.getPurchaseFrom(), mrnDetails.getPurchaseBy());
+					DateUtils.getDateOfTenant(), itemId, "Move ItemSale", serialNumber, itemSale.getItemId(),
+					itemSale.getPurchaseFrom(), itemSale.getPurchaseBy());
 
-			details.setOfficeId(mrnDetails.getPurchaseBy());
+			details.setOfficeId(itemSale.getPurchaseBy());
 			this.inventoryItemDetailsRepository.save(details);
 			this.inventoryTransactionHistoryJpaRepository.save(transactionHistory);
-			if (mrnDetails.getOrderQuantity().equals(mrnDetails.getReceivedQuantity())) {
-				mrnDetails.setStatus("Completed");
+			if (itemSale.getOrderQuantity().equals(itemSale.getReceivedQuantity())) {
+				itemSale.setStatus("Completed");
 			}
-			this.itemSaleRepository.save(mrnDetails);
+			// itemSaleRepository.save(itemSale);
+
+			itemSaleRepository.saveDetails(itemSale.getReceivedQuantity(), itemSale.getStatus(), itemSale.getItemId());
 
 			return new CommandProcessingResultBuilder().withEntityId(transactionHistory.getId()).build();
 		} catch (DataIntegrityViolationException dve) {

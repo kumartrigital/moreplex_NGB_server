@@ -92,9 +92,10 @@ public class Plan{
 	@Column(name = "plan_poid")
 	private Long planPoid;
 	
-	
+	@Column(name = "is_advance", nullable = false)
+	private char isAdvance='N';
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "duration",nullable = true)	
     private Contract duration;
 
@@ -104,7 +105,7 @@ public class Plan{
 
 	public Plan(final String code, final String description,final LocalDate start_date, final LocalDate endDate,
 			final Long bill_rule, final Long status,final List<PlanDetails> details,final String provisioingSystem,
-			final boolean isPrepaid,final boolean allowTopup,final boolean isHwReq, final Long planType,final String currencyId) {
+			final boolean isPrepaid,final boolean allowTopup,final boolean isHwReq, final Long planType,final String currencyId,final boolean isAdvance) {
 			
 				this.planCode = code;
 				this.description = description;
@@ -119,6 +120,7 @@ public class Plan{
 				this.isHwReq=isHwReq?'Y':'N';
 				this.planType=planType;
 				this.currencyId=currencyId;
+				this.isAdvance = isAdvance?'Y':'N';
 				
 		}
 	public Plan(final String code, final String description,final Date start_date, final Date endDate,
@@ -359,7 +361,9 @@ public class Plan{
         }
         
         
-   
+        final boolean isAdvance=command.booleanPrimitiveValueOfParameterNamed("isAdvance");
+		final char isAdvanceParamName =isAdvance?'Y':'N';
+		this.isAdvance=isAdvanceParamName;
         /*final String durationParamName = "duration";
         final String newValue = command.stringValueOfParameterNamed(durationParamName);
         if(this.duration ==  null){
@@ -399,7 +403,8 @@ public class Plan{
 		final boolean isHwReq=command.booleanPrimitiveValueOfParameterNamed("isHwReq");
 		final Long planType=command.longValueOfParameterNamed("planType");
 		final String currencyId = command.stringValueOfParameterNamed("currencyId");
-		return new Plan(planCode,planDescription,startDate,endDate,billRule,status,null,provisioingSystem,isPrepaid,allowTopup,isHwReq,planType,currencyId);
+		final boolean isAdvance=command.booleanPrimitiveValueOfParameterNamed("isAdvance");
+		return new Plan(planCode,planDescription,startDate,endDate,billRule,status,null,provisioingSystem,isPrepaid,allowTopup,isHwReq,planType,currencyId,isAdvance);
 	}
 
 	/**
@@ -445,7 +450,9 @@ public class Plan{
 		this.planDetails = planDetails;
 	}
 	
-
+	public char getIsAdvance() {
+		return isAdvance;
+	}
 
 	public Set<PlanDetails> updatePlanDetails(Set<PlanDetails> planDetailsSet) {
 		Set<PlanDetails>  planDetailsUpdateSet = null;

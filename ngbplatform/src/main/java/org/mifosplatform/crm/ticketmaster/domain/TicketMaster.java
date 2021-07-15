@@ -88,6 +88,9 @@ public class TicketMaster {
 	@Column(name = "team_user_id")
 	private Long teamUserId;
 
+	@Column(name = "type")
+	private String type;
+
 	
 	public TicketMaster() {
 		
@@ -118,11 +121,11 @@ public class TicketMaster {
 		final String subCategory = command.stringValueOfParameterNamed("subCategory");
 		final String teamCode = command.stringValueOfParameterNamed("teamCode");
 		final Long teamUserId = command.longValueOfParameterNamed("teamUserId");
-		
-		
+		final String type = command.stringValueOfParameterName("type");
+
 		
 		return new TicketMaster(clientId, priority,ticketDate, problemCode,description,statusCode, null, 
-					assignedTo, null, null, null, sourceOfTicket, dueTime,subCategory,teamCode,teamUserId);
+					assignedTo, null, null, null, sourceOfTicket, dueTime,subCategory,teamCode,teamUserId,type);
 	}
 
 	public TicketMaster(final Long statusCode, final Long assignedTo) {
@@ -145,7 +148,7 @@ public class TicketMaster {
 	public TicketMaster(final Long clientId, final String priority, final Date ticketDate, final Integer problemCode,
 			final String description, final String status, final String resolutionDescription, 
 			final Long assignedTo, final Long statusCode, final Date createdDate, final Integer createdbyId,
-			final String sourceOfTicket, final Date dueTime, final String subCategory,final String teamCode,final Long teamUserId) {
+			final String sourceOfTicket, final Date dueTime, final String subCategory,final String teamCode,final Long teamUserId,String type ) {
 		
 		this.clientId = clientId;
 		this.priority = priority;
@@ -164,6 +167,8 @@ public class TicketMaster {
 		this.subCategory=subCategory;
 		this.teamCode = teamCode;
 		this.teamUserId=teamUserId;
+		this.type = type;
+
 		
 	}
 

@@ -24,7 +24,7 @@ public interface TicketMasterReadPlatformService {
 
 	TicketMasterData retrieveTicket(Long clientId, Long ticketId);
 	
-	Page<ClientTicketData> retrieveAssignedTicketsForNewClient(SearchSqlQuery searchTicketMaster, String statusType, String fromDate, String toDate);
+	Page<ClientTicketData> retrieveAssignedTicketsForNewClient(SearchSqlQuery searchTicketMaster, String statusType, String fromDate, String toDate,String type);
 
 	List<SubCategoryData> retrieveSubCategory(final int codeValue);
 
@@ -36,5 +36,10 @@ public interface TicketMasterReadPlatformService {
 	List<TicketMasterData> retrieveTicketsDetails(Long ticketId);
 
 	List<TicketMasterData> retrieveTicketDetailsByOfficeId(Long officeId);
+
+	List<TicketMasterData> retrieveAllOfficeTicketDetails();
+	
+
+	
 	
 }
