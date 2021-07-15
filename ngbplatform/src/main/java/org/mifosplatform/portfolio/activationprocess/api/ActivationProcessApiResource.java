@@ -59,6 +59,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.tool.xml.Pipeline;
 import com.itextpdf.tool.xml.XMLWorker;
 import com.itextpdf.tool.xml.XMLWorkerHelper;
+import com.itextpdf.tool.xml.html.CssApplier;
 import com.itextpdf.tool.xml.html.Tags;
 import com.itextpdf.tool.xml.parser.XMLParser;
 import com.itextpdf.tool.xml.pipeline.css.CSSResolver;
@@ -354,77 +355,76 @@ public class ActivationProcessApiResource {
 		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 		return this.toApiJsonSerializer.serialize(result);
 	}
-	
-
 
 	public StringTemplate getStringTemplate() {
-	    final StringTemplateGroup group = new StringTemplateGroup("Generators");
-	    return group.getInstanceOf("agreement");
-	  }
-	
-	@RequestMapping(value = "generatePDF/{mobileNo}", method = RequestMethod.GET)
-	public void exportToPDF(final HttpServletRequest request, final HttpServletResponse response,@PathParam("mobileNo") String mobileNo) throws IOException {
-	    
+		final StringTemplateGroup group = new StringTemplateGroup("Generators");
+		return group.getInstanceOf("agreement");
+	}
+
+	@GET
+	@Path("generatePDF/{mobileNo}")
+	public void exportToPDF(final HttpServletRequest request, final HttpServletResponse response,
+			@PathParam("mobileNo") String mobileNo) throws IOException {
+
 		OutputStream os = null;
-	    try {
-	      
-	      LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNo);
+		try {
 
-	      StringTemplate page = getStringTemplate();
-	      page.setAttribute("data",leaseDetails);
-	      
-	      String content = page.toString();
+			LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNo);
 
-	      final HtmlCleaner htmlCleaner = new HtmlCleaner();
-	      final TagNode tagNode = htmlCleaner.clean(content);
-	      content = htmlCleaner.getInnerHtml(tagNode);
+			StringTemplate page = getStringTemplate();
+			page.setAttribute("data", leaseDetails);
 
-	      os = response.getOutputStream();
+			String content = page.toString();
 
-	      Document document = null;
+			final HtmlCleaner htmlCleaner = new HtmlCleaner();
+			final TagNode tagNode = htmlCleaner.clean(content);
+			content = htmlCleaner.getInnerHtml(tagNode);
 
-	      document = new Document(PageSize.A4);
+			os = response.getOutputStream();
 
-	      final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	      final PdfWriter writer = PdfWriter.getInstance(document, baos);
-	      document.open();
+			Document document = null;
 
-	      final HtmlPipelineContext htmlContext = new HtmlPipelineContext(null);
+			document = new Document(PageSize.A4);
 
-	      htmlContext.setTagFactory(Tags.getHtmlTagProcessorFactory());
+			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			final PdfWriter writer = PdfWriter.getInstance(document, baos);
+			document.open();
+			
 
-	      final CSSResolver cssResolver = XMLWorkerHelper.getInstance().getDefaultCssResolver(true);
-	      final Pipeline<?> pipeline = new CssResolverPipeline(cssResolver, new HtmlPipeline(htmlContext,
-	          new PdfWriterPipeline(document, writer)));
-	      final XMLWorker worker = new XMLWorker(pipeline, true);
-	      final XMLParser parser = new XMLParser(worker);
+			final HtmlPipelineContext htmlContext = new HtmlPipelineContext(null);
 
-	      try {
-	        parser.parse(new StringReader(content));
-	      } catch (final Exception e) {
-	        e.printStackTrace();
-	        
-	      }
+			htmlContext.setTagFactory(Tags.getHtmlTagProcessorFactory());
 
-	      document.close();
-	      response.setContentType("Content-Type: text/html; charset=UTF-8");
-	      response.addHeader(
-	          "Content-Disposition",
-	          "attachment; filename=agreement.pdf");
-	      response.setContentLength(baos.size());
-	      baos.writeTo(os);
-	    } catch (final IOException | DocumentException e) {
-	      e.printStackTrace();
-	    } finally {
-	      try {
-	        if (os != null) {
-	          os.flush();
-	          os.close();
-	        }
-	      } catch (final IOException e) {
-	        e.printStackTrace();
-	      }
-	    }
-	  }
+			final CSSResolver cssResolver = XMLWorkerHelper.getInstance().getDefaultCssResolver(true);
+			final Pipeline<?> pipeline = new CssResolverPipeline(cssResolver,
+					new HtmlPipeline(htmlContext, new PdfWriterPipeline(document, writer)));
+			final XMLWorker worker = new XMLWorker(pipeline, true);
+			final XMLParser parser = new XMLParser(worker);
+
+			try {
+				parser.parse(new StringReader(content));
+			} catch (final Exception e) {
+				e.printStackTrace();
+
+			}
+
+			document.close();
+			response.setContentType("Content-Type: text/html; charset=UTF-8");
+			response.addHeader("Content-Disposition", "attachment; filename=agreement.pdf");
+			response.setContentLength(baos.size());
+			baos.writeTo(os);
+		} catch (final IOException | DocumentException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (os != null) {
+					os.flush();
+					os.close();
+				}
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 }

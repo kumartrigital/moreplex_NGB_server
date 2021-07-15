@@ -221,11 +221,12 @@ dependencies {
 			[	group: 'com.opencsv', name: 'opencsv', version: '5.1'],
 			// https://mvnrepository.com/artifact/com.itextpdf/itextpdf
 			[ group: 'com.itextpdf', name: 'itextpdf', version: '5.5.13.2' ],
-			[ group: 'org.antlr', name: 'antlr-complete', version: '3.5.2' ],
-			[ group: 'com.itextpdf.tool', name: 'xmlworker', version: '5.5.13.2' ],
+			http://marketplace.eclipse.org/marketplace-client-intro?mpc_install=8068[ group: 'org.antlr', name: 'antlr-complete', version: '3.5.2' ],
+			[ group: 'org.antlr', name: 'stringtemplate', version: '3.2' ],
+			[ group: 'com.itextpdf.tool', name: 'xmlworker', version: '1.1.0' ],
 			[ group: 'net.sourceforge.htmlcleaner', name: 'htmlcleaner', version: '2.24' ],
 
-
+https://marketplace.eclipse.org/content/jaspersoft-studio
 			)
 
 	testCompile 'junit:junit:4.11',
