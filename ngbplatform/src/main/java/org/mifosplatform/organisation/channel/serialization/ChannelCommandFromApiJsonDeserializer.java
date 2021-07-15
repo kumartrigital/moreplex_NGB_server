@@ -24,7 +24,7 @@ import com.google.gson.JsonElement;
 public class ChannelCommandFromApiJsonDeserializer {
 	
 	private FromJsonHelper fromJsonHelper;
-	private final Set<String> supportedParams = new HashSet<String>(Arrays.asList("channelName","channelCategory","channelType","isLocalChannel","isHdChannel","channelSequence","broadcasterId","locale","language","broadcasterName"));
+	private final Set<String> supportedParams = new HashSet<String>(Arrays.asList("channelName","channelCategory","channelType","isLocalChannel","isLocalChanne","isHdChannel","channelSequence","broadcasterId","locale","language","broadcasterName"));
 	
 	
 	@Autowired
