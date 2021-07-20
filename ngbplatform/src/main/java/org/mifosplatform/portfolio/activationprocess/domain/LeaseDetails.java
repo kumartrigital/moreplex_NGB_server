@@ -68,6 +68,12 @@ public class LeaseDetails {
 	@Column(name = "image_verfication")
 	private String imageVerification;
 
+	@Column(name = "bank_name")
+	private String bankName;
+
+	@Column(name = "account_no")
+	private String accountNo;
+
 	public Long getId() {
 		return id;
 	}
@@ -210,6 +216,22 @@ public class LeaseDetails {
 
 	public void setImageVerification(String imageVerification) {
 		this.imageVerification = imageVerification;
+	}
+
+	public String getBankName() {
+		return bankName;
+	}
+
+	public void setBankName(String bankName) {
+		this.bankName = bankName;
+	}
+
+	public String getAccountNo() {
+		return accountNo;
+	}
+
+	public void setAccountNo(String accountNo) {
+		this.accountNo = accountNo;
 	}
 
 	public LeaseDetails(Long officeId, String firstName, String lastName, String email, String mobileNumber, String nIN,

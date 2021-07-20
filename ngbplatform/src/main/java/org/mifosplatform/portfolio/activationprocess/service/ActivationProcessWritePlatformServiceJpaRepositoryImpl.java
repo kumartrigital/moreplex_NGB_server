@@ -2070,11 +2070,22 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			} else {
 				leaseDetails.setImageVerification("manual");
 			}
-			leaseDetails.setStatus("Registration_Pending");
+			leaseDetails.setStatus("Bvn_Pending");
 			leaseDetailsRepository.save(leaseDetails);
 
 			return CommandProcessingResult.parsingResult(leaseDetails);
-		} else if (leaseDetails.getStatus().equals("Registration_Pending")) {
+		} else if (leaseDetails.getStatus().equals("Bvn_Pending")) {
+
+			leaseDetails.setAccountNo(command.stringValueOfParameterName("accountNo"));
+			leaseDetails.setBankName(command.stringValueOfParameterName("bankName"));
+			leaseDetails.setStatus("Registration_Pending");
+			
+			leaseDetailsRepository.save(leaseDetails);
+
+			return CommandProcessingResult.parsingResult(leaseDetails);
+		}
+
+		else if (leaseDetails.getStatus().equals("Registration_Pending")) {
 			String result = command.stringValueOfParameterName("ActivationResult");
 			if (result.equalsIgnoreCase("Success")) {
 				String deviceId = command.stringValueOfParameterName("deviceId");
