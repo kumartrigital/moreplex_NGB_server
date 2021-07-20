@@ -16,6 +16,9 @@ public interface BillWritePlatformService {
 	String generateInovicePdf(Long billId);
 	
 	String generatePaymentPdf(Long paymentId);
+	
+	String generateLeaseAggrement(String mobileNo);
+
 
 	void sendPdfToEmail(String printFileName,Long clientId,String templateName);
 

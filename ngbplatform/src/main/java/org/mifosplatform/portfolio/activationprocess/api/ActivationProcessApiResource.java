@@ -1,17 +1,18 @@
 package org.mifosplatform.portfolio.activationprocess.api;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringReader;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -24,10 +25,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.antlr.stringtemplate.StringTemplate;
-import org.antlr.stringtemplate.StringTemplateGroup;
-import org.htmlcleaner.HtmlCleaner;
-import org.htmlcleaner.TagNode;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mifosplatform.commands.domain.CommandWrapper;
@@ -36,6 +33,7 @@ import org.mifosplatform.commands.service.PortfolioCommandSourceWritePlatformSer
 import org.mifosplatform.infrastructure.core.api.ApiRequestParameterHelper;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.serialization.ToApiJsonSerializer;
+import org.mifosplatform.infrastructure.core.service.FileUtils;
 import org.mifosplatform.logistics.itemdetails.service.ItemDetailsReadPlatformService;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
@@ -49,24 +47,13 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.util.ResourceUtils;
 
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.PageSize;
-import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.tool.xml.Pipeline;
-import com.itextpdf.tool.xml.XMLWorker;
-import com.itextpdf.tool.xml.XMLWorkerHelper;
-import com.itextpdf.tool.xml.html.CssApplier;
-import com.itextpdf.tool.xml.html.Tags;
-import com.itextpdf.tool.xml.parser.XMLParser;
-import com.itextpdf.tool.xml.pipeline.css.CSSResolver;
-import com.itextpdf.tool.xml.pipeline.css.CssResolverPipeline;
-import com.itextpdf.tool.xml.pipeline.end.PdfWriterPipeline;
-import com.itextpdf.tool.xml.pipeline.html.HtmlPipeline;
-import com.itextpdf.tool.xml.pipeline.html.HtmlPipelineContext;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 @Path("/activationprocess")
 @Component
@@ -334,8 +321,6 @@ public class ActivationProcessApiResource {
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
 	public String retrieveLeaseDetails(@Context final UriInfo uriInfo, @PathParam("mobileNo") final String mobileNo) {
-		// this.context.authenticatedUser().validateHasReadPermission(this.RESOURCE_TYPE);
-
 		LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNo);
 		if (leaseDetails == null) {
 			throw new LeaseDetailsNotFoundException("leasedetails not found");
@@ -355,76 +340,26 @@ public class ActivationProcessApiResource {
 		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 		return this.toApiJsonSerializer.serialize(result);
 	}
-
-	public StringTemplate getStringTemplate() {
-		final StringTemplateGroup group = new StringTemplateGroup("Generators");
-		return group.getInstanceOf("agreement");
-	}
+	
+	
 
 	@GET
-	@Path("generatePDF/{mobileNo}")
-	public void exportToPDF(final HttpServletRequest request, final HttpServletResponse response,
-			@PathParam("mobileNo") String mobileNo) throws IOException {
+	@Path("/resendotp")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public void getDocument(HttpServletResponse response) throws IOException, JRException {
 
-		OutputStream os = null;
-		try {
+	String sourceFileName = ResourceUtils.getFile(FileUtils.MIFOSX_BASE_DIR + File.separator + "leaseAgrrement.jasper").getAbsolutePath();
+	// creating our list of beans
 
-			LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNo);
-
-			StringTemplate page = getStringTemplate();
-			page.setAttribute("data", leaseDetails);
-
-			String content = page.toString();
-
-			final HtmlCleaner htmlCleaner = new HtmlCleaner();
-			final TagNode tagNode = htmlCleaner.clean(content);
-			content = htmlCleaner.getInnerHtml(tagNode);
-
-			os = response.getOutputStream();
-
-			Document document = null;
-
-			document = new Document(PageSize.A4);
-
-			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			final PdfWriter writer = PdfWriter.getInstance(document, baos);
-			document.open();
-			
-
-			final HtmlPipelineContext htmlContext = new HtmlPipelineContext(null);
-
-			htmlContext.setTagFactory(Tags.getHtmlTagProcessorFactory());
-
-			final CSSResolver cssResolver = XMLWorkerHelper.getInstance().getDefaultCssResolver(true);
-			final Pipeline<?> pipeline = new CssResolverPipeline(cssResolver,
-					new HtmlPipeline(htmlContext, new PdfWriterPipeline(document, writer)));
-			final XMLWorker worker = new XMLWorker(pipeline, true);
-			final XMLParser parser = new XMLParser(worker);
-
-			try {
-				parser.parse(new StringReader(content));
-			} catch (final Exception e) {
-				e.printStackTrace();
-
-			}
-
-			document.close();
-			response.setContentType("Content-Type: text/html; charset=UTF-8");
-			response.addHeader("Content-Disposition", "attachment; filename=agreement.pdf");
-			response.setContentLength(baos.size());
-			baos.writeTo(os);
-		} catch (final IOException | DocumentException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (os != null) {
-					os.flush();
-					os.close();
-				}
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
+	LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(null);
+	
+	// creating datasource from bean list
+	JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource((Collection<?>) leaseDetails);
+	Map parameters = new HashMap();
+	JasperPrint jasperPrint = JasperFillManager.fillReport(sourceFileName, parameters, beanColDataSource);
+	JasperExportManager.exportReportToPdfStream(jasperPrint, response.getOutputStream());
+	response.setContentType("application/pdf");
+	response.addHeader("Content-Disposition", "inline; filename=jasper.pdf;");
 		}
-	}
-
 }

@@ -216,17 +216,11 @@ dependencies {
 			[group: 'org.apache.axis2', name: 'axis2-adb', version: '1.6.3'],
 			[group: 'org.apache.axis2', name: 'axis2-transport-local', version: '1.6.3'],
 			[group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'],
-			// https://mvnrepository.com/artifact/com.opencsv/opencsv
-			// https://mvnrepository.com/artifact/com.opencsv/opencsv
 			[	group: 'com.opencsv', name: 'opencsv', version: '5.1'],
-			// https://mvnrepository.com/artifact/com.itextpdf/itextpdf
-			[ group: 'com.itextpdf', name: 'itextpdf', version: '5.5.13.2' ],
-			http://marketplace.eclipse.org/marketplace-client-intro?mpc_install=8068[ group: 'org.antlr', name: 'antlr-complete', version: '3.5.2' ],
-			[ group: 'org.antlr', name: 'stringtemplate', version: '3.2' ],
-			[ group: 'com.itextpdf.tool', name: 'xmlworker', version: '1.1.0' ],
-			[ group: 'net.sourceforge.htmlcleaner', name: 'htmlcleaner', version: '2.24' ],
+			// https://mvnrepository.com/artifact/net.sf.jasperreports/jasperreports
+			[ group: 'net.sf.jasperreports', name: 'jasperreports', version: '6.17.0'],
 
-https://marketplace.eclipse.org/content/jaspersoft-studio
+
 			)
 
 	testCompile 'junit:junit:4.11',
@@ -235,6 +229,7 @@ https://marketplace.eclipse.org/content/jaspersoft-studio
 			'com.jayway.restassured:rest-assured:2.3.3'
 
 }
+
 
 task dist(type:Zip){
 	baseName= 'mifosplatform'
