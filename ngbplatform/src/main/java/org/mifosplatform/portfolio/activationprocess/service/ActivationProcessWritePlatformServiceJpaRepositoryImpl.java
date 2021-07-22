@@ -2031,6 +2031,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		String mobileNO = command.stringValueOfParameterName("mobileNO");
 		String otp = command.stringValueOfParameterName("otp");
 		LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobileNO);
+		JSONObject requestPayload = new JSONObject();
 
 		if (leaseDetails.getStatus().equals("Otp_Pending")) {
 			if (otp.equals(leaseDetails.getOtp())) {
@@ -2041,7 +2042,6 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			}
 			return CommandProcessingResult.parsingResult("otp verified");
 		} else if (leaseDetails.getStatus().equals("NIN_Pending")) {
-			JSONObject requestPayload = new JSONObject();
 			try {
 				requestPayload.put("firstname", leaseDetails.getFirstName());
 				requestPayload.put("lastname", leaseDetails.getLastName());
@@ -2076,10 +2076,22 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			return CommandProcessingResult.parsingResult(leaseDetails);
 		} else if (leaseDetails.getStatus().equals("Bvn_Pending")) {
 
+			try {
+				requestPayload.put("firstname", leaseDetails.getFirstName());
+				requestPayload.put("lastname", leaseDetails.getLastName());
+				requestPayload.put("phone", leaseDetails.getMobileNumber());
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return new CommandProcessingResult(e.getLocalizedMessage());
+			}
+			// ResponseEntity<String> apiResponse =
+			// this.validationNIN(Long.parseLong(leaseDetails.getNIN()),
+			// requestPayload);
+
 			leaseDetails.setAccountNo(command.stringValueOfParameterName("accountNo"));
 			leaseDetails.setBankName(command.stringValueOfParameterName("bankName"));
 			leaseDetails.setStatus("Registration_Pending");
-			
+
 			leaseDetailsRepository.save(leaseDetails);
 
 			return CommandProcessingResult.parsingResult(leaseDetails);

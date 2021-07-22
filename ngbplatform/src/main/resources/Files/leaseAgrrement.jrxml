@@ -2,13 +2,18 @@
 <!-- Created with Jaspersoft Studio version 6.17.0.final using JasperReports Library version 6.17.0-6d93193241dd8cc42629e188b94f9e0bc5722efd  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Blank_Letter" pageWidth="612" pageHeight="792" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e6045c4a-2ff0-4d18-8176-669ff7afb2d9">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<parameter name="param1" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
 	<queryString>
-		<![CDATA[select first_name as fName , last_name as lName , mobile_number as mNumber,nin_number as nin from b_lease_details where mobile_number = '8135742906']]>
+		<![CDATA[select first_name as fName , last_name as lName , mobile_number as mNumber,nin_number as nin ,bvn_number as bvn ,bank_name as bankName ,account_no as accountNumber from b_lease_details where mobile_number =$P{param1}]]>
 	</queryString>
 	<field name="fName" class="java.lang.String"/>
 	<field name="mNumber" class="java.lang.String"/>
 	<field name="nin" class="java.lang.String"/>
-	<field name="currentDate" class="java.util.Date"/>
+	<field name="accountNumber" class="java.lang.String"/>
+	<field name="bankName" class="java.lang.String"/>
+	<field name="bvn" class="java.lang.String"/>
 	<title>
 		<band height="76">
 			<staticText>
@@ -142,11 +147,23 @@ Date:
 			</textField>
 			<textField>
 				<reportElement x="28" y="361" width="100" height="30" uuid="d9f9eb79-c71b-4038-ad97-fe0ebd92251f"/>
-				<textFieldExpression><![CDATA[$F{currentDate}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="150" y="105" width="100" height="30" uuid="754b7865-d253-498c-b2df-9cc65ed4bd78"/>
-				<textFieldExpression><![CDATA[$F{currentDate}]]></textFieldExpression>
+				<reportElement x="150" y="105" width="100" height="15" uuid="754b7865-d253-498c-b2df-9cc65ed4bd78"/>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="70" y="82" width="90" height="23" uuid="5eb38489-9e93-4134-82ad-4cc9b573c954"/>
+				<textFieldExpression><![CDATA[$F{bankName}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="121" y="93" width="100" height="17" uuid="5c1ff170-f479-4ad9-b92b-697f30bb3cac"/>
+				<textFieldExpression><![CDATA[$F{accountNumber}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="35" y="68" width="100" height="30" uuid="45641635-f360-4789-bebf-47872fc5923a"/>
+				<textFieldExpression><![CDATA[$F{bvn}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
