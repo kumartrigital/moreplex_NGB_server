@@ -157,13 +157,14 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				addressjsonBilling.put("addressType", "BILLING");
 				address.add(addressjsonBilling);
 
-				ItemDetails itemDetails = itemDetailsRepository.getAvilableBox(2l);
+				//ItemDetails itemDetails = itemDetailsRepository.getAvilableBox(2l);
+				/*
+				 * if (itemDetails == null) { throw new
+				 * ItemNotFoundException("stock not found"); }
+				 */
 
-				if (itemDetails == null) {
-					throw new ItemNotFoundException("stock not found");
-				}
-
-				devicejson.put("deviceId", itemDetails.getSerialNumber());
+				devicejson.put("deviceId",command.stringValueOfParameterName("stbNo"));
+				
 				devices.add(devicejson);
 
 				basePlanjson.put("planCode", "BASEPACK");
@@ -178,9 +179,10 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 
 				PaymentGateway.setType(type);
 				PaymentGateway.setReProcessDetail(activation.toString());
-				PaymentGateway.setDeviceId(itemDetails.getSerialNumber());
-				System.out.println("RevPayOrderWritePlatformServiceImpl.createOrder()" + activation.toString());
+				PaymentGateway.setDeviceId(command.stringValueOfParameterName("stbNo"));
+
 				paymentGatewayRepository.save(PaymentGateway);
+				
 				devices.clear();
 				plans.clear();
 				address.clear();
