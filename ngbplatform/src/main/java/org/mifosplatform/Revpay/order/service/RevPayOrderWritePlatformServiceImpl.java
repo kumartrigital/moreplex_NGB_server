@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mifosplatform.Revpay.order.domain.RevPayOrderRepository;
+import org.mifosplatform.Revpay.order.exception.OrderNotCreatedException;
 import org.mifosplatform.finance.paymentsgateway.domain.PaymentGateway;
 import org.mifosplatform.finance.paymentsgateway.domain.PaymentGatewayRepository;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
@@ -157,14 +158,14 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				addressjsonBilling.put("addressType", "BILLING");
 				address.add(addressjsonBilling);
 
-				//ItemDetails itemDetails = itemDetailsRepository.getAvilableBox(2l);
+				// ItemDetails itemDetails = itemDetailsRepository.getAvilableBox(2l);
 				/*
 				 * if (itemDetails == null) { throw new
 				 * ItemNotFoundException("stock not found"); }
 				 */
 
-				devicejson.put("deviceId",command.stringValueOfParameterName("stbNo"));
-				
+				devicejson.put("deviceId", command.stringValueOfParameterName("stbNo"));
+
 				devices.add(devicejson);
 
 				basePlanjson.put("planCode", "BASEPACK");
@@ -182,7 +183,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				PaymentGateway.setDeviceId(command.stringValueOfParameterName("stbNo"));
 
 				paymentGatewayRepository.save(PaymentGateway);
-				
+
 				devices.clear();
 				plans.clear();
 				address.clear();
@@ -218,8 +219,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			throw new OrderNotCreatedException();
 		}
-		return new CommandProcessingResult(revorder);
 
 	}
 
