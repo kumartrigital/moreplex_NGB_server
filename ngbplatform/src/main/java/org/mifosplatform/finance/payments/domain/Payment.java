@@ -62,17 +62,13 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 	@Column(name = "payment_source")
 	private String paymentSource;
 	
-	
-	@Column(name = "currency")
-	private String currency;
-	
 
 	public Payment() {
 	}
 
 	public Payment(final Long clientId, final Long paymentId,final Long externalId, final BigDecimal amountPaid,final Long statmentId,
 			final LocalDate paymentDate,final String remark, final Long paymodeCode, final String transId,final String receiptNo, 
-			final Long invoiceId, boolean isWalletPayment, boolean isSubscriptionPayment,final String paymentSource,final String currency) {
+			final Long invoiceId, boolean isWalletPayment, boolean isSubscriptionPayment,final String paymentSource) {
 
 
 		this.clientId = clientId;
@@ -87,14 +83,13 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 		this.isWalletPayment=isWalletPayment?'Y':'N';
 		this.isSubscriptionPayment=isSubscriptionPayment?'Y':'N';
 		this.paymentSource=paymentSource;
-		this.currency=currency;
 
 	}
 	
 	
 	public Payment(final Long clientId, final Long paymentId,final Long externalId, final BigDecimal amountPaid,final Long statmentId,
 			final LocalDate paymentDate,final String remark, final int paymodeId, final String transId,final String receiptNo, 
-			final Long invoiceId, char isWalletPayment,char isSubscriptionPayment, final Long referenceId,final String currency) {
+			final Long invoiceId, char isWalletPayment,char isSubscriptionPayment, final Long referenceId) {
 
 		this.clientId = clientId;
 		this.statementId = statmentId;
@@ -109,7 +104,6 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 		this.isWalletPayment = isWalletPayment;
 		this.isSubscriptionPayment = isSubscriptionPayment;
 		this.refernceId = referenceId;
-		this.currency=currency;
 		
 
 	}
@@ -128,8 +122,7 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 		final boolean isWalletPayment = command.booleanPrimitiveValueOfParameterNamed("isWalletPayment");
 		final boolean isSubscriptionPayment =command.booleanPrimitiveValueOfParameterNamed("isSubscriptionPayment");
 		final String paymentSource = command.stringValueOfParameterNamed("paymentSource");
-		final String currency = command.stringValueOfParameterNamed("currency");
-		return new Payment(clientid, null, null, amountPaid, null, paymentDate,remarks, paymentCode,txtid,receiptNo,invoiceId,isWalletPayment,isSubscriptionPayment,paymentSource,currency);
+		return new Payment(clientid, null, null, amountPaid, null, paymentDate,remarks, paymentCode,txtid,receiptNo,invoiceId,isWalletPayment,isSubscriptionPayment,paymentSource);
 
 
 	}
@@ -169,10 +162,6 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 	public String getPaymentSource() {
 		return paymentSource;
 	}
-	
-	public String getCurrency() {
-		return currency;
-	}
 
 	public void updateBillId(final Long billId) {
 		this.statementId = billId;
@@ -190,7 +179,7 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 	public String getReceiptNo() {
 		return receiptNo;
 	}
-	
+
 	public int getPaymodeId() {
 		return paymodeId;
 	}
@@ -214,7 +203,6 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 	public char getIsSubscriptionPayment() {
 		return isSubscriptionPayment;
 	}
-	
 
 	public Long getRefernceId() {
 		return refernceId;
@@ -224,9 +212,7 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 		this.receiptNo = receiptNo;
 	}
 	
-	public void setCurrency(String currency) {
-		this.currency = currency;
-	}
+	
 
 }
 
