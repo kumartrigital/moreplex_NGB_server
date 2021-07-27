@@ -144,7 +144,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				addressjson.put("state", command.stringValueOfParameterName("state"));
 				addressjson.put("country", command.stringValueOfParameterName("country"));
 				addressjson.put("district", command.stringValueOfParameterName("district"));
-				addressjson.put("zipCode", "900013");
+				addressjson.put("zipCode", command.stringValueOfParameterName("zipcode"));
 				addressjson.put("addressType", "PRIMARY");
 				address.add(addressjson);
 
@@ -154,24 +154,16 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				addressjsonBilling.put("state", command.stringValueOfParameterName("state"));
 				addressjsonBilling.put("country", command.stringValueOfParameterName("country"));
 				addressjsonBilling.put("district", command.stringValueOfParameterName("district"));
-				addressjsonBilling.put("zipCode", "900013");
+				addressjsonBilling.put("zipCode", command.stringValueOfParameterName("zipcode"));
 				addressjsonBilling.put("addressType", "BILLING");
 				address.add(addressjsonBilling);
-
-				// ItemDetails itemDetails = itemDetailsRepository.getAvilableBox(2l);
-				/*
-				 * if (itemDetails == null) { throw new
-				 * ItemNotFoundException("stock not found"); }
-				 */
 
 				devicejson.put("deviceId", command.stringValueOfParameterName("stbNo"));
 
 				devices.add(devicejson);
 
-				basePlanjson.put("planCode", "BASEPACK");
-				purchasePlanjson.put("planCode", "PURCHASE");
-				plans.add(basePlanjson);
-				plans.add(purchasePlanjson);
+				plans.add(basePlanjson.put("planCode", "BASEPACK"));
+				plans.add(purchasePlanjson.put("planCode", "PURCHASE"));
 
 				activation.put("salutation", "Mr.");
 				activation.put("address", address);
