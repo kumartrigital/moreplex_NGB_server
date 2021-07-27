@@ -46,8 +46,10 @@ import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
+import org.mifosplatform.portfolio.order.api.OrdersApiResource;
 import com.sun.jersey.spi.resource.Singleton;
+import org.mifosplatform.finance.officebalance.domain.OfficeBalanceRepository;
+import org.mifosplatform.finance.officebalance.domain.OfficeBalance;
 
 @Singleton
 @Component
@@ -61,7 +63,9 @@ public class RevPayOrdersApiResource {
 	private final PortfolioCommandSourceWritePlatformService commandSourceWritePlatformService;
 	private final RevPayOrderWritePlatformService revPayOrderWritePlatformService;
 	private final PaymentGatewayRepository paymentGatewayRepository;
+	private final OfficeBalanceRepository officeBalanceRepository;
 	private final PaymentsApiResource paymentsApiResource;
+	private final OrdersApiResource ordersApiResource;
 	private final ToApiJsonSerializer<PaymentGateway> apiJsonSerializerPaymentGateway;
 	private final ItemDetailsRepository itemDetailsRepository;
 	private final ItemSaleRepository itemSaleRepository;
@@ -76,7 +80,9 @@ public class RevPayOrdersApiResource {
 			final PortfolioCommandSourceWritePlatformService commandSourceWritePlatformService,
 			final RevPayOrderWritePlatformService revPayOrderWritePlatformService,
 			final FromJsonHelper fromApiJsonHelper, final PaymentGatewayRepository paymentGatewayRepository,
+			final OfficeBalanceRepository officeBalanceRepository,
 			final PaymentsApiResource paymentsApiResource,
+			final OrdersApiResource ordersApiResource,
 			final ToApiJsonSerializer<PaymentGateway> apiJsonSerializerPaymentGateway,
 			final ItemSaleAPiResource itemSaleAPiResource, final ItemDetailsRepository itemDetailsRepository,
 			final ItemSaleRepository itemSaleRepository, final MRNDetailsApiResource mRNDetailsApiResource,
@@ -89,7 +95,9 @@ public class RevPayOrdersApiResource {
 		this.commandSourceWritePlatformService = commandSourceWritePlatformService;
 		this.revPayOrderWritePlatformService = revPayOrderWritePlatformService;
 		this.paymentGatewayRepository = paymentGatewayRepository;
+		this.officeBalanceRepository=officeBalanceRepository;
 		this.paymentsApiResource = paymentsApiResource;
+		this.ordersApiResource=ordersApiResource;
 		this.apiJsonSerializerPaymentGateway = apiJsonSerializerPaymentGateway;
 		this.itemDetailsRepository = itemDetailsRepository;
 		this.itemSaleRepository = itemSaleRepository;
@@ -225,6 +233,17 @@ public class RevPayOrdersApiResource {
 
 				paymentsApiResource.createPayment(jsonResult.getLong("clientId"), paymentJson.toString());
 
+				try {
+					indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			else if (revpayOrder.getType().equalsIgnoreCase("Account_Topup")) {
+				paymentJson.put("OfficeId", revpayOrder.getObsId());
+				ordersApiResource.createOrder(revpayOrder.getObsId(), paymentJson.toString());
+				
 				try {
 					indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
 				} catch (URISyntaxException e) {

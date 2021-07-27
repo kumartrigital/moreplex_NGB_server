@@ -27,6 +27,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.mifosplatform.finance.officebalance.domain.OfficeBalanceRepository;
+import org.mifosplatform.finance.officebalance.domain.OfficeBalance;
+
 
 @Service
 public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlatformService {
@@ -44,18 +47,22 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	private final ItemSaleAPiResource itemSaleAPiResource;
 
 	private final ItemDetailsRepository itemDetailsRepository;
+	private final OfficeBalanceRepository officeBalanceRepository;
+	
 
 	@Autowired
 	public RevPayOrderWritePlatformServiceImpl(final RevPayOrderRepository revPayOrderRepo,
 			OrderWritePlatformService orderWritePlatformService, FromJsonHelper fromApiJsonHelper,
 			PaymentGatewayRepository paymentGatewayRepository, final ItemSaleAPiResource itemSaleAPiResource,
-			final ItemDetailsRepository itemDetailsRepository) {
+			final ItemDetailsRepository itemDetailsRepository,final OfficeBalanceRepository officeBalanceRepository) {
 		this.revPayOrderRepo = revPayOrderRepo;
 		this.orderWritePlatformService = orderWritePlatformService;
 		this.fromApiJsonHelper = fromApiJsonHelper;
 		this.paymentGatewayRepository = paymentGatewayRepository;
 		this.itemSaleAPiResource = itemSaleAPiResource;
 		this.itemDetailsRepository = itemDetailsRepository;
+		this.officeBalanceRepository=officeBalanceRepository;
+		
 	}
 
 	@Override
@@ -186,6 +193,19 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 
 			}
 
+			else if (type.equalsIgnoreCase("Account_Topup")) {
+				
+				PaymentGateway.setObsId(command.longValueOfParameterNamed("OfficeId"));
+		    	OfficeBalance officeBalances = this.officeBalanceRepository.findOneByOfficeId(PaymentGateway.getObsId());
+				officeBalances.updateBalance("DEBIT",officeBalances.getBalanceAmount());
+				officeBalanceRepository.save(officeBalances);
+		    	paymentGatewayRepository.save(PaymentGateway);
+				revorder.put("txid", PaymentGateway.getPaymentId());
+				revorder.put("revorder", "order created sucussfully");
+				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
+						+ PaymentGateway.getPaymentId() + "/");
+			}
+			
 			else if (type.equalsIgnoreCase("redemption")) {
 				PaymentGateway.setDeviceId(command.stringValueOfParameterName("stbNo"));
 				PaymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
