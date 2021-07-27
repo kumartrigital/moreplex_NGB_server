@@ -214,12 +214,11 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
 						+ PaymentGateway.getPaymentId() + "/");
 			}
-
 			return new CommandProcessingResult(revorder);
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new OrderNotCreatedException();
+			throw new OrderNotCreatedException(e.getLocalizedMessage());
 		}
 
 	}

@@ -9,8 +9,8 @@ public class OrderNotCreatedException extends AbstractPlatformDomainRuleExceptio
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public OrderNotCreatedException() {
-		super("error.msg.order.not.created ", "order not created ");
+	public OrderNotCreatedException(String message) {
+		super("error.msg.order.not.created ", "Order failed to created :" +message);
 	}
 
 }
