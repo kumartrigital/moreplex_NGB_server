@@ -61,6 +61,10 @@ import org.mifosplatform.portfolio.plan.domain.PlanDetailsRepository;
 import org.mifosplatform.portfolio.plan.domain.PlanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.mifosplatform.portfolio.order.api.MultipleOrdersApiResource;
+import org.mifosplatform.portfolio.plan.domain.Plan;
+
+
 
 import com.google.gson.JsonObject;
 import com.sun.jersey.spi.resource.Singleton;
@@ -80,6 +84,7 @@ public class RevPayOrdersApiResource {
 	private final OfficeBalanceRepository officeBalanceRepository;
 	private final PaymentsApiResource paymentsApiResource;
 	private final OrdersApiResource ordersApiResource;
+	private final MultipleOrdersApiResource multipleOrdersApiResource;
 	private final ToApiJsonSerializer<PaymentGateway> apiJsonSerializerPaymentGateway;
 	private final ItemDetailsRepository itemDetailsRepository;
 	private final ItemSaleRepository itemSaleRepository;
@@ -106,6 +111,7 @@ public class RevPayOrdersApiResource {
 			final FromJsonHelper fromApiJsonHelper, final PaymentGatewayRepository paymentGatewayRepository,
 			final OfficeBalanceRepository officeBalanceRepository, final PaymentsApiResource paymentsApiResource,
 			final OrdersApiResource ordersApiResource,
+			final MultipleOrdersApiResource multipleOrdersApiResource,
 			final ToApiJsonSerializer<PaymentGateway> apiJsonSerializerPaymentGateway,
 			final ItemSaleAPiResource itemSaleAPiResource, final ItemDetailsRepository itemDetailsRepository,
 			final ItemSaleRepository itemSaleRepository, final MRNDetailsApiResource mRNDetailsApiResource,
@@ -124,6 +130,7 @@ public class RevPayOrdersApiResource {
 		this.officeBalanceRepository = officeBalanceRepository;
 		this.paymentsApiResource = paymentsApiResource;
 		this.ordersApiResource = ordersApiResource;
+		this.multipleOrdersApiResource=multipleOrdersApiResource;
 		this.apiJsonSerializerPaymentGateway = apiJsonSerializerPaymentGateway;
 		this.itemDetailsRepository = itemDetailsRepository;
 		this.itemSaleRepository = itemSaleRepository;
@@ -332,6 +339,36 @@ public class RevPayOrdersApiResource {
 							null, null, null);
 					this.orderWritePlatformService.renewalClientOrder(commd,
 							Long.parseLong(revpayOrder.getReffernceId()));
+				}
+			}
+			else if (revpayOrder.getType().equalsIgnoreCase("subscription_add")) {
+				
+		   final Order order = this.orderRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
+		   final Plan plan = this.planRepository.findOne(order.getPlanId());	
+				
+		   final JsonObject orderJson = new JsonObject();
+				final JsonObject planJson = new JsonObject();
+			
+				orderJson.addProperty("planid",order.getPlanId());
+				orderJson.addProperty("planCode",plan.getPlanCode());
+				orderJson.addProperty("plandescription",plan.getDescription());
+				orderJson.addProperty("planpoid",plan.getPlanPoid());
+				orderJson.addProperty("dealpoid",plan.getPlanPoid());
+				orderJson.addProperty("paytermCode",plan.getPlanPoid());
+				orderJson.addProperty("contractperiod",order.getContarctPeriod());
+				orderJson.addProperty("clientserviceid",order.getClientServiceId());
+				orderJson.addProperty("billAlign",order.getbillAlign());
+				orderJson.addProperty("clientId", order.getClientId());
+				orderJson.addProperty("locale","en");
+				orderJson.addProperty("dateFormat","dd MMMM yyyy");
+				orderJson.addProperty("startdate",formatter.format(order.getStartDate()));
+				
+				multipleOrdersApiResource.createMultipleOrder(9l, orderJson.toString());
+				
+				try {
+					indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
 				}
 			}
 
