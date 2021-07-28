@@ -864,10 +864,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 	@Override
 	public CommandProcessingResult renewalClientOrder(JsonCommand command, Long orderId) {
 
-		try {
-
-			// System.out.println("OrderWritePlatformServiceImpl.renewalClientOrder() " +
-			// command);
+		try {		
 			LocalDate newStartdate = null;
 			String requstStatus = null;
 			String requestStatusForProv = null;

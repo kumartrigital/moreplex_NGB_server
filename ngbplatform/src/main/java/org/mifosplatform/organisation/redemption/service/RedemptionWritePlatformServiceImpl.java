@@ -182,9 +182,7 @@ public class RedemptionWritePlatformServiceImpl implements RedemptionWritePlatfo
 
 				if (pinType.equalsIgnoreCase(PRODUCE_PINTYPE) && pinTypeValue != null) {
 
-					System.out.println(
-							"RedemptionWritePlatformServiceImpl.createrRedemption() found pin type as product for Pin Number "
-									+ pinNum + "with value = " + pinTypeValue);
+				LOGGER.info("RedemptionWritePlatformServiceImpl.createrRedemption() found pin type as product for Pin Number :"+ pinNum + "with value :" + pinTypeValue);
 					final Long planId = Long.parseLong(pinTypeValue);
 					final List<Long> orderIds = this.redemptionReadPlatformService.retrieveOrdersData(clientId, planId);
 					final Price price = this.priceRepository.findOne(priceId);

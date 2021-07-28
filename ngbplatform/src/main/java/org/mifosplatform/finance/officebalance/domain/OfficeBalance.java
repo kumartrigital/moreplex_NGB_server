@@ -80,10 +80,8 @@ public class OfficeBalance extends AbstractAuditableCustom<AppUser,Long> {
 	public void updateBalance(String paymentType, BigDecimal amountPaid) {
 
 		if ("CREDIT".equalsIgnoreCase(paymentType)) {
-
 			this.balanceAmount = this.balanceAmount.subtract(amountPaid);
 		} else {
-
 			this.balanceAmount = this.balanceAmount.add(amountPaid);
 		}
 

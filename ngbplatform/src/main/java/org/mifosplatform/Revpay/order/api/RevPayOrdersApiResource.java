@@ -23,13 +23,17 @@ import org.json.JSONException;
 import org.json.simple.JSONObject;
 import org.mifosplatform.Revpay.order.domain.RevpayOrder;
 import org.mifosplatform.Revpay.order.service.RevPayOrderWritePlatformService;
+import org.mifosplatform.billing.planprice.domain.Price;
+import org.mifosplatform.billing.planprice.domain.PriceRepository;
 import org.mifosplatform.commands.domain.CommandWrapper;
 import org.mifosplatform.commands.service.CommandWrapperBuilder;
 import org.mifosplatform.commands.service.PortfolioCommandSourceWritePlatformService;
+import org.mifosplatform.finance.officebalance.domain.OfficeBalanceRepository;
 import org.mifosplatform.finance.payments.api.PaymentsApiResource;
 import org.mifosplatform.finance.paymentsgateway.domain.PaymentGateway;
 import org.mifosplatform.finance.paymentsgateway.domain.PaymentGatewayRepository;
 import org.mifosplatform.infrastructure.core.api.ApiRequestParameterHelper;
+import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
 import org.mifosplatform.infrastructure.core.serialization.DefaultToApiJsonSerializer;
@@ -44,12 +48,22 @@ import org.mifosplatform.organisation.officepayments.api.OfficePaymentsApiResour
 import org.mifosplatform.portfolio.activationprocess.api.ActivationProcessApiResource;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
+import org.mifosplatform.portfolio.contract.domain.Contract;
+import org.mifosplatform.portfolio.contract.domain.ContractRepository;
+import org.mifosplatform.portfolio.order.api.OrdersApiResource;
+import org.mifosplatform.portfolio.order.domain.Order;
+import org.mifosplatform.portfolio.order.domain.OrderPrice;
+import org.mifosplatform.portfolio.order.domain.OrderPriceRepository;
+import org.mifosplatform.portfolio.order.domain.OrderRepository;
+import org.mifosplatform.portfolio.order.service.OrderWritePlatformService;
+import org.mifosplatform.portfolio.plan.domain.Plan;
+import org.mifosplatform.portfolio.plan.domain.PlanDetailsRepository;
+import org.mifosplatform.portfolio.plan.domain.PlanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.mifosplatform.portfolio.order.api.OrdersApiResource;
+
+import com.google.gson.JsonObject;
 import com.sun.jersey.spi.resource.Singleton;
-import org.mifosplatform.finance.officebalance.domain.OfficeBalanceRepository;
-import org.mifosplatform.finance.officebalance.domain.OfficeBalance;
 
 @Singleton
 @Component
@@ -73,6 +87,16 @@ public class RevPayOrdersApiResource {
 	private final OfficePaymentsApiResource officePaymentsApiResource;
 	private final ActivationProcessApiResource activationProcessApiResource;
 	private final LeaseDetailsRepository leaseDetailsRepository;
+	private final OrderRepository orderRepository;
+	private final OrderPriceRepository orderPriceRepository;
+	private final PlanRepository planRepository;
+	private final PriceRepository priceRepository;
+	private final ContractRepository contractRepository;
+	private final FromJsonHelper fromJsonHelper;
+
+	private final static int RECONNECT_ORDER_STATUS = 3;
+	private final static int RENEWAL_ORDER_STATUS = 1;
+	private final OrderWritePlatformService orderWritePlatformService;
 
 	@Autowired
 	public RevPayOrdersApiResource(final DefaultToApiJsonSerializer<RevpayOrder> apiJsonSerializer,
@@ -80,24 +104,26 @@ public class RevPayOrdersApiResource {
 			final PortfolioCommandSourceWritePlatformService commandSourceWritePlatformService,
 			final RevPayOrderWritePlatformService revPayOrderWritePlatformService,
 			final FromJsonHelper fromApiJsonHelper, final PaymentGatewayRepository paymentGatewayRepository,
-			final OfficeBalanceRepository officeBalanceRepository,
-			final PaymentsApiResource paymentsApiResource,
+			final OfficeBalanceRepository officeBalanceRepository, final PaymentsApiResource paymentsApiResource,
 			final OrdersApiResource ordersApiResource,
 			final ToApiJsonSerializer<PaymentGateway> apiJsonSerializerPaymentGateway,
 			final ItemSaleAPiResource itemSaleAPiResource, final ItemDetailsRepository itemDetailsRepository,
 			final ItemSaleRepository itemSaleRepository, final MRNDetailsApiResource mRNDetailsApiResource,
 			final OfficePaymentsApiResource officePaymentsApiResource,
 			final ActivationProcessApiResource activationProcessApiResource,
-			final LeaseDetailsRepository leaseDetailsRepository) {
+			final LeaseDetailsRepository leaseDetailsRepository, final OrderRepository orderRepository,
+			final OrderWritePlatformService orderWritePlatformService, final OrderPriceRepository orderPriceRepository,
+			final PlanRepository planRepository, final PriceRepository priceRepository,
+			final ContractRepository contractRepository, final FromJsonHelper fromJsonHelper) {
 
 		this.toApiJsonSerializer = apiJsonSerializer;
 		this.apiRequestParameterHelper = apiRequestParameterHelper;
 		this.commandSourceWritePlatformService = commandSourceWritePlatformService;
 		this.revPayOrderWritePlatformService = revPayOrderWritePlatformService;
 		this.paymentGatewayRepository = paymentGatewayRepository;
-		this.officeBalanceRepository=officeBalanceRepository;
+		this.officeBalanceRepository = officeBalanceRepository;
 		this.paymentsApiResource = paymentsApiResource;
-		this.ordersApiResource=ordersApiResource;
+		this.ordersApiResource = ordersApiResource;
 		this.apiJsonSerializerPaymentGateway = apiJsonSerializerPaymentGateway;
 		this.itemDetailsRepository = itemDetailsRepository;
 		this.itemSaleRepository = itemSaleRepository;
@@ -105,6 +131,13 @@ public class RevPayOrdersApiResource {
 		this.officePaymentsApiResource = officePaymentsApiResource;
 		this.activationProcessApiResource = activationProcessApiResource;
 		this.leaseDetailsRepository = leaseDetailsRepository;
+		this.orderRepository = orderRepository;
+		this.orderWritePlatformService = orderWritePlatformService;
+		this.orderPriceRepository = orderPriceRepository;
+		this.planRepository = planRepository;
+		this.priceRepository = priceRepository;
+		this.contractRepository = contractRepository;
+		this.fromJsonHelper = fromApiJsonHelper;
 
 	}
 
@@ -177,11 +210,12 @@ public class RevPayOrdersApiResource {
 				if (leaseDetails.getStatus().equalsIgnoreCase("Payment_pending")) {
 					leaseDetails.setStatus("NIN_Pending");
 					leaseDetailsRepository.save(leaseDetails);
-				}else {
+				} else {
 					leaseDetails.setStatus("something went wrong");
 				}
 				try {
-					indexPath = new URI("https://52.22.65.59:8877/#/Registration/LeaseVerification/"+leaseDetails.getMobileNumber());
+					indexPath = new URI("https://52.22.65.59:8877/#/Registration/LeaseVerification/"
+							+ leaseDetails.getMobileNumber());
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
@@ -216,7 +250,7 @@ public class RevPayOrdersApiResource {
 				org.json.JSONObject jsonResult = new org.json.JSONObject(activationResponse.toString());
 
 				revpayOrder.setReffernceId(jsonResult.getString("clientId"));
-				
+
 				paymentJson.put("clientId", jsonResult.getLong("clientId"));
 				paymentJson.put("isSubscriptionPayment", "false");
 				paymentJson.put("isChequeSelected", "No");
@@ -230,7 +264,6 @@ public class RevPayOrdersApiResource {
 				paymentJson.put("paymentSource", null);
 				paymentJson.put("paymentDate", formatter.format(revpayOrder.getPaymentDate()));
 
-
 				paymentsApiResource.createPayment(jsonResult.getLong("clientId"), paymentJson.toString());
 
 				try {
@@ -239,15 +272,66 @@ public class RevPayOrdersApiResource {
 					e.printStackTrace();
 				}
 			}
-			
-			else if (revpayOrder.getType().equalsIgnoreCase("Account_Topup")) {
-				paymentJson.put("OfficeId", revpayOrder.getObsId());
-				ordersApiResource.createOrder(revpayOrder.getObsId(), paymentJson.toString());
-				
+
+			else if (revpayOrder.getType().equalsIgnoreCase("account_topup")) {
+
+				paymentJson.put("paymentCode", 23);
+				paymentJson.put("amountPaid", revpayOrder.getAmountPaid());
+				paymentJson.put("receiptNo", revpayOrder.getReceiptNo());
+				paymentJson.put("remarks", "Toup_PAYMENT");
+				paymentJson.put("locale", "en");
+				paymentJson.put("dateFormat", "dd MMMM yyyy");
+				paymentJson.put("paymentDate", formatter.format(revpayOrder.getPaymentDate()));
+				paymentJson.put("collectionBy", revpayOrder.getObsId());
+				paymentJson.put("collectorName", revpayOrder.getObsId());
+				officePaymentsApiResource.createOfficePayment(9l, paymentJson.toString());
+
+				/*
+				 * OfficeBalance officeBalances =
+				 * this.officeBalanceRepository.findOneByOfficeId(revpayOrder.getObsId());
+				 * officeBalances.updateBalance("DEBIT", officeBalances.getBalanceAmount());
+				 * officeBalanceRepository.save(officeBalances);
+				 */
+
 				try {
 					indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
+				}
+			} else if (revpayOrder.getType().equalsIgnoreCase("subscription_renewal")) {
+
+				final Order order = this.orderRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
+
+				final OrderPrice orderPrice = orderPriceRepository.findOrders(order);
+
+				final Plan plan = planRepository.findPlanCheckDeletedStatus(order.getPlanId());
+
+				final Price price = this.priceRepository.findOne(order.getPlanId());
+				Long contractId = (long) 0;
+
+				if (price != null) {
+					final String contractPeriod = price.getContractPeriod();
+					Contract contract = this.contractRepository.findOneByContractId(contractPeriod);
+					contractId = contract.getId();
+				}
+
+				if (order.getStatus() == RECONNECT_ORDER_STATUS) {
+					this.orderWritePlatformService.reconnectOrder(Long.parseLong(revpayOrder.getReffernceId()),
+							"Revpay");
+
+				} else if (order.getStatus() == RENEWAL_ORDER_STATUS) {
+					final JsonObject orderJson = new JsonObject();
+
+					orderJson.addProperty("priceId", order.getPlanId());
+					orderJson.addProperty("renewalPeriod", contractId);
+					orderJson.addProperty("priceId", order.getPlanId());
+					orderJson.addProperty("description", "Order Renewal By Redemption");
+					orderJson.addProperty("channel", "Revpay");
+					final JsonCommand commd = new JsonCommand(null, orderJson.toString(), orderJson, fromJsonHelper,
+							null, revpayOrder.getObsId(), null, null, revpayOrder.getObsId(), null, null, null, null,
+							null, null, null);
+					this.orderWritePlatformService.renewalClientOrder(commd,
+							Long.parseLong(revpayOrder.getReffernceId()));
 				}
 			}
 

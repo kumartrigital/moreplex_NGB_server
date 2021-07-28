@@ -10,6 +10,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mifosplatform.Revpay.order.domain.RevPayOrderRepository;
 import org.mifosplatform.Revpay.order.exception.OrderNotCreatedException;
+import org.mifosplatform.finance.officebalance.domain.OfficeBalance;
+import org.mifosplatform.finance.officebalance.domain.OfficeBalanceRepository;
 import org.mifosplatform.finance.paymentsgateway.domain.PaymentGateway;
 import org.mifosplatform.finance.paymentsgateway.domain.PaymentGatewayRepository;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
@@ -17,8 +19,6 @@ import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.mifosplatform.logistics.agent.api.ItemSaleAPiResource;
-import org.mifosplatform.logistics.item.exception.ItemNotFoundException;
-import org.mifosplatform.logistics.itemdetails.domain.ItemDetails;
 import org.mifosplatform.logistics.itemdetails.domain.ItemDetailsRepository;
 import org.mifosplatform.portfolio.order.service.OrderWritePlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +27,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.mifosplatform.finance.officebalance.domain.OfficeBalanceRepository;
-import org.mifosplatform.finance.officebalance.domain.OfficeBalance;
-
 
 @Service
 public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlatformService {
@@ -48,21 +45,20 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 
 	private final ItemDetailsRepository itemDetailsRepository;
 	private final OfficeBalanceRepository officeBalanceRepository;
-	
 
 	@Autowired
 	public RevPayOrderWritePlatformServiceImpl(final RevPayOrderRepository revPayOrderRepo,
 			OrderWritePlatformService orderWritePlatformService, FromJsonHelper fromApiJsonHelper,
 			PaymentGatewayRepository paymentGatewayRepository, final ItemSaleAPiResource itemSaleAPiResource,
-			final ItemDetailsRepository itemDetailsRepository,final OfficeBalanceRepository officeBalanceRepository) {
+			final ItemDetailsRepository itemDetailsRepository, final OfficeBalanceRepository officeBalanceRepository) {
 		this.revPayOrderRepo = revPayOrderRepo;
 		this.orderWritePlatformService = orderWritePlatformService;
 		this.fromApiJsonHelper = fromApiJsonHelper;
 		this.paymentGatewayRepository = paymentGatewayRepository;
 		this.itemSaleAPiResource = itemSaleAPiResource;
 		this.itemDetailsRepository = itemDetailsRepository;
-		this.officeBalanceRepository=officeBalanceRepository;
-		
+		this.officeBalanceRepository = officeBalanceRepository;
+
 	}
 
 	@Override
@@ -193,19 +189,52 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 
 			}
 
-			else if (type.equalsIgnoreCase("Account_Topup")) {
-				
-				PaymentGateway.setObsId(command.longValueOfParameterNamed("OfficeId"));
-		    	OfficeBalance officeBalances = this.officeBalanceRepository.findOneByOfficeId(PaymentGateway.getObsId());
-				officeBalances.updateBalance("DEBIT",officeBalances.getBalanceAmount());
-				officeBalanceRepository.save(officeBalances);
-		    	paymentGatewayRepository.save(PaymentGateway);
+			else if (type.equalsIgnoreCase("account_topup")) {
+
+				PaymentGateway.setObsId(command.longValueOfParameterNamed("toOffice"));
+				PaymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
+				PaymentGateway.setPaymentId(getTxid());
+				PaymentGateway.setPartyId(PaymentGateway.getPaymentId());
+				PaymentGateway.setReceiptNo("RAVE_STB_" + PaymentGateway.getPaymentId());
+				PaymentGateway.setStatus("intiated");
+				PaymentGateway.setPaymentDate(new Date());
+				PaymentGateway.setSource("REVPAY");
+				PaymentGateway.setRemarks("NOTHING");
+				PaymentGateway.setType(type);
+				PaymentGateway.setDeviceId(command.stringValueOfParameterName("toOffice"));
+				paymentGatewayRepository.save(PaymentGateway);
+				revorder = new JSONObject();
+
 				revorder.put("txid", PaymentGateway.getPaymentId());
 				revorder.put("revorder", "order created sucussfully");
 				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
 						+ PaymentGateway.getPaymentId() + "/");
+			} else if (type.equalsIgnoreCase("subscription_renewal")) {
+
+				PaymentGateway.setObsId(Long.parseLong(command.stringValueOfParameterName("toOffice")));
+				PaymentGateway.setDeviceId(command.stringValueOfParameterName("toOffice"));
+				PaymentGateway.setPaymentDate(new Date());
+				BigDecimal amountPaid = new BigDecimal(command.stringValueOfParameterName("amount"));
+				PaymentGateway.setAmountPaid(amountPaid);
+				String Txid = getTxid();
+				PaymentGateway.setPaymentId(Txid);
+				PaymentGateway.setPartyId(Txid);
+				PaymentGateway.setReceiptNo("RAVEPAY_" + Txid);
+				PaymentGateway.setSource("RAVEPAY");
+				PaymentGateway.setStatus("Initiated");
+				PaymentGateway.setReffernceId(command.stringValueOfParameterName("refId"));
+				PaymentGateway.setType(type);
+				PaymentGateway.setRemarks("NOTHING");
+
+				revorder = new JSONObject();
+				revorder.put("txid", PaymentGateway.getPaymentId());
+				paymentGatewayRepository.save(PaymentGateway);
+
+				revorder.put("revorder", "order created sucussfully");
+				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
+						+ PaymentGateway.getPaymentId() + "/");
 			}
-			
+
 			else if (type.equalsIgnoreCase("redemption")) {
 				PaymentGateway.setDeviceId(command.stringValueOfParameterName("stbNo"));
 				PaymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
