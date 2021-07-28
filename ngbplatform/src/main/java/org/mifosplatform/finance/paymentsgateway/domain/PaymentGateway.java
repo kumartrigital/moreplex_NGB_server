@@ -24,8 +24,8 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
  */
 @Entity
 @Table(name = "b_paymentgateway")
-public class PaymentGateway extends AbstractAuditableCustom<AppUser, Long>{
-	
+public class PaymentGateway extends AbstractAuditableCustom<AppUser, Long> {
+
 	/**
 	 * 
 	 */
@@ -34,104 +34,105 @@ public class PaymentGateway extends AbstractAuditableCustom<AppUser, Long>{
 	@Column(name = "key_id")
 	private String deviceId;
 
-	@Column(name="party_id")
+	@Column(name = "party_id")
 	private String partyId;
-	
+
 	@Column(name = "payment_date")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date paymentDate;
-	
+
 	@Column(name = "amount_paid", scale = 6, precision = 19, nullable = false)
 	private BigDecimal amountPaid;
-	
+
 	@Column(name = "receipt_no")
 	private String receiptNo;
-	
+
 	@Column(name = "source")
 	private String source;
 
-	@Column(name="t_details")
+	@Column(name = "t_details")
 	private String details;
-	
+
 	@Column(name = "payment_id")
 	private String paymentId;
-	
+
 	@Column(name = "obs_id")
 	private Long obsId;
-	
+
+	@Column(name = "office_id")
+	private Long officeId;
+
 	@Column(name = "status")
 	private String status;
-	
+
 	@Column(name = "Remarks")
 	private String remarks;
-	
+
 	@Column(name = "t_status")
 	private String tStatus;
-	
+
 	@Column(name = "type")
 	private String type;
-	
-	@Column(name = "is_auto" ,nullable = false)
-	private boolean isAuto=true;
-	
+
+	@Column(name = "is_auto", nullable = false)
+	private boolean isAuto = true;
+
 	@Column(name = "reprocess_detail")
 	private String reProcessDetail;
-	
+
 	@Column(name = "refference_id")
 	private String reffernceId;
 
-	@Column(name="ussd_details")
+	@Column(name = "ussd_details")
 	private String UssdDetails;
-	
-	public PaymentGateway(){
-		
-	}
-	
-	public PaymentGateway(final String deviceId, final String partyId, final Date paymentDate,
-			final BigDecimal amountPaid, final String receiptNo,
-			final String source, final String details) {
-		
-		this.deviceId=deviceId;
-		this.partyId=partyId;
-		this.paymentDate=paymentDate;
-		this.amountPaid=amountPaid;
-		this.receiptNo=receiptNo;
-		this.source=source;
-		this.details=details;
+
+	public PaymentGateway() {
+
 	}
 
-	public PaymentGateway(final String deviceId, final String transactionId,
-			final BigDecimal amountPaid, final String phoneNo, final String type,
-			 final String tStatus, final String details, final Date date, final String source) {
-		this.deviceId=deviceId;
-		this.partyId=phoneNo;
-		this.paymentDate=date;
-		this.amountPaid=amountPaid;
-		this.receiptNo=transactionId;
-		this.source=source;
-		this.details=details;
-		this.type=type;
-		this.tStatus=tStatus;
+	public PaymentGateway(final String deviceId, final String partyId, final Date paymentDate,
+			final BigDecimal amountPaid, final String receiptNo, final String source, final String details) {
+
+		this.deviceId = deviceId;
+		this.partyId = partyId;
+		this.paymentDate = paymentDate;
+		this.amountPaid = amountPaid;
+		this.receiptNo = receiptNo;
+		this.source = source;
+		this.details = details;
+	}
+
+	public PaymentGateway(final String deviceId, final String transactionId, final BigDecimal amountPaid,
+			final String phoneNo, final String type, final String tStatus, final String details, final Date date,
+			final String source) {
+		this.deviceId = deviceId;
+		this.partyId = phoneNo;
+		this.paymentDate = date;
+		this.amountPaid = amountPaid;
+		this.receiptNo = transactionId;
+		this.source = source;
+		this.details = details;
+		this.type = type;
+		this.tStatus = tStatus;
 	}
 
 	public Map<String, Object> fromJson(final JsonCommand command) {
-		 
+
 		final Map<String, Object> actualChanges = new LinkedHashMap<String, Object>(1);
-		 final String remarks = "remarks";
-		 if (command.isChangeInStringParameterNamed(remarks,this.remarks)) {
-				final String newValue = command.stringValueOfParameterNamed("remarks");
-				actualChanges.put(remarks, newValue);
-				this.remarks = StringUtils.defaultIfEmpty(newValue, null);
-		 }
-		 final String status = "status";
-			if (command.isChangeInStringParameterNamed(status,
-					this.status)) {
-				final String newValue = command.stringValueOfParameterNamed("status");
-				actualChanges.put(status, newValue);
-				this.status = StringUtils.defaultIfEmpty(newValue, null);
-			}
-			return actualChanges;	 
-		 
+		final String remarks = "remarks";
+		if (command.isChangeInStringParameterNamed(remarks, this.remarks)) {
+			final String newValue = command.stringValueOfParameterNamed("remarks");
+			actualChanges.put(remarks, newValue);
+			this.remarks = StringUtils.defaultIfEmpty(newValue, null);
+		}
+		final String status = "status";
+		if (command.isChangeInStringParameterNamed(status, this.status)) {
+			final String newValue = command.stringValueOfParameterNamed("status");
+			actualChanges.put(status, newValue);
+			this.status = StringUtils.defaultIfEmpty(newValue, null);
+		}
+		return actualChanges;
+
 	}
 
 	public String getDeviceId() {
@@ -199,7 +200,7 @@ public class PaymentGateway extends AbstractAuditableCustom<AppUser, Long>{
 	}
 
 	public void setRemarks(Object remarks) {
-		this.remarks = (String)remarks;
+		this.remarks = (String) remarks;
 	}
 
 	public String getReProcessDetail() {
@@ -212,8 +213,7 @@ public class PaymentGateway extends AbstractAuditableCustom<AppUser, Long>{
 
 	public void setErrorRemarks(Object printStackTrace) {
 		// TODO Auto-generated method stub
-		
-		
+
 	}
 
 	public String gettStatus() {
@@ -271,8 +271,6 @@ public class PaymentGateway extends AbstractAuditableCustom<AppUser, Long>{
 	public void setReffernceId(String reffernceId) {
 		this.reffernceId = reffernceId;
 	}
-	
-	
 
 	public String getUssdDetails() {
 		return UssdDetails;
@@ -286,6 +284,14 @@ public class PaymentGateway extends AbstractAuditableCustom<AppUser, Long>{
 		return serialVersionUID;
 	}
 
+	public Long getOfficeId() {
+		return officeId;
+	}
+
+	public void setOfficeId(Long officeId) {
+		this.officeId = officeId;
+	}
+
 	@Override
 	public String toString() {
 		return "PaymentGateway [deviceId=" + deviceId + ", partyId=" + partyId + ", paymentDate=" + paymentDate
@@ -294,7 +300,5 @@ public class PaymentGateway extends AbstractAuditableCustom<AppUser, Long>{
 				+ remarks + ", tStatus=" + tStatus + ", type=" + type + ", isAuto=" + isAuto + ", reProcessDetail="
 				+ reProcessDetail + ", reffernceId=" + reffernceId + "]";
 	}
-	
-	
-	
+
 }

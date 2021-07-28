@@ -64,8 +64,6 @@ import org.springframework.stereotype.Component;
 import org.mifosplatform.portfolio.order.api.MultipleOrdersApiResource;
 import org.mifosplatform.portfolio.plan.domain.Plan;
 
-
-
 import com.google.gson.JsonObject;
 import com.sun.jersey.spi.resource.Singleton;
 
@@ -110,8 +108,7 @@ public class RevPayOrdersApiResource {
 			final RevPayOrderWritePlatformService revPayOrderWritePlatformService,
 			final FromJsonHelper fromApiJsonHelper, final PaymentGatewayRepository paymentGatewayRepository,
 			final OfficeBalanceRepository officeBalanceRepository, final PaymentsApiResource paymentsApiResource,
-			final OrdersApiResource ordersApiResource,
-			final MultipleOrdersApiResource multipleOrdersApiResource,
+			final OrdersApiResource ordersApiResource, final MultipleOrdersApiResource multipleOrdersApiResource,
 			final ToApiJsonSerializer<PaymentGateway> apiJsonSerializerPaymentGateway,
 			final ItemSaleAPiResource itemSaleAPiResource, final ItemDetailsRepository itemDetailsRepository,
 			final ItemSaleRepository itemSaleRepository, final MRNDetailsApiResource mRNDetailsApiResource,
@@ -130,7 +127,7 @@ public class RevPayOrdersApiResource {
 		this.officeBalanceRepository = officeBalanceRepository;
 		this.paymentsApiResource = paymentsApiResource;
 		this.ordersApiResource = ordersApiResource;
-		this.multipleOrdersApiResource=multipleOrdersApiResource;
+		this.multipleOrdersApiResource = multipleOrdersApiResource;
 		this.apiJsonSerializerPaymentGateway = apiJsonSerializerPaymentGateway;
 		this.itemDetailsRepository = itemDetailsRepository;
 		this.itemSaleRepository = itemSaleRepository;
@@ -293,13 +290,6 @@ public class RevPayOrdersApiResource {
 				paymentJson.put("collectorName", revpayOrder.getObsId());
 				officePaymentsApiResource.createOfficePayment(9l, paymentJson.toString());
 
-				/*
-				 * OfficeBalance officeBalances =
-				 * this.officeBalanceRepository.findOneByOfficeId(revpayOrder.getObsId());
-				 * officeBalances.updateBalance("DEBIT", officeBalances.getBalanceAmount());
-				 * officeBalanceRepository.save(officeBalances);
-				 */
-
 				try {
 					indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
 				} catch (URISyntaxException e) {
@@ -307,64 +297,40 @@ public class RevPayOrdersApiResource {
 				}
 			} else if (revpayOrder.getType().equalsIgnoreCase("subscription_renewal")) {
 
-				final Order order = this.orderRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
-
-				final OrderPrice orderPrice = orderPriceRepository.findOrders(order);
-
-				final Plan plan = planRepository.findPlanCheckDeletedStatus(order.getPlanId());
-
-				final Price price = this.priceRepository.findOne(order.getPlanId());
-				Long contractId = (long) 0;
-
-				if (price != null) {
-					final String contractPeriod = price.getContractPeriod();
-					Contract contract = this.contractRepository.findOneByContractId(contractPeriod);
-					contractId = contract.getId();
-				}
+				Order order = this.orderRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
 
 				if (order.getStatus() == RECONNECT_ORDER_STATUS) {
 					this.orderWritePlatformService.reconnectOrder(Long.parseLong(revpayOrder.getReffernceId()),
 							"Revpay");
-
 				} else if (order.getStatus() == RENEWAL_ORDER_STATUS) {
-					final JsonObject orderJson = new JsonObject();
-
-					orderJson.addProperty("priceId", order.getPlanId());
-					orderJson.addProperty("renewalPeriod", contractId);
-					orderJson.addProperty("priceId", order.getPlanId());
-					orderJson.addProperty("description", "Order Renewal By Redemption");
-					orderJson.addProperty("channel", "Revpay");
-					final JsonCommand commd = new JsonCommand(null, orderJson.toString(), orderJson, fromJsonHelper,
-							null, revpayOrder.getObsId(), null, null, revpayOrder.getObsId(), null, null, null, null,
-							null, null, null);
-					this.orderWritePlatformService.renewalClientOrder(commd,
-							Long.parseLong(revpayOrder.getReffernceId()));
+					this.ordersApiResource.renewalOrder(Long.parseLong(revpayOrder.getReffernceId()),
+							revpayOrder.getReProcessDetail());
 				}
-			}
-			else if (revpayOrder.getType().equalsIgnoreCase("subscription_add")) {
-				
-		   final Order order = this.orderRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
-		   final Plan plan = this.planRepository.findOne(order.getPlanId());	
-				
-		   final JsonObject orderJson = new JsonObject();
-				final JsonObject planJson = new JsonObject();
 			
-				orderJson.addProperty("planid",order.getPlanId());
-				orderJson.addProperty("planCode",plan.getPlanCode());
-				orderJson.addProperty("plandescription",plan.getDescription());
-				orderJson.addProperty("planpoid",plan.getPlanPoid());
-				orderJson.addProperty("dealpoid",plan.getPlanPoid());
-				orderJson.addProperty("paytermCode",plan.getPlanPoid());
-				orderJson.addProperty("contractperiod",order.getContarctPeriod());
-				orderJson.addProperty("clientserviceid",order.getClientServiceId());
-				orderJson.addProperty("billAlign",order.getbillAlign());
+			
+			} else if (revpayOrder.getType().equalsIgnoreCase("subscription_add")) {
+
+				final Order order = this.orderRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
+				final Plan plan = this.planRepository.findOne(order.getPlanId());
+
+				final JsonObject orderJson = new JsonObject();
+
+				orderJson.addProperty("planid", order.getPlanId());
+				orderJson.addProperty("planCode", plan.getPlanCode());
+				orderJson.addProperty("plandescription", plan.getDescription());
+				orderJson.addProperty("planpoid", plan.getPlanPoid());
+				orderJson.addProperty("dealpoid", plan.getPlanPoid());
+				orderJson.addProperty("paytermCode", plan.getPlanPoid());
+				orderJson.addProperty("contractperiod", order.getContarctPeriod());
+				orderJson.addProperty("clientserviceid", order.getClientServiceId());
+				orderJson.addProperty("billAlign", order.getbillAlign());
 				orderJson.addProperty("clientId", order.getClientId());
-				orderJson.addProperty("locale","en");
-				orderJson.addProperty("dateFormat","dd MMMM yyyy");
-				orderJson.addProperty("startdate",formatter.format(order.getStartDate()));
-				
-				multipleOrdersApiResource.createMultipleOrder(9l, orderJson.toString());
-				
+				orderJson.addProperty("locale", "en");
+				orderJson.addProperty("dateFormat", "dd MMMM yyyy");
+				orderJson.addProperty("startdate", formatter.format(order.getStartDate()));
+
+				multipleOrdersApiResource.createMultipleOrder(revpayOrder.getObsId(), orderJson.toString());
+
 				try {
 					indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
 				} catch (URISyntaxException e) {
