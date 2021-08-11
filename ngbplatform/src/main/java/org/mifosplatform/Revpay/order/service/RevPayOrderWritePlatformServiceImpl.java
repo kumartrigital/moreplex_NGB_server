@@ -42,6 +42,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 @Service
@@ -302,17 +304,23 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGateway.setType(type);
 				paymentGateway.setRemarks("NOTHING");
 
-				final JsonObject orderJson = new JsonObject();
-				String[] planCodes = command.arrayValueOfParameterNamed("planCodes");
+				final JsonElement elementjson = fromApiJsonHelper.parse(command.json());
 
+				JsonArray planCodes = fromApiJsonHelper.extractJsonArrayNamed("devices", elementjson);
+
+				String planCode = null;
 				ClientService clientService = clientServiceRepository
 						.findClientServicewithClientId(paymentGateway.getObsId());
-				for (int i = 0; i < planCodes.length; i++) {
-
-					final Plan plan = this.planRepository.findwithPlanCode(planCodes[i]);
-
+				for (JsonElement j : planCodes) {
+					JsonCommand deviceComm = new JsonCommand(null, j.toString(), j, fromApiJsonHelper, null, null, null,
+							null, null, null, null, null, null, null, null, null);
+					planCode = deviceComm.stringValueOfParameterName("planCode");
+					
+					final Plan plan = this.planRepository.findwithPlanCode(planCode);
+					
 					Price price = priceRepository.findplansByPlanIdChargeOwnerSelf(plan.getId());
-
+					
+					JsonObject orderJson = new JsonObject();
 					orderJson.addProperty("planid", plan.getId());
 					orderJson.addProperty("planCode", plan.getPlanCode());
 					orderJson.addProperty("plandescription", plan.getDescription());
@@ -375,7 +383,6 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	}
 
 	public String revTransactionStatus(Long txid) {
-		String status = null;
 		String revResponse = null;
 		try {
 			RestTemplate rest = new RestTemplate();
@@ -386,8 +393,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 			JSONObject revRequest = new JSONObject();
 			revRequest.put("txref", txid);
 			// FLWPUBK-acb0630ea1c150dabf363efa007d3a0b-X
-			revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
-			// revRequest.put("SECKEY", "FLWSECK-05da041a69e8b6ac206ae74f8f7c4bd8-X");
+			//revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
+			 revRequest.put("SECKEY", "FLWSECK-05da041a69e8b6ac206ae74f8f7c4bd8-X");
 
 			HttpEntity<String> request = new HttpEntity<>(revRequest.toString(), headers);
 			revResponse = rest.postForObject(VERIFY_ENDPOINT, request, String.class);

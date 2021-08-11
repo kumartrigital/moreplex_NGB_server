@@ -5,16 +5,21 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.domain.AbstractAuditableCustom;
+import org.mifosplatform.organisation.monetary.domain.ApplicationCurrency;
 import org.mifosplatform.useradministration.domain.AppUser;
+
 @SuppressWarnings("serial")
 @Entity
-@Table(name = "b_payments",uniqueConstraints = {@UniqueConstraint(name = "receipt_no", columnNames = { "receipt_no" })})
+@Table(name = "b_payments", uniqueConstraints = {
+		@UniqueConstraint(name = "receipt_no", columnNames = { "receipt_no" }) })
 public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 
 	@Column(name = "client_id", nullable = false)
@@ -37,39 +42,44 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 
 	@Column(name = "paymode_id")
 	private int paymodeId;
-	
+
 	@Column(name = "transaction_id")
 	private String transactionId;
-	
+
 	@Column(name = "cancel_remark")
 	private String cancelRemark;
-	
+
 	@Column(name = "receipt_no")
 	private String receiptNo;
-	
+
 	@Column(name = "invoice_id", nullable = false)
 	private Long invoiceId;
-	
+
 	@Column(name = "is_wallet_payment", nullable = false)
 	private char isWalletPayment;
-	
-	@Column(name = "is_sub_payment", nullable=false)
+
+	@Column(name = "is_sub_payment", nullable = false)
 	private char isSubscriptionPayment;
-	
+
 	@Column(name = "ref_id", nullable = true)
 	private Long refernceId;
-	
+
 	@Column(name = "payment_source")
 	private String paymentSource;
-	
+
+	/*
+	 * @OneToOne
+	 * 
+	 * @JoinColumn(name = "currency_Id") private ApplicationCurrency currencyId;
+	 */
 
 	public Payment() {
 	}
 
-	public Payment(final Long clientId, final Long paymentId,final Long externalId, final BigDecimal amountPaid,final Long statmentId,
-			final LocalDate paymentDate,final String remark, final Long paymodeCode, final String transId,final String receiptNo, 
-			final Long invoiceId, boolean isWalletPayment, boolean isSubscriptionPayment,final String paymentSource) {
-
+	public Payment(final Long clientId, final Long paymentId, final Long externalId, final BigDecimal amountPaid,
+			final Long statmentId, final LocalDate paymentDate, final String remark, final Long paymodeCode,
+			final String transId, final String receiptNo, final Long invoiceId, boolean isWalletPayment,
+			boolean isSubscriptionPayment, final String paymentSource) {
 
 		this.clientId = clientId;
 		this.statementId = statmentId;
@@ -77,19 +87,19 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 		this.paymentDate = paymentDate.toDate();
 		this.remarks = remark;
 		this.paymodeId = paymodeCode.intValue();
-		this.transactionId=transId;
-		this.receiptNo=receiptNo.isEmpty()?null:receiptNo;
-		this.invoiceId=invoiceId;
-		this.isWalletPayment=isWalletPayment?'Y':'N';
-		this.isSubscriptionPayment=isSubscriptionPayment?'Y':'N';
-		this.paymentSource=paymentSource;
+		this.transactionId = transId;
+		this.receiptNo = receiptNo.isEmpty() ? null : receiptNo;
+		this.invoiceId = invoiceId;
+		this.isWalletPayment = isWalletPayment ? 'Y' : 'N';
+		this.isSubscriptionPayment = isSubscriptionPayment ? 'Y' : 'N';
+		this.paymentSource = paymentSource;
 
 	}
-	
-	
-	public Payment(final Long clientId, final Long paymentId,final Long externalId, final BigDecimal amountPaid,final Long statmentId,
-			final LocalDate paymentDate,final String remark, final int paymodeId, final String transId,final String receiptNo, 
-			final Long invoiceId, char isWalletPayment,char isSubscriptionPayment, final Long referenceId) {
+
+	public Payment(final Long clientId, final Long paymentId, final Long externalId, final BigDecimal amountPaid,
+			final Long statmentId, final LocalDate paymentDate, final String remark, final int paymodeId,
+			final String transId, final String receiptNo, final Long invoiceId, char isWalletPayment,
+			char isSubscriptionPayment, final Long referenceId) {
 
 		this.clientId = clientId;
 		this.statementId = statmentId;
@@ -98,32 +108,30 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 		this.remarks = remark;
 		this.paymodeId = paymodeId;
 		this.transactionId = transId;
-		if(this.receiptNo != null)
-		this.receiptNo = receiptNo+"_CP";
+		if (this.receiptNo != null)
+			this.receiptNo = receiptNo + "_CP";
 		this.invoiceId = invoiceId;
 		this.isWalletPayment = isWalletPayment;
 		this.isSubscriptionPayment = isSubscriptionPayment;
 		this.refernceId = referenceId;
-		
 
 	}
 
 	public static Payment fromJson(final JsonCommand command, final Long clientid) {
-		final LocalDate paymentDate = command
-				.localDateValueOfParameterNamed("paymentDate");
+		final LocalDate paymentDate = command.localDateValueOfParameterNamed("paymentDate");
 		final Long paymentCode = command.longValueOfParameterNamed("paymentCode");
-				
+
 		final BigDecimal amountPaid = command.bigDecimalValueOfParameterNamed("amountPaid");
 		final String remarks = command.stringValueOfParameterNamed("remarks");
-		final String txtid=command.stringValueOfParameterNamed("txn_id");
-		final String receiptNo=command.stringValueOfParameterNamed("receiptNo");
-		/*String concatReciept="R-"+receiptNo;*/
-		final Long invoiceId=command.longValueOfParameterNamed("invoiceId");
+		final String txtid = command.stringValueOfParameterNamed("txn_id");
+		final String receiptNo = command.stringValueOfParameterNamed("receiptNo");
+		/* String concatReciept="R-"+receiptNo; */
+		final Long invoiceId = command.longValueOfParameterNamed("invoiceId");
 		final boolean isWalletPayment = command.booleanPrimitiveValueOfParameterNamed("isWalletPayment");
-		final boolean isSubscriptionPayment =command.booleanPrimitiveValueOfParameterNamed("isSubscriptionPayment");
+		final boolean isSubscriptionPayment = command.booleanPrimitiveValueOfParameterNamed("isSubscriptionPayment");
 		final String paymentSource = command.stringValueOfParameterNamed("paymentSource");
-		return new Payment(clientid, null, null, amountPaid, null, paymentDate,remarks, paymentCode,txtid,receiptNo,invoiceId,isWalletPayment,isSubscriptionPayment,paymentSource);
-
+		return new Payment(clientid, null, null, amountPaid, null, paymentDate, remarks, paymentCode, txtid, receiptNo,
+				invoiceId, isWalletPayment, isSubscriptionPayment, paymentSource);
 
 	}
 
@@ -158,7 +166,7 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 	public int getPaymodeCode() {
 		return paymodeId;
 	}
-	
+
 	public String getPaymentSource() {
 		return paymentSource;
 	}
@@ -211,8 +219,10 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 	public void setReceiptNo(String receiptNo) {
 		this.receiptNo = receiptNo;
 	}
-	
-	
-
+	/*
+	 * public ApplicationCurrency getCurrencyId() { return currencyId; }
+	 * 
+	 * public void setCurrencyId(ApplicationCurrency currencyId) { this.currencyId =
+	 * currencyId; }
+	 */
 }
-

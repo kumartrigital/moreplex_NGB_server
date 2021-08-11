@@ -1871,8 +1871,14 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 			String VERIFY_ENDPOINT = "https://vapi.verifyme.ng/v1/verifications/identities/nin/" + NIN;
 			HttpHeaders headers = new HttpHeaders();
+			/*
+			 * headers.add("Authorization",
+			 * "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE"
+			 * );
+			 */
 			headers.add("Authorization",
-					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE");
+					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJsaXZlIiwiaWF0IjoxNjIyNzk2MzMxfQ.XnLKL-HEhOKmVpScsnaPEX-OEBR5auO_yokb78yMAII");
+
 			headers.add("Content-Type", "application/json");
 			HttpEntity<String> request = new HttpEntity<>(requestPayload.toString(), headers);
 
@@ -1892,8 +1898,15 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 			String VERIFY_ENDPOINT = "https://vapi.verifyme.ng/v1/verifications/identities/bvn/" + BVN;
 			HttpHeaders headers = new HttpHeaders();
+			/*
+			 * headers.add("Authorization",
+			 * "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE"
+			 * );
+			 */
 			headers.add("Authorization",
-					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE");
+					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJsaXZlIiwiaWF0IjoxNjIyNzk2MzMxfQ.XnLKL-HEhOKmVpScsnaPEX-OEBR5auO_yokb78yMAII");
+
+			
 			headers.add("Content-Type", "application/json");
 			HttpEntity<String> request = new HttpEntity<>(requestPayload.toString(), headers);
 			result = restTemplate.exchange(VERIFY_ENDPOINT, HttpMethod.POST, request, String.class);
@@ -1920,9 +1933,16 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
+			/*
+			 * headers.add("Authorization",
+			 * "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE"
+			 * );
+			 */
+			
 			headers.add("Authorization",
-					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE");
+					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJsaXZlIiwiaWF0IjoxNjIyNzk2MzMxfQ.XnLKL-HEhOKmVpScsnaPEX-OEBR5auO_yokb78yMAII");
 
+			
 			MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
 			params.add("photoUrl", path);
 			params.add("idType", "nin");

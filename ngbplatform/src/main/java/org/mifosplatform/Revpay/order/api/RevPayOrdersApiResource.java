@@ -182,20 +182,21 @@ public class RevPayOrdersApiResource {
 		String status = "successful";
 		String result = null;
 
-		// String revpayStatus =
-		// revPayOrderWritePlatformService.revTransactionStatus(txref);
+		String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
 		PaymentGateway revpayOrder = paymentGatewayRepository.findPaymentDetailsByPaymentId(txref.toString());
-		// System.out.println("RevPayOrdersApiResource.GetcllBackRavePayOrder()");
-		// org.json.JSONObject json;
-
-		/*
-		 * try { json = new org.json.JSONObject(revpayStatus.toString());
-		 * org.json.JSONObject data = json.getJSONObject("data"); flwrefKey =
-		 * data.getString("flwref"); status = data.getString("status"); } catch
-		 * (JSONException e1) { revpayOrder.setStatus("Transaction Id Not found");
-		 * revpayOrder.setPartyId(flwrefKey); result = "Transaction Id Not found";
-		 * paymentGatewayRepository.save(revpayOrder); e1.printStackTrace(); }
-		 */
+		org.json.JSONObject json;
+		try {
+			json = new org.json.JSONObject(revpayStatus.toString());
+			org.json.JSONObject data = json.getJSONObject("data");
+			flwrefKey = data.getString("flwref");
+			status = data.getString("status");
+		} catch (JSONException e1) {
+			revpayOrder.setStatus("Transaction Id Not found");
+			revpayOrder.setPartyId(flwrefKey);
+			result = "Transaction Id Not found";
+			paymentGatewayRepository.save(revpayOrder);
+			e1.printStackTrace();
+		}
 
 		String locale = "en";
 		String dateFormat = "dd MMMM yyyy";
@@ -203,8 +204,8 @@ public class RevPayOrdersApiResource {
 		if (status.equalsIgnoreCase("successful")) {
 
 			revpayOrder.setStatus("Success");
-			// revpayOrder.setPartyId(flwrefKey);
-			revpayOrder.setPartyId("test");
+			revpayOrder.setPartyId(flwrefKey);
+			// revpayOrder.setPartyId("test");
 			paymentGatewayRepository.save(revpayOrder);
 			JSONObject paymentJson = new JSONObject();
 			SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
@@ -306,8 +307,7 @@ public class RevPayOrdersApiResource {
 					this.ordersApiResource.renewalOrder(Long.parseLong(revpayOrder.getReffernceId()),
 							revpayOrder.getReProcessDetail());
 				}
-			
-			
+
 			} else if (revpayOrder.getType().equalsIgnoreCase("subscription_add")) {
 
 				final Order order = this.orderRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
