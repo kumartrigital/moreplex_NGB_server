@@ -41,6 +41,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.mifosplatform.crm.clientprospect.domain.ClientProspectJpaRepository;
+import org.mifosplatform.crm.clientprospect.domain.ClientProspect;
 
 import com.google.gson.JsonObject;
 
@@ -50,6 +52,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	private final RevPayOrderRepository revPayOrderRepo;
 
 	private final PaymentGatewayRepository paymentGatewayRepository;
+
+	private final ClientProspectJpaRepository clientProspectJpaRepository;
 
 	private final OrderWritePlatformService orderWritePlatformService;
 
@@ -76,7 +80,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	@Autowired
 	public RevPayOrderWritePlatformServiceImpl(final RevPayOrderRepository revPayOrderRepo,
 			OrderWritePlatformService orderWritePlatformService, FromJsonHelper fromApiJsonHelper,
-			PaymentGatewayRepository paymentGatewayRepository, final ItemSaleAPiResource itemSaleAPiResource,
+			PaymentGatewayRepository paymentGatewayRepository,final ClientProspectJpaRepository clientProspectJpaRepository, final ItemSaleAPiResource itemSaleAPiResource,
 			final ItemDetailsRepository itemDetailsRepository, final OfficeBalanceRepository officeBalanceRepository,
 			final OrderRepository orderRepository, final PriceRepository priceRepository,
 			final ContractRepository contractRepository, final PlanRepository planRepository,
@@ -85,6 +89,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 		this.orderWritePlatformService = orderWritePlatformService;
 		this.fromApiJsonHelper = fromApiJsonHelper;
 		this.paymentGatewayRepository = paymentGatewayRepository;
+		this.clientProspectJpaRepository=clientProspectJpaRepository;
 		this.itemSaleAPiResource = itemSaleAPiResource;
 		this.itemDetailsRepository = itemDetailsRepository;
 		this.officeBalanceRepository = officeBalanceRepository;
@@ -219,7 +224,88 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
 						+ paymentGateway.getPaymentId() + "/");
 
-			} else if (type.equalsIgnoreCase("account_topup")) {
+			} else if (type.equalsIgnoreCase("selfcare_registration")) {
+				
+				ClientProspect clientProspect = new ClientProspect();
+				
+				revorder = new JSONObject();
+
+				paymentGateway.setObsId(command.longValueOfParameterNamed("OfficeId"));
+				paymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
+				paymentGateway.setPaymentId(getTxid());
+				paymentGateway.setPartyId(paymentGateway.getPaymentId());
+				paymentGateway.setReceiptNo("RAVE_STB_Activation" + paymentGateway.getPaymentId());
+				paymentGateway.setStatus("intiated");
+				paymentGateway.setPaymentDate(new Date());
+				paymentGateway.setSource("REVPAY");
+				paymentGateway.setRemarks("NOTHING");
+				paymentGateway.setType(type);
+				
+				org.json.simple.JSONArray address = new org.json.simple.JSONArray();
+				org.json.simple.JSONArray devices = new org.json.simple.JSONArray();
+				org.json.simple.JSONArray plans = new org.json.simple.JSONArray();
+
+				JSONObject activation = new JSONObject();
+				JSONObject addressjsonBilling = new JSONObject();
+				JSONObject addressjson = new JSONObject();
+				JSONObject devicejson = new JSONObject();
+				JSONObject purchasePlanjson = new JSONObject();
+				JSONObject basePlanjson = new JSONObject();
+			
+				activation.put("forename", command.stringValueOfParameterNamed("forename"));
+				activation.put("surname", command.stringValueOfParameterNamed("surname"));
+				activation.put("gender", "male");
+				activation.put("email", command.stringValueOfParameterNamed("email"));
+				activation.put("mobile", command.stringValueOfParameterNamed("mobile"));
+				activation.put("dob", 12101990);
+				activation.put("officeId", 2);
+
+				addressjson.put("addressNo", command.stringValueOfParameterNamed("addressNo"));
+				addressjson.put("street", "");
+				addressjson.put("city", command.stringValueOfParameterName("city"));
+				addressjson.put("state", command.stringValueOfParameterName("state"));
+				addressjson.put("country", command.stringValueOfParameterName("country"));
+				addressjson.put("district", command.stringValueOfParameterName("district"));
+				addressjson.put("zipCode", command.stringValueOfParameterName("zipcode"));
+				addressjson.put("addressType", "PRIMARY");
+				address.add(addressjson);
+
+				addressjsonBilling.put("addressNo", command.stringValueOfParameterName("addressNo"));
+				addressjsonBilling.put("street", "");
+				addressjsonBilling.put("city", command.stringValueOfParameterName("city"));
+				addressjsonBilling.put("state", command.stringValueOfParameterName("state"));
+				addressjsonBilling.put("country", command.stringValueOfParameterName("country"));
+				addressjsonBilling.put("district", command.stringValueOfParameterName("district"));
+				addressjsonBilling.put("zipCode", command.stringValueOfParameterName("zipcode"));
+				addressjsonBilling.put("addressType", "BILLING");
+				address.add(addressjsonBilling);
+				
+				
+				devicejson.put("deviceId", command.stringValueOfParameterName("stbNo"));
+
+				devices.add(devicejson);
+
+				plans.add(basePlanjson.put("planCode", "BASEPACK"));
+				plans.add(purchasePlanjson.put("planCode", "PURCHASE"));
+
+				activation.put("salutation", "Mr.");
+				activation.put("address", address);
+				activation.put("devices", devices);
+				activation.put("plans", plans);
+				paymentGateway.setType(type);
+				paymentGateway.setReProcessDetail(activation.toString());
+				paymentGateway.setDeviceId(command.stringValueOfParameterName("stbNo"));
+				paymentGatewayRepository.save(paymentGateway);
+				
+				devices.clear();
+				plans.clear();
+				address.clear();
+				revorder.put("txid", paymentGateway.getPaymentId());
+				revorder.put("revorder", "order created sucussfully");
+				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
+						+ paymentGateway.getPaymentId() + "/");
+				
+				} else if (type.equalsIgnoreCase("account_topup")) {
 				paymentGateway.setObsId(command.longValueOfParameterNamed("toOffice"));
 				paymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
 				paymentGateway.setPaymentId(getTxid());
