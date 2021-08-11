@@ -337,6 +337,36 @@ public class RevPayOrdersApiResource {
 					e.printStackTrace();
 				}
 			}
+			
+			else if (revpayOrder.getType().equalsIgnoreCase("selfcare_registration")) {
+
+				 String activationResponse = activationProcessApiResource
+							.createSelfRegistration(revpayOrder.getReProcessDetail());
+					org.json.JSONObject jsonResult = new org.json.JSONObject(activationResponse.toString());
+					
+					revpayOrder.setReffernceId(jsonResult.getString("clientId"));
+
+					paymentJson.put("clientId", jsonResult.getLong("clientId"));
+					paymentJson.put("isSubscriptionPayment", "false");
+					paymentJson.put("isChequeSelected", "No");
+					paymentJson.put("paymentCode", 27);
+					paymentJson.put("receiptNo", revpayOrder.getReceiptNo());
+					paymentJson.put("remarks", "nothing");
+					paymentJson.put("amountPaid", revpayOrder.getAmountPaid());
+					paymentJson.put("paymentType", "Online Payment");
+					paymentJson.put("locale", locale);
+					paymentJson.put("dateFormat", dateFormat);
+					paymentJson.put("paymentSource", null);
+					paymentJson.put("paymentDate", formatter.format(revpayOrder.getPaymentDate()));
+
+					paymentsApiResource.createPayment(jsonResult.getLong("clientId"), paymentJson.toString());
+
+					try {
+						indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
+					} catch (URISyntaxException e) {
+						e.printStackTrace();
+					}
+				}
 
 			else {
 				paymentJson.put("clientId", revpayOrder.getReffernceId());
