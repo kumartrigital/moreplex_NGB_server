@@ -159,18 +159,18 @@ public class RevPayOrdersApiResource {
 	}
 
 	@GET
-	@Path("/status")
+	@Path("/status/{txid}")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
-	public String getRavePayStatus(@QueryParam("txid") String txid, @Context final UriInfo uriInfo) {
-
+	public String getRavePayStatus(@PathParam("txid") String txid, @Context final UriInfo uriInfo) {
 		PaymentGateway orderDetails = paymentGatewayRepository.findPaymentDetailsByPaymentId(txid);
 		final ApiRequestJsonSerializationSettings settings = apiRequestParameterHelper
 				.process(uriInfo.getQueryParameters());
 		return this.apiJsonSerializerPaymentGateway.serialize(settings, orderDetails, RESPONSE_DATA_PARAMETERS);
-
 	}
 
+	
+	
 	@GET
 	@Path("/orderlock/{txref}/{flwref}")
 	@SuppressWarnings("unchecked")
@@ -179,24 +179,22 @@ public class RevPayOrdersApiResource {
 
 		URI indexPath = null;
 		String flwrefKey = null;
-		String status = "successful";
+		 String status = "successful";
+		//String status = null;
 		String result = null;
 
-		String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
+		//String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
 		PaymentGateway revpayOrder = paymentGatewayRepository.findPaymentDetailsByPaymentId(txref.toString());
-		org.json.JSONObject json;
-		try {
-			json = new org.json.JSONObject(revpayStatus.toString());
-			org.json.JSONObject data = json.getJSONObject("data");
-			flwrefKey = data.getString("flwref");
-			status = data.getString("status");
-		} catch (JSONException e1) {
-			revpayOrder.setStatus("Transaction Id Not found");
-			revpayOrder.setPartyId(flwrefKey);
-			result = "Transaction Id Not found";
-			paymentGatewayRepository.save(revpayOrder);
-			e1.printStackTrace();
-		}
+
+		/*
+		 * org.json.JSONObject json; try { json = new
+		 * org.json.JSONObject(revpayStatus.toString()); org.json.JSONObject data =
+		 * json.getJSONObject("data"); flwrefKey = data.getString("flwref"); status =
+		 * data.getString("status"); } catch (JSONException e1) {
+		 * revpayOrder.setStatus("Transaction Id Not found");
+		 * revpayOrder.setPartyId(flwrefKey); result = "Transaction Id Not found";
+		 * paymentGatewayRepository.save(revpayOrder); e1.printStackTrace(); }
+		 */
 
 		String locale = "en";
 		String dateFormat = "dd MMMM yyyy";
@@ -204,11 +202,12 @@ public class RevPayOrdersApiResource {
 		if (status.equalsIgnoreCase("successful")) {
 
 			revpayOrder.setStatus("Success");
-			revpayOrder.setPartyId(flwrefKey);
-			// revpayOrder.setPartyId("test");
+			 revpayOrder.setPartyId(flwref);
+			//revpayOrder.setPartyId("test");
 			paymentGatewayRepository.save(revpayOrder);
 			JSONObject paymentJson = new JSONObject();
 			SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
+
 			if (revpayOrder.getType().equalsIgnoreCase("LEASEVERIFICATION_Payment")) {
 				LeaseDetails leaseDetails = leaseDetailsRepository
 						.findLeaseDetailsByMobileNo(revpayOrder.getDeviceId());
@@ -337,36 +336,36 @@ public class RevPayOrdersApiResource {
 					e.printStackTrace();
 				}
 			}
-			
+
 			else if (revpayOrder.getType().equalsIgnoreCase("selfcare_registration")) {
 
-				 String activationResponse = activationProcessApiResource
-							.createSelfRegistration(revpayOrder.getReProcessDetail());
-					org.json.JSONObject jsonResult = new org.json.JSONObject(activationResponse.toString());
-					
-					revpayOrder.setReffernceId(jsonResult.getString("clientId"));
+				String activationResponse = activationProcessApiResource
+						.createSelfRegistration(revpayOrder.getReProcessDetail());
+				org.json.JSONObject jsonResult = new org.json.JSONObject(activationResponse.toString());
 
-					paymentJson.put("clientId", jsonResult.getLong("clientId"));
-					paymentJson.put("isSubscriptionPayment", "false");
-					paymentJson.put("isChequeSelected", "No");
-					paymentJson.put("paymentCode", 27);
-					paymentJson.put("receiptNo", revpayOrder.getReceiptNo());
-					paymentJson.put("remarks", "nothing");
-					paymentJson.put("amountPaid", revpayOrder.getAmountPaid());
-					paymentJson.put("paymentType", "Online Payment");
-					paymentJson.put("locale", locale);
-					paymentJson.put("dateFormat", dateFormat);
-					paymentJson.put("paymentSource", null);
-					paymentJson.put("paymentDate", formatter.format(revpayOrder.getPaymentDate()));
+				revpayOrder.setReffernceId(jsonResult.getString("clientId"));
 
-					paymentsApiResource.createPayment(jsonResult.getLong("clientId"), paymentJson.toString());
+				paymentJson.put("clientId", jsonResult.getLong("clientId"));
+				paymentJson.put("isSubscriptionPayment", "false");
+				paymentJson.put("isChequeSelected", "No");
+				paymentJson.put("paymentCode", 27);
+				paymentJson.put("receiptNo", revpayOrder.getReceiptNo());
+				paymentJson.put("remarks", "nothing");
+				paymentJson.put("amountPaid", revpayOrder.getAmountPaid());
+				paymentJson.put("paymentType", "Online Payment");
+				paymentJson.put("locale", locale);
+				paymentJson.put("dateFormat", dateFormat);
+				paymentJson.put("paymentSource", null);
+				paymentJson.put("paymentDate", formatter.format(revpayOrder.getPaymentDate()));
 
-					try {
-						indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
-					} catch (URISyntaxException e) {
-						e.printStackTrace();
-					}
+				paymentsApiResource.createPayment(jsonResult.getLong("clientId"), paymentJson.toString());
+
+				try {
+					indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
 				}
+			}
 
 			else {
 				paymentJson.put("clientId", revpayOrder.getReffernceId());

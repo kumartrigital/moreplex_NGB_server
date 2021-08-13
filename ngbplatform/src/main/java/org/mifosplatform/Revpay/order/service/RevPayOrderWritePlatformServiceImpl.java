@@ -9,12 +9,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.simple.JSONArray;
 import org.mifosplatform.Revpay.order.domain.RevPayOrderRepository;
 import org.mifosplatform.Revpay.order.exception.OrderNotCreatedException;
 import org.mifosplatform.billing.planprice.domain.Price;
 import org.mifosplatform.billing.planprice.domain.PriceRepository;
-import org.mifosplatform.finance.officebalance.domain.OfficeBalance;
+import org.mifosplatform.crm.clientprospect.domain.ClientProspect;
+import org.mifosplatform.crm.clientprospect.domain.ClientProspectJpaRepository;
 import org.mifosplatform.finance.officebalance.domain.OfficeBalanceRepository;
 import org.mifosplatform.finance.paymentsgateway.domain.PaymentGateway;
 import org.mifosplatform.finance.paymentsgateway.domain.PaymentGatewayRepository;
@@ -24,8 +24,6 @@ import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityExce
 import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.mifosplatform.logistics.agent.api.ItemSaleAPiResource;
 import org.mifosplatform.logistics.itemdetails.domain.ItemDetailsRepository;
-import org.mifosplatform.organisation.priceregion.data.PriceRegionData;
-import org.mifosplatform.portfolio.client.domain.Client;
 import org.mifosplatform.portfolio.clientservice.domain.ClientService;
 import org.mifosplatform.portfolio.clientservice.domain.ClientServiceRepository;
 import org.mifosplatform.portfolio.contract.domain.Contract;
@@ -41,8 +39,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.mifosplatform.crm.clientprospect.domain.ClientProspectJpaRepository;
-import org.mifosplatform.crm.clientprospect.domain.ClientProspect;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -82,16 +78,17 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	@Autowired
 	public RevPayOrderWritePlatformServiceImpl(final RevPayOrderRepository revPayOrderRepo,
 			OrderWritePlatformService orderWritePlatformService, FromJsonHelper fromApiJsonHelper,
-			PaymentGatewayRepository paymentGatewayRepository,final ClientProspectJpaRepository clientProspectJpaRepository, final ItemSaleAPiResource itemSaleAPiResource,
-			final ItemDetailsRepository itemDetailsRepository, final OfficeBalanceRepository officeBalanceRepository,
-			final OrderRepository orderRepository, final PriceRepository priceRepository,
-			final ContractRepository contractRepository, final PlanRepository planRepository,
-			final ClientServiceRepository clientServiceRepository) {
+			PaymentGatewayRepository paymentGatewayRepository,
+			final ClientProspectJpaRepository clientProspectJpaRepository,
+			final ItemSaleAPiResource itemSaleAPiResource, final ItemDetailsRepository itemDetailsRepository,
+			final OfficeBalanceRepository officeBalanceRepository, final OrderRepository orderRepository,
+			final PriceRepository priceRepository, final ContractRepository contractRepository,
+			final PlanRepository planRepository, final ClientServiceRepository clientServiceRepository) {
 		this.revPayOrderRepo = revPayOrderRepo;
 		this.orderWritePlatformService = orderWritePlatformService;
 		this.fromApiJsonHelper = fromApiJsonHelper;
 		this.paymentGatewayRepository = paymentGatewayRepository;
-		this.clientProspectJpaRepository=clientProspectJpaRepository;
+		this.clientProspectJpaRepository = clientProspectJpaRepository;
 		this.itemSaleAPiResource = itemSaleAPiResource;
 		this.itemDetailsRepository = itemDetailsRepository;
 		this.officeBalanceRepository = officeBalanceRepository;
@@ -106,6 +103,9 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	@Override
 	public CommandProcessingResult createOrder(JsonCommand command) {
 		JSONObject revorder = null;
+		// String base_URL = "https://billing.moreplextv.com";
+		String base_URL = "https://52.22.65.59:8877";
+
 		try {
 
 			String type = command.stringValueOfParameterName("type");
@@ -127,8 +127,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				revorder = new JSONObject();
 				revorder.put("txid", paymentGateway.getPaymentId());
 				revorder.put("revorder", "order created sucussfully");
-				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
-						+ paymentGateway.getPaymentId() + "/");
+				revorder.put("callbackUrl",
+						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 			}
 
 			else if (type.equalsIgnoreCase("leaseverification_payment")) {
@@ -147,8 +147,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				revorder = new JSONObject();
 				revorder.put("txid", paymentGateway.getPaymentId());
 				revorder.put("revorder", "order created sucussfully");
-				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
-						+ paymentGateway.getPaymentId() + "/");
+				revorder.put("callbackUrl",
+						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 			}
 
 			else if (type.equalsIgnoreCase("activation_Payment")) {
@@ -223,13 +223,13 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				address.clear();
 				revorder.put("txid", paymentGateway.getPaymentId());
 				revorder.put("revorder", "order created sucussfully");
-				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
-						+ paymentGateway.getPaymentId() + "/");
+				revorder.put("callbackUrl",
+						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 
 			} else if (type.equalsIgnoreCase("selfcare_registration")) {
-				
+
 				ClientProspect clientProspect = new ClientProspect();
-				
+
 				revorder = new JSONObject();
 
 				paymentGateway.setObsId(command.longValueOfParameterNamed("OfficeId"));
@@ -242,7 +242,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGateway.setSource("REVPAY");
 				paymentGateway.setRemarks("NOTHING");
 				paymentGateway.setType(type);
-				
+
 				org.json.simple.JSONArray address = new org.json.simple.JSONArray();
 				org.json.simple.JSONArray devices = new org.json.simple.JSONArray();
 				org.json.simple.JSONArray plans = new org.json.simple.JSONArray();
@@ -253,7 +253,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				JSONObject devicejson = new JSONObject();
 				JSONObject purchasePlanjson = new JSONObject();
 				JSONObject basePlanjson = new JSONObject();
-			
+
 				activation.put("forename", command.stringValueOfParameterNamed("forename"));
 				activation.put("surname", command.stringValueOfParameterNamed("surname"));
 				activation.put("gender", "male");
@@ -281,8 +281,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				addressjsonBilling.put("zipCode", command.stringValueOfParameterName("zipcode"));
 				addressjsonBilling.put("addressType", "BILLING");
 				address.add(addressjsonBilling);
-				
-				
+
 				devicejson.put("deviceId", command.stringValueOfParameterName("stbNo"));
 
 				devices.add(devicejson);
@@ -298,16 +297,16 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGateway.setReProcessDetail(activation.toString());
 				paymentGateway.setDeviceId(command.stringValueOfParameterName("stbNo"));
 				paymentGatewayRepository.save(paymentGateway);
-				
+
 				devices.clear();
 				plans.clear();
 				address.clear();
 				revorder.put("txid", paymentGateway.getPaymentId());
 				revorder.put("revorder", "order created sucussfully");
-				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
-						+ paymentGateway.getPaymentId() + "/");
-				
-				} else if (type.equalsIgnoreCase("account_topup")) {
+				revorder.put("callbackUrl",
+						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
+
+			} else if (type.equalsIgnoreCase("account_topup")) {
 				paymentGateway.setObsId(command.longValueOfParameterNamed("toOffice"));
 				paymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
 				paymentGateway.setPaymentId(getTxid());
@@ -324,8 +323,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 
 				revorder.put("txid", paymentGateway.getPaymentId());
 				revorder.put("revorder", "order created sucussfully");
-				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
-						+ paymentGateway.getPaymentId() + "/");
+				revorder.put("callbackUrl",
+						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 
 			} else if (type.equalsIgnoreCase("subscription_renewal")) {
 				paymentGateway.setObsId(Long.parseLong(command.stringValueOfParameterName("clientId")));
@@ -369,8 +368,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGatewayRepository.save(paymentGateway);
 
 				revorder.put("revorder", "order created sucussfully");
-				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
-						+ paymentGateway.getPaymentId() + "/");
+				revorder.put("callbackUrl",
+						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 			}
 
 			else if (type.equalsIgnoreCase("subscription_add")) {
@@ -392,8 +391,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 
 				final JsonElement elementjson = fromApiJsonHelper.parse(command.json());
 
-				JsonArray planCodes = fromApiJsonHelper.extractJsonArrayNamed("devices", elementjson);
-
+				JsonArray planCodes = fromApiJsonHelper.extractJsonArrayNamed("plans", elementjson);
+				System.out.println("RevPayOrderWritePlatformServiceImpl.createOrder()" + planCodes.toString());
 				String planCode = null;
 				ClientService clientService = clientServiceRepository
 						.findClientServicewithClientId(paymentGateway.getObsId());
@@ -401,11 +400,14 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 					JsonCommand deviceComm = new JsonCommand(null, j.toString(), j, fromApiJsonHelper, null, null, null,
 							null, null, null, null, null, null, null, null, null);
 					planCode = deviceComm.stringValueOfParameterName("planCode");
-					
+					int contractPeriod = deviceComm.integerValueOfParameterNamed("contractPeriod");
+
+					System.out.println("RevPayOrderWritePlatformServiceImpl.createOrder()" + planCode);
 					final Plan plan = this.planRepository.findwithPlanCode(planCode);
-					
+
+					System.out.println("RevPayOrderWritePlatformServiceImpl.createOrder()" + plan.getId());
 					Price price = priceRepository.findplansByPlanIdChargeOwnerSelf(plan.getId());
-					
+
 					JsonObject orderJson = new JsonObject();
 					orderJson.addProperty("planid", plan.getId());
 					orderJson.addProperty("planCode", plan.getPlanCode());
@@ -413,7 +415,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 					orderJson.addProperty("planpoid", 0);
 					orderJson.addProperty("dealpoid", 0);
 					orderJson.addProperty("paytermCode", price.getContractPeriod());
-					orderJson.addProperty("contractperiod", plan.getDuration().getId());
+					orderJson.addProperty("contractperiod",contractPeriod);
 					orderJson.addProperty("clientserviceid", clientService.getServiceId());
 					orderJson.addProperty("billAlign", true);
 					orderJson.addProperty("clientId", clientService.getClientId());
@@ -422,15 +424,15 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 					String dateFormat = "dd MMMM yyyy";
 					SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
 					orderJson.addProperty("startdate", formatter.format(new Date()));
-					paymentGateway.setReProcessDetail(orderJson.toString());
+					paymentGateway.setReProcessDetail("\"plans\" :"+orderJson.toString());
 				}
 				paymentGatewayRepository.save(paymentGateway);
 
 				revorder = new JSONObject();
 				revorder.put("txid", paymentGateway.getPaymentId());
 				revorder.put("revorder", "order created sucussfully");
-				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
-						+ paymentGateway.getPaymentId() + "/");
+				revorder.put("callbackUrl",
+						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 			}
 
 			else if (type.equalsIgnoreCase("redemption")) {
@@ -450,8 +452,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				revorder.put("txid", paymentGateway.getPaymentId());
 				paymentGatewayRepository.save(paymentGateway);
 				revorder.put("revorder", "order created sucussfully");
-				revorder.put("callbackUrl", "https://52.22.65.59:8877/ngbplatform/api/v1/revpay/orderlock/"
-						+ paymentGateway.getPaymentId() + "/");
+				revorder.put("callbackUrl",
+						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 			}
 			return new CommandProcessingResult(revorder);
 
@@ -479,8 +481,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 			JSONObject revRequest = new JSONObject();
 			revRequest.put("txref", txid);
 			// FLWPUBK-acb0630ea1c150dabf363efa007d3a0b-X
-			//revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
-			 revRequest.put("SECKEY", "FLWSECK-05da041a69e8b6ac206ae74f8f7c4bd8-X");
+			revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
+			// revRequest.put("SECKEY", "FLWSECK-7a27e5bdaca5e7632e760f7aef00d40b-X");
 
 			HttpEntity<String> request = new HttpEntity<>(revRequest.toString(), headers);
 			revResponse = rest.postForObject(VERIFY_ENDPOINT, request, String.class);

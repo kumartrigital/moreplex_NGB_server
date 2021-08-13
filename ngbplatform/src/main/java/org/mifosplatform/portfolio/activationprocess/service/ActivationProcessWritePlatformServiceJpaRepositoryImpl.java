@@ -2192,6 +2192,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 		String uniqueNumber = this.OTP();
 		String path = currentDirectory + "/webapps/Verification_Images/leaseImage" + uniqueNumber + extension;
+		System.out.println("ActivationProcessWritePlatformServiceJpaRepositoryImpl.saveImage()" + path);
+
 		File file = new File(path);
 		try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file))) {
 			outputStream.write(data);
@@ -2200,6 +2202,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			e.printStackTrace();
 		}
 		String imagePath = "https://52.22.65.59:8877/Verification_Images/leaseImage" + uniqueNumber + extension;
+		//String imagePath = "https://billing.moreplextv.com/Verification_Images/leaseImage" + uniqueNumber + extension;
+
 		return imagePath;
 	}
 
