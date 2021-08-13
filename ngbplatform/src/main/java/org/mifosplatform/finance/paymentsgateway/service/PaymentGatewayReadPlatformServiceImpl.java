@@ -88,6 +88,37 @@ public class PaymentGatewayReadPlatformServiceImpl implements PaymentGatewayRead
 
 	}
 	
+	
+	private static final class PaymentMappernew implements RowMapper<PaymentGatewayData> {
+
+		public String schema() {
+			return " p.id as id,p.key_id as serialNo,p.party_id as phoneNo,p.payment_date as paymentDate,p.source as source," +
+					" p.amount_paid as amountPaid,p.receipt_no as receiptNo,p.t_details as clientName,p.status as status," +
+					" p.Remarks as remarks,p.obs_id as paymentId,p.reprocess_detail as reprocessDetail from b_paymentgateway p";
+		}
+		
+		@Override
+		public PaymentGatewayData mapRow(ResultSet rs, int rowNum) throws SQLException {
+			Long id = rs.getLong("id");
+			String serialNo = rs.getString("serialNo");
+			String phoneNo = rs.getString("phoneNo");
+			DateTime paymentDate=JdbcSupport.getDateTime(rs,"paymentDate");
+			BigDecimal amountPaid = rs.getBigDecimal("amountPaid");
+			String receiptNo = rs.getString("receiptNo");
+			String clientName = rs.getString("clientName");
+			String status = rs.getString("status");
+			Long paymentId = rs.getLong("paymentId");
+			String remarks = rs.getString("remarks");
+			String reprocessDetail = rs.getString("reprocessDetail");
+			String source = rs.getString("source");
+			
+			return new PaymentGatewayData(id,serialNo,phoneNo,paymentDate,amountPaid,receiptNo,clientName,status,paymentId,remarks,reprocessDetail,source);
+		}
+
+	}
+	
+	
+	
 	@Override
 	public List<MediaEnumoptionData> retrieveTemplateData() {
 		this.context.authenticatedUser();
@@ -110,6 +141,18 @@ public class PaymentGatewayReadPlatformServiceImpl implements PaymentGatewayRead
 			}
 	}
 
+	@Override
+	public PaymentGatewayData retrievePaymentgatewaydatanew(Long txref) {
+		try{
+			this.context.authenticatedUser();
+			PaymentMappernew mapper=new PaymentMappernew();
+			String sql = "select "+mapper.schema()+ " where p.party_id=?";
+			return jdbcTemplate.queryForObject(sql, mapper, new Object[] {txref});
+			} catch(EmptyResultDataAccessException e){
+				return null;
+			}
+	}
+	
 	@Override
 	public Page<PaymentGatewayData> retrievePaymentGatewayData(SearchSqlQuery searchPaymentDetail,String tabType,String source) {	
 
