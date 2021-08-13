@@ -204,7 +204,7 @@ public class TenantAwareBasicAuthenticationFilter extends BasicAuthenticationFil
 				ThreadLocalContextUtil.setTenant(tenant);
 				authenticateLocal(request, chain, response, username, password);
 
-			}
+			} 
 
 			else if (path.contains("api/v1/order/") && request.getMethod().equalsIgnoreCase(GET)
 					|| path.contains("api/v1/order/") && request.getMethod().equalsIgnoreCase(POST)) {

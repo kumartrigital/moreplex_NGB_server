@@ -92,27 +92,29 @@ public class PaymentGatewayReadPlatformServiceImpl implements PaymentGatewayRead
 	private static final class PaymentMappernew implements RowMapper<PaymentGatewayData> {
 
 		public String schema() {
-			return " p.id as id,p.key_id as serialNo,p.party_id as phoneNo,p.payment_date as paymentDate,p.source as source," +
+			return " p.id as id,p.key_id as serialNo,p.payment_date as paymentDate,p.source as source," +
 					" p.amount_paid as amountPaid,p.receipt_no as receiptNo,p.t_details as clientName,p.status as status," +
-					" p.Remarks as remarks,p.obs_id as paymentId,p.reprocess_detail as reprocessDetail from b_paymentgateway p";
+					" p.Remarks as remarks,p.obs_id as paymentId,p.type as type from b_paymentgateway p";
 		}
 		
 		@Override
 		public PaymentGatewayData mapRow(ResultSet rs, int rowNum) throws SQLException {
 			Long id = rs.getLong("id");
 			String serialNo = rs.getString("serialNo");
-			String phoneNo = rs.getString("phoneNo");
-			DateTime paymentDate=JdbcSupport.getDateTime(rs,"paymentDate");
+			//String phoneNo = rs.getString("phoneNo");
+			//DateTime paymentDate=JdbcSupport.getDateTime(rs,"paymentDate");
+			LocalDate paymentDate = JdbcSupport.getLocalDate(rs, "paymentDate");
 			BigDecimal amountPaid = rs.getBigDecimal("amountPaid");
 			String receiptNo = rs.getString("receiptNo");
 			String clientName = rs.getString("clientName");
 			String status = rs.getString("status");
 			Long paymentId = rs.getLong("paymentId");
 			String remarks = rs.getString("remarks");
-			String reprocessDetail = rs.getString("reprocessDetail");
+			//String reprocessDetail = rs.getString("reprocessDetail");
 			String source = rs.getString("source");
+			String type=rs.getString("type");
 			
-			return new PaymentGatewayData(id,serialNo,phoneNo,paymentDate,amountPaid,receiptNo,clientName,status,paymentId,remarks,reprocessDetail,source);
+			return new PaymentGatewayData(id,serialNo,paymentDate,amountPaid,receiptNo,clientName,status,paymentId,remarks,source,type);
 		}
 
 	}

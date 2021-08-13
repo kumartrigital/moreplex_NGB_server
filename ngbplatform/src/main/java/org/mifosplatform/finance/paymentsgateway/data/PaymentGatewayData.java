@@ -29,6 +29,8 @@ public class PaymentGatewayData {
 	private Object phoneMSISDN;
 	private String reprocessDetail;
 	private String source;
+	private String type;
+	private LocalDate paymentDatenew;
 
 	public PaymentGatewayData(final Long id, final String serialNo, final String phoneNo,
 			final DateTime paymentDate, final BigDecimal amountPaid, final String receiptNo,
@@ -48,12 +50,30 @@ public class PaymentGatewayData {
 		this.source = source;
 	}
 
-	
+	public PaymentGatewayData(final Long id, final String serialNo, 
+			final LocalDate paymentDatenew, final BigDecimal amountPaid, final String receiptNo,
+			final String clientName, final String status, final Long paymentId, final String remarks,
+			 final String source,final String type) {
+		this.id=id;
+		this.paymentId=paymentId;
+		this.serialNo=serialNo;
+		this.paymentDatenew=paymentDatenew;
+		this.receiptNo=receiptNo;
+		this.amountPaid=amountPaid;
+		this.status=status;
+		
+		this.clientName=clientName;
+		this.remarks=remarks;
+		this.source = source;
+		this.type=type;
+	}
 
 	public Long getId() {
 		return id;
 	}
-
+	public String getType() {
+		return type;
+	}
 	public Long getPaymentId() {
 		return paymentId;
 	}
@@ -66,6 +86,9 @@ public class PaymentGatewayData {
 		return paymentDate;
 	}
 
+	public LocalDate getPaymentDatenew() {
+		return paymentDatenew;
+	}
 	public String getReceiptNo() {
 		return receiptNo;
 	}
