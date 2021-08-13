@@ -190,9 +190,10 @@ public class TenantAwareBasicAuthenticationFilter extends BasicAuthenticationFil
 				ThreadLocalContextUtil.setTenant(tenant);
 				authenticateLocal(request, chain, response, username, password);
 
-			} else if (path.contains("/api/v1/revpay/status") && request.getMethod().equalsIgnoreCase(GET)) {
+			}
+			else if (path.contains("/api/v1/revpay/status") && request.getMethod().equalsIgnoreCase(GET)) {
 
-				tenant = getTenantIdentifier(request);
+			tenant = getTenantIdentifier(request);
 				String username = "integration";
 				String password = "integration";
 
