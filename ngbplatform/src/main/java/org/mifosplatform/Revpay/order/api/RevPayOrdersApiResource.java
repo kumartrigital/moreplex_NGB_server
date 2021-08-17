@@ -23,52 +23,43 @@ import org.json.JSONException;
 import org.json.simple.JSONObject;
 import org.mifosplatform.Revpay.order.domain.RevpayOrder;
 import org.mifosplatform.Revpay.order.service.RevPayOrderWritePlatformService;
-import org.mifosplatform.billing.planprice.domain.Price;
 import org.mifosplatform.billing.planprice.domain.PriceRepository;
 import org.mifosplatform.commands.domain.CommandWrapper;
 import org.mifosplatform.commands.service.CommandWrapperBuilder;
 import org.mifosplatform.commands.service.PortfolioCommandSourceWritePlatformService;
-import org.mifosplatform.crm.clientprospect.service.SearchSqlQuery;
 import org.mifosplatform.finance.officebalance.domain.OfficeBalanceRepository;
 import org.mifosplatform.finance.payments.api.PaymentsApiResource;
 import org.mifosplatform.finance.paymentsgateway.data.PaymentGatewayData;
 import org.mifosplatform.finance.paymentsgateway.domain.PaymentGateway;
 import org.mifosplatform.finance.paymentsgateway.domain.PaymentGatewayRepository;
+import org.mifosplatform.finance.paymentsgateway.service.PaymentGatewayReadPlatformService;
 import org.mifosplatform.infrastructure.core.api.ApiRequestParameterHelper;
-import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
 import org.mifosplatform.infrastructure.core.serialization.DefaultToApiJsonSerializer;
 import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.mifosplatform.infrastructure.core.serialization.ToApiJsonSerializer;
-import org.mifosplatform.infrastructure.core.service.Page;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.logistics.agent.api.ItemSaleAPiResource;
 import org.mifosplatform.logistics.agent.domain.ItemSale;
 import org.mifosplatform.logistics.agent.domain.ItemSaleRepository;
 import org.mifosplatform.logistics.itemdetails.domain.ItemDetailsRepository;
 import org.mifosplatform.logistics.mrn.api.MRNDetailsApiResource;
-import org.mifosplatform.organisation.channel.data.ChannelData;
 import org.mifosplatform.organisation.officepayments.api.OfficePaymentsApiResource;
 import org.mifosplatform.portfolio.activationprocess.api.ActivationProcessApiResource;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
-import org.mifosplatform.portfolio.contract.domain.Contract;
 import org.mifosplatform.portfolio.contract.domain.ContractRepository;
+import org.mifosplatform.portfolio.order.api.MultipleOrdersApiResource;
 import org.mifosplatform.portfolio.order.api.OrdersApiResource;
 import org.mifosplatform.portfolio.order.domain.Order;
-import org.mifosplatform.portfolio.order.domain.OrderPrice;
 import org.mifosplatform.portfolio.order.domain.OrderPriceRepository;
 import org.mifosplatform.portfolio.order.domain.OrderRepository;
 import org.mifosplatform.portfolio.order.service.OrderWritePlatformService;
 import org.mifosplatform.portfolio.plan.domain.Plan;
-import org.mifosplatform.portfolio.plan.domain.PlanDetailsRepository;
 import org.mifosplatform.portfolio.plan.domain.PlanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.mifosplatform.portfolio.order.api.MultipleOrdersApiResource;
-import org.mifosplatform.portfolio.plan.domain.Plan;
-import org.mifosplatform.finance.paymentsgateway.service.PaymentGatewayReadPlatformService;
 
 import com.google.gson.JsonObject;
 import com.sun.jersey.spi.resource.Singleton;
@@ -108,14 +99,13 @@ public class RevPayOrdersApiResource {
 
 	private final static int RECONNECT_ORDER_STATUS = 3;
 	private final static int RENEWAL_ORDER_STATUS = 1;
-	private final static  String RESOURCE_TYPE = "PAYMENTGATEWAY";
+	private final static String RESOURCE_TYPE = "PAYMENTGATEWAY";
 
 	private final OrderWritePlatformService orderWritePlatformService;
 
 	@Autowired
 	public RevPayOrdersApiResource(final DefaultToApiJsonSerializer<RevpayOrder> apiJsonSerializer,
-			final ApiRequestParameterHelper apiRequestParameterHelper,
-			final PlatformSecurityContext context,
+			final ApiRequestParameterHelper apiRequestParameterHelper, final PlatformSecurityContext context,
 			final PortfolioCommandSourceWritePlatformService commandSourceWritePlatformService,
 			final RevPayOrderWritePlatformService revPayOrderWritePlatformService,
 			final PaymentGatewayReadPlatformService paymentGatewayReadPlatformService,
@@ -134,12 +124,12 @@ public class RevPayOrdersApiResource {
 			final ContractRepository contractRepository, final FromJsonHelper fromJsonHelper) {
 
 		this.toApiJsonSerializer = apiJsonSerializer;
-		this.context=context;
+		this.context = context;
 		this.apiRequestParameterHelper = apiRequestParameterHelper;
-		this.apiJsonSerializerPaymentGatewaydata=apiJsonSerializerPaymentGatewaydata;
+		this.apiJsonSerializerPaymentGatewaydata = apiJsonSerializerPaymentGatewaydata;
 		this.commandSourceWritePlatformService = commandSourceWritePlatformService;
 		this.revPayOrderWritePlatformService = revPayOrderWritePlatformService;
-		this.paymentGatewayReadPlatformService=paymentGatewayReadPlatformService;
+		this.paymentGatewayReadPlatformService = paymentGatewayReadPlatformService;
 		this.paymentGatewayRepository = paymentGatewayRepository;
 		this.officeBalanceRepository = officeBalanceRepository;
 		this.paymentsApiResource = paymentsApiResource;
@@ -176,37 +166,22 @@ public class RevPayOrdersApiResource {
 	}
 
 	@GET
-	@Path("/status/{txid}")
-	@Consumes({ MediaType.APPLICATION_JSON })
-	@Produces({ MediaType.APPLICATION_JSON })
-	public String getRavePayStatus(@PathParam("txid") String txid, @Context final UriInfo uriInfo) {
-		PaymentGateway orderDetails = paymentGatewayRepository.findPaymentDetailsByPaymentId(txid);
-		final ApiRequestJsonSerializationSettings settings = apiRequestParameterHelper
-				.process(uriInfo.getQueryParameters());
-		return this.apiJsonSerializerPaymentGateway.serialize(settings, orderDetails, RESPONSE_DATA_PARAMETERS);
-	}
-	
-	@GET
 	@Path("/status/{txref}")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
 	public String getRavePayStatusnew(@PathParam("txref") Long txref, @Context final UriInfo uriInfo) {
 
 		this.context.authenticatedUser().validateHasReadPermission(this.RESOURCE_TYPE);
-	//	PaymentGateway orderDetails = paymentGatewayRepository.findPaymentDetailsByPaymentId(txref);
+		// PaymentGateway orderDetails =
+		// paymentGatewayRepository.findPaymentDetailsByPaymentId(txref);
 		PaymentGatewayData paymentGateway = this.paymentGatewayReadPlatformService.retrievePaymentgatewaydatanew(txref);
 
 		final ApiRequestJsonSerializationSettings settings = apiRequestParameterHelper
 				.process(uriInfo.getQueryParameters());
 		return this.apiJsonSerializerPaymentGatewaydata.serialize(settings, paymentGateway, RESPONSE_DATA_PARAMETERS);
-		
-		
 
 	}
-	
 
-	
-	
 	@GET
 	@Path("/orderlock/{txref}/{flwref}")
 	@SuppressWarnings("unchecked")
@@ -215,22 +190,25 @@ public class RevPayOrdersApiResource {
 
 		URI indexPath = null;
 		String flwrefKey = null;
-		 String status = "successful";
-		//String status = null;
+		String status = null;
 		String result = null;
 
-		//String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
+		String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
 		PaymentGateway revpayOrder = paymentGatewayRepository.findPaymentDetailsByPaymentId(txref.toString());
 
-		/*
-		 * org.json.JSONObject json; try { json = new
-		 * org.json.JSONObject(revpayStatus.toString()); org.json.JSONObject data =
-		 * json.getJSONObject("data"); flwrefKey = data.getString("flwref"); status =
-		 * data.getString("status"); } catch (JSONException e1) {
-		 * revpayOrder.setStatus("Transaction Id Not found");
-		 * revpayOrder.setPartyId(flwrefKey); result = "Transaction Id Not found";
-		 * paymentGatewayRepository.save(revpayOrder); e1.printStackTrace(); }
-		 */
+		org.json.JSONObject json;
+		try {
+			json = new org.json.JSONObject(revpayStatus.toString());
+			org.json.JSONObject data = json.getJSONObject("data");
+			flwrefKey = data.getString("flwref");
+			status = data.getString("status");
+		} catch (JSONException e1) {
+			revpayOrder.setStatus("Transaction Id Not found");
+			revpayOrder.setPartyId(flwrefKey);
+			result = "Transaction Id Not found";
+			paymentGatewayRepository.save(revpayOrder);
+			e1.printStackTrace();
+		}
 
 		String locale = "en";
 		String dateFormat = "dd MMMM yyyy";
@@ -238,8 +216,7 @@ public class RevPayOrdersApiResource {
 		if (status.equalsIgnoreCase("successful")) {
 
 			revpayOrder.setStatus("Success");
-			 revpayOrder.setPartyId(flwref);
-			//revpayOrder.setPartyId("test");
+			revpayOrder.setPartyId(flwrefKey);
 			paymentGatewayRepository.save(revpayOrder);
 			JSONObject paymentJson = new JSONObject();
 			SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);

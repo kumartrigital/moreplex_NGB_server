@@ -329,9 +329,10 @@ public class BillWritePlatformServiceImpl implements BillWritePlatformService {
             final Connection connection = this.dataSource.getConnection();
             Map<String, Object> parameters = new HashMap<String, Object>();
             parameters.put("param1", mobileNo);
-            parameters.put(JRParameter.REPORT_LOCALE, getLocale(tenant));
-
             parameters.put("realPath",this.getClass().getClassLoader().getResource("Files").getFile());
+
+          //  parameters.put(JRParameter.REPORT_LOCALE, getLocale(tenant));
+//getLocale(tenant);
            final JasperPrint jasperPrint = JasperFillManager.fillReport(jasperfilepath, parameters, connection);
            JasperExportManager.exportReportToPdfFile(jasperPrint,printPaymentLocation);
            connection.close();
@@ -388,6 +389,7 @@ public class BillWritePlatformServiceImpl implements BillWritePlatformService {
 		if (locale == null) {
 			locale = Locale.getDefault();
 		}
+		System.out.println("BillWritePlatformServiceImpl.getLocale()" + locale);
 		return locale;
 	}
 	

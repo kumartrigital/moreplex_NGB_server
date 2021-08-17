@@ -5,6 +5,7 @@
 	<parameter name="param1" class="java.lang.String">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
+	<parameter name="realPath" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[select first_name as fName , last_name as lName , mobile_number as mNumber,nin_number as nin ,bvn_number as bvn ,bank_name as bankName ,account_no as accountNumber from b_lease_details where mobile_number =$P{param1}]]>
 	</queryString>
@@ -97,7 +98,7 @@ This agreement and any dispute or claim about it or its subject matter is govern
 		</band>
 		<band height="510">
 			<staticText>
-				<reportElement x="0" y="0" width="572" height="510" uuid="dab1a9ac-89e4-4c31-a7ff-0010cd3c4030"/>
+				<reportElement x="-2" y="0" width="572" height="510" uuid="dab1a9ac-89e4-4c31-a7ff-0010cd3c4030"/>
 				<text><![CDATA[
     11. INFORMATION & PAYMENT TERMS
     
@@ -165,6 +166,14 @@ Date:
 				<reportElement x="35" y="68" width="100" height="30" uuid="45641635-f360-4789-bebf-47872fc5923a"/>
 				<textFieldExpression><![CDATA[$F{bvn}]]></textFieldExpression>
 			</textField>
+			<staticText>
+				<reportElement x="142" y="289" width="100" height="21" uuid="c18fd0ad-e4e8-4760-8934-7b106e95281c"/>
+				<text><![CDATA[John Okorocha]]></text>
+			</staticText>
+			<image>
+				<reportElement x="160" y="300" width="132" height="39" uuid="22b60555-6296-46b3-9a0d-dba7ce19ab3e"/>
+				<imageExpression><![CDATA[$P{realPath}+"/jhon_sign.png"]]></imageExpression>
+			</image>
 		</band>
 	</detail>
 </jasperReport>

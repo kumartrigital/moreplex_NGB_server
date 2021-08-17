@@ -87,8 +87,8 @@ import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsReposito
 import org.mifosplatform.portfolio.activationprocess.exception.BvnNotVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.ClientAlreadyCreatedException;
 import org.mifosplatform.portfolio.activationprocess.exception.LeaseDetailsNotFoundException;
-import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
 import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberDuplicationException;
+import org.mifosplatform.portfolio.activationprocess.exception.MobileNumberLengthException;
 import org.mifosplatform.portfolio.activationprocess.exception.NINNOTVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.OTPNOTVerificationException;
 import org.mifosplatform.portfolio.activationprocess.exception.PhotoNotVerificationException;
@@ -128,7 +128,6 @@ import org.mifosplatform.workflow.eventaction.service.EventActionConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -1906,7 +1905,6 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			headers.add("Authorization",
 					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJsaXZlIiwiaWF0IjoxNjIyNzk2MzMxfQ.XnLKL-HEhOKmVpScsnaPEX-OEBR5auO_yokb78yMAII");
 
-			
 			headers.add("Content-Type", "application/json");
 			HttpEntity<String> request = new HttpEntity<>(requestPayload.toString(), headers);
 			result = restTemplate.exchange(VERIFY_ENDPOINT, HttpMethod.POST, request, String.class);
@@ -1938,11 +1936,10 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			 * "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJ0ZXN0IiwiaWF0IjoxNjIyNzk2MzMxfQ.RPq3hcDDsLOzHwh-wHF-8vaTbPw3nfj0EoggmrN-qYE"
 			 * );
 			 */
-			
+
 			headers.add("Authorization",
 					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjg0ODQ1LCJlbnYiOiJsaXZlIiwiaWF0IjoxNjIyNzk2MzMxfQ.XnLKL-HEhOKmVpScsnaPEX-OEBR5auO_yokb78yMAII");
 
-			
 			MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
 			params.add("photoUrl", path);
 			params.add("idType", "nin");
@@ -2201,8 +2198,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		String imagePath = "https://52.22.65.59:8877/Verification_Images/leaseImage" + uniqueNumber + extension;
-		//String imagePath = "https://billing.moreplextv.com/Verification_Images/leaseImage" + uniqueNumber + extension;
+		// String imagePath = "https://52.22.65.59:8877/Verification_Images/leaseImage"+ uniqueNumber + extension;
+		String imagePath = "https://billing.moreplextv.com/Verification_Images/leaseImage" + uniqueNumber + extension;
 
 		return imagePath;
 	}
