@@ -8,7 +8,7 @@
 	</parameter>
 	<parameter name="realPath" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select first_name as fName , last_name as lName , mobile_number as mNumber,nin_number as nin ,bvn_number as bvn ,bank_name as bankName ,account_no as accountNumber,city as city,state as state ,country as country from b_lease_details where mobile_number =$P{param1}]]>
+		<![CDATA[select first_name as fName , last_name as lName , mobile_number as mNumber,nin_number as nin ,bvn_number as bvn ,bank_name as bankName ,account_no as accountNumber,city as city,state as state ,country as country,email as email from b_lease_details where mobile_number =$P{param1}]]>
 	</queryString>
 	<field name="fName" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.name" value="first_name"/>
@@ -63,6 +63,12 @@
 		<property name="com.jaspersoft.studio.field.tree.path" value="b_lease_details"/>
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
+	<field name="email" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="email"/>
+		<property name="com.jaspersoft.studio.field.label" value="email"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="b_lease_details"/>
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
 	<title>
 		<band height="76">
 			<staticText>
@@ -78,7 +84,7 @@
 		<band height="657">
 			<staticText>
 				<reportElement x="0" y="-20" width="572" height="670" uuid="d504ada0-e2c1-4c97-b26a-c6fa055fed26"/>
-				<text><![CDATA[THIS  LEASE  AGREEMENT is made the date on section 11 of this agreement, BETWEEN MOREPLEX TV Ltd, a limited liability company duly incorporated under the laws of the Federal Republic of Nigeria, with registered office address at NO 15B KUDIRAT ABIOLA WAY, IKEJA, LAGOS  NIGERIA (hereinafter called ‘COMPANY’ and shall for the sake of this agreement be referred to as ‘The Company’ which expression shall where the context permits include its successors-in-title, privies and assigns) of the first part; AND                            ;with                             
+				<text><![CDATA[THIS  LEASE  AGREEMENT is made the date on section 11 of this agreement, BETWEEN MOREPLEX TV Ltd, a limited liability company duly incorporated under the laws of the Federal Republic of Nigeria, with registered office address at NO 15B KUDIRAT ABIOLA WAY, IKEJA, LAGOS  NIGERIA (hereinafter called ‘COMPANY’ and shall for the sake of this agreement be referred to as ‘The Company’ which expression shall where the context permits include its successors-in-title, privies and assigns) of the first part AND                                   with                             
 				 address_____________________________________________________________________________________________ (hereinafter referred to as  “The Customer” which expression shall where the context permits include its successors-in-title, privies and assigns) of the other part.
 WHEREAS 
     1. The Company is the owner and operator of a Direct –To – Home Satellite platform known as MOREPLEX TV and is desirous of maintaining and smoothly operating same and to give out its Decoders to interested customers for lease The Customer  has presented to the company his  willingness  in taking the company’s products for lease and capacity to pay the agreed total sum in the manner as in Section 11 of this agreement.
@@ -108,7 +114,7 @@ iv. The customer agrees and accepts that online acknowledgement, or scanned docu
 				<reportElement x="0" y="656" width="100" height="1" uuid="06ae85e0-b284-4c90-b60a-c4d374c0ab2d"/>
 			</break>
 			<textField>
-				<reportElement x="46" y="30" width="104" height="15" uuid="60a5c621-af2f-4d11-b227-181750d4aafa">
+				<reportElement x="46" y="30" width="94" height="15" uuid="60a5c621-af2f-4d11-b227-181750d4aafa">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
@@ -169,6 +175,8 @@ This agreement and any dispute or claim about it or its subject matter is govern
 
 
 
+
+
 Total Amount: N16,000.00
 Discounted Price: N12,000.00
 Monthly Lease Payment: N1000.00
@@ -180,7 +188,7 @@ In a case where customer defaults, Customer hereby has authorized Moreplex TV Lt
 
 IN WITNESS WHEREOF the parties have executed and affixed their common seals to this agreement the day and year first above written.
 
-SIGNED, SEALED AND DELIVERED BY THE WITHIN NAMED COMPANY   
+ 
 
 
 
@@ -198,13 +206,13 @@ SIGNED, SEALED AND DELIVERED BY THE WITHIN NAMED COMPANY
 ]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="81" y="32" width="174" height="13" uuid="9c051477-16fc-4d56-945b-b9e1a96055f3">
+				<reportElement x="81" y="35" width="174" height="13" uuid="9c051477-16fc-4d56-945b-b9e1a96055f3">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textFieldExpression><![CDATA[$F{fName}+" "+$F{lName}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="121" y="47" width="171" height="13" uuid="cae265b1-9ac1-4c48-8c8d-8ebef506c159">
+				<reportElement x="121" y="61" width="171" height="13" uuid="cae265b1-9ac1-4c48-8c8d-8ebef506c159">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
@@ -212,7 +220,7 @@ SIGNED, SEALED AND DELIVERED BY THE WITHIN NAMED COMPANY
 				<textFieldExpression><![CDATA[$F{mNumber}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="23" y="73" width="207" height="13" uuid="584ff9bf-d5ce-4dcc-bf0a-31af8d044d24">
+				<reportElement x="23" y="89" width="207" height="13" uuid="584ff9bf-d5ce-4dcc-bf0a-31af8d044d24">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
@@ -220,28 +228,28 @@ SIGNED, SEALED AND DELIVERED BY THE WITHIN NAMED COMPANY
 				<textFieldExpression><![CDATA[$F{nin}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="85" y="402" width="122" height="13" uuid="d679890c-0c9c-4ceb-8605-87c48a69d3ec">
+				<reportElement x="85" y="428" width="122" height="13" uuid="d679890c-0c9c-4ceb-8605-87c48a69d3ec">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textFieldExpression><![CDATA[$F{fName}+" "+$F{lName}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="27" y="435" width="130" height="14" uuid="d9f9eb79-c71b-4038-ad97-fe0ebd92251f">
+				<reportElement x="26" y="457" width="130" height="14" uuid="d9f9eb79-c71b-4038-ad97-fe0ebd92251f">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="133" y="127" width="159" height="14" uuid="754b7865-d253-498c-b2df-9cc65ed4bd78">
+				<reportElement x="133" y="147" width="159" height="14" uuid="754b7865-d253-498c-b2df-9cc65ed4bd78">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="59" y="99" width="210" height="13" uuid="5eb38489-9e93-4134-82ad-4cc9b573c954">
+				<reportElement x="59" y="117" width="210" height="13" uuid="5eb38489-9e93-4134-82ad-4cc9b573c954">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
@@ -249,14 +257,14 @@ SIGNED, SEALED AND DELIVERED BY THE WITHIN NAMED COMPANY
 				<textFieldExpression><![CDATA[$F{bankName}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="108" y="113" width="169" height="14" uuid="5c1ff170-f479-4ad9-b92b-697f30bb3cac">
+				<reportElement x="108" y="133" width="169" height="14" uuid="5c1ff170-f479-4ad9-b92b-697f30bb3cac">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textFieldExpression><![CDATA[$F{accountNumber}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="26" y="85" width="210" height="13" uuid="45641635-f360-4789-bebf-47872fc5923a">
+				<reportElement x="26" y="103" width="210" height="13" uuid="45641635-f360-4789-bebf-47872fc5923a">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
@@ -264,7 +272,7 @@ SIGNED, SEALED AND DELIVERED BY THE WITHIN NAMED COMPANY
 				<textFieldExpression><![CDATA[$F{bvn}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="140" y="330" width="100" height="13" uuid="c18fd0ad-e4e8-4760-8934-7b106e95281c">
+				<reportElement x="143" y="351" width="100" height="13" uuid="c18fd0ad-e4e8-4760-8934-7b106e95281c">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement>
@@ -273,67 +281,67 @@ SIGNED, SEALED AND DELIVERED BY THE WITHIN NAMED COMPANY
 				<text><![CDATA[John Okorocha]]></text>
 			</staticText>
 			<image>
-				<reportElement x="140" y="343" width="132" height="39" uuid="22b60555-6296-46b3-9a0d-dba7ce19ab3e"/>
-				<imageExpression><![CDATA[$P{realPath}+"/jhon_sign.png"]]></imageExpression>
+				<reportElement x="143" y="367" width="132" height="39" uuid="22b60555-6296-46b3-9a0d-dba7ce19ab3e"/>
+				<imageExpression><![CDATA[$P{realPath}+"/jhon_sign-removebg-preview.png"]]></imageExpression>
 			</image>
 			<staticText>
-				<reportElement x="0" y="32" width="80" height="13" uuid="3f1efff4-2666-476d-a00c-6a4534988dca">
+				<reportElement x="0" y="35" width="80" height="13" uuid="3f1efff4-2666-476d-a00c-6a4534988dca">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Customer Name:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="47" width="120" height="13" uuid="cee5b83a-0494-4f84-a399-8bc5d8f8eb82">
+				<reportElement x="0" y="61" width="120" height="13" uuid="cee5b83a-0494-4f84-a399-8bc5d8f8eb82">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Customer Phone Number:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="72" width="22" height="13" uuid="af1f15bd-6b5b-4318-a274-6796bbb91cbe">
+				<reportElement x="0" y="89" width="22" height="13" uuid="af1f15bd-6b5b-4318-a274-6796bbb91cbe">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[NIN:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="85" width="24" height="13" uuid="062e26cb-eb97-427a-b88a-ed36ac5db8ea">
+				<reportElement x="0" y="103" width="24" height="13" uuid="062e26cb-eb97-427a-b88a-ed36ac5db8ea">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[BVN:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="99" width="59" height="13" uuid="27f30bf6-e6e4-4c41-ac55-c8fe20219be0">
+				<reportElement x="0" y="117" width="59" height="13" uuid="27f30bf6-e6e4-4c41-ac55-c8fe20219be0">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Bank Name:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="113" width="109" height="14" uuid="d38ec60e-c7ba-427c-981a-7a91518ea253">
+				<reportElement x="0" y="133" width="109" height="14" uuid="d38ec60e-c7ba-427c-981a-7a91518ea253">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Bank Account Number:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="127" width="133" height="14" uuid="626f07c4-ecd3-4f79-acb7-a7331bbd535d">
+				<reportElement x="0" y="147" width="133" height="14" uuid="626f07c4-ecd3-4f79-acb7-a7331bbd535d">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Effective Date(Today’s date):]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="60" width="90" height="13" uuid="9097aa42-ca9a-461c-8e07-4dbbf5d218d3">
+				<reportElement x="0" y="75" width="90" height="13" uuid="9097aa42-ca9a-461c-8e07-4dbbf5d218d3">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Customer Address:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="89" y="60" width="221" height="13" uuid="f62c45f7-6dca-47f9-9813-9339057984d4">
+				<reportElement x="89" y="75" width="221" height="13" uuid="f62c45f7-6dca-47f9-9813-9339057984d4">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
@@ -341,46 +349,66 @@ SIGNED, SEALED AND DELIVERED BY THE WITHIN NAMED COMPANY
 				<textFieldExpression><![CDATA[$F{city}+" " +$F{state}+" " +$F{country}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="1" y="402" width="83" height="13" uuid="6856b9c7-1721-4245-b6ca-306b7bb6d048">
+				<reportElement x="1" y="428" width="83" height="13" uuid="6856b9c7-1721-4245-b6ca-306b7bb6d048">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Customer Name:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="435" width="25" height="13" uuid="2e7bab08-ffa6-46b4-a19c-77b14cdf56fb">
+				<reportElement x="0" y="457" width="25" height="13" uuid="2e7bab08-ffa6-46b4-a19c-77b14cdf56fb">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Date:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="419" width="92" height="13" uuid="a5590da5-5564-4c8f-ba0a-83cb44aff595">
+				<reportElement x="0" y="441" width="92" height="13" uuid="a5590da5-5564-4c8f-ba0a-83cb44aff595">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Customer Signature: ]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="330" width="133" height="13" uuid="e7885fd1-77c3-4224-8d35-b0f71a464ab6">
+				<reportElement x="0" y="350" width="133" height="13" uuid="e7885fd1-77c3-4224-8d35-b0f71a464ab6">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Moreplex Director’s Name:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1" y="350" width="139" height="13" uuid="6fcf9c06-6bae-48ed-9ed1-80ec5197ec12">
+				<reportElement x="1" y="372" width="139" height="13" uuid="6fcf9c06-6bae-48ed-9ed1-80ec5197ec12">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Moreplex Director’s Signature:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1" y="385" width="379" height="15" uuid="4d8d378c-e46a-46ed-9424-ed62e44f2d8f">
+				<reportElement x="1" y="408" width="379" height="15" uuid="4d8d378c-e46a-46ed-9424-ed62e44f2d8f">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[SIGNED, SEALED AND DELIVERED BY THE WITHIN NAMED CUSTOMER]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="49" width="77" height="13" uuid="4e124e93-6303-4f01-891f-f9450a24106f">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<text><![CDATA[Customer Email:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="77" y="49" width="215" height="13" uuid="272942db-136f-4b1c-ac7d-79415eb47689">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{email}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="329" width="379" height="15" uuid="179c5f45-ea73-4d8d-abdd-ec52e57403bc">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<text><![CDATA[SIGNED, SEALED AND DELIVERED BY THE WITHIN NAMED COMPANY]]></text>
 			</staticText>
 		</band>
 	</detail>
