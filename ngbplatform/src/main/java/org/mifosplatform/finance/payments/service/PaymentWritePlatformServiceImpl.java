@@ -306,6 +306,7 @@ public class PaymentWritePlatformServiceImpl implements PaymentWritePlatformServ
 					DateUtils.getLocalDateOfTenant(), payment.getRemarks(), payment.getPaymodeId(), null,
 					payment.getReceiptNo(), null, payment.isWalletPayment(), payment.getIsSubscriptionPayment(),
 					payment.getId());
+			
 			cancelPay.cancelPayment(command);
 			this.paymentRepository.save(cancelPay);
 			payment.cancelPayment(command);

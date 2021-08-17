@@ -116,6 +116,7 @@ public class Payment extends AbstractAuditableCustom<AppUser, Long> {
 		this.refernceId = referenceId;
 
 	}
+	
 
 	public static Payment fromJson(final JsonCommand command, final Long clientid) {
 		final LocalDate paymentDate = command.localDateValueOfParameterNamed("paymentDate");
