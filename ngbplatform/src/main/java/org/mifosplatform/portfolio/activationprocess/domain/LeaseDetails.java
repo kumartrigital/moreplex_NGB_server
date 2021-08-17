@@ -74,6 +74,9 @@ public class LeaseDetails {
 	@Column(name = "account_no")
 	private String accountNo;
 
+	@Column(name="postal_code")
+	private String pinCode;
+	
 	public Long getId() {
 		return id;
 	}
@@ -271,4 +274,14 @@ public class LeaseDetails {
 				deviceId, voucherId);
 
 	}
+
+	public String getPinCode() {
+		return pinCode;
+	}
+
+	public void setPinCode(String pinCode) {
+		this.pinCode = pinCode;
+	}
+	
+	
 }

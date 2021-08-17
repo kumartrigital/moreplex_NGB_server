@@ -252,7 +252,7 @@ public class ActivationProcessApiResource {
 				response.put("message", "Mobile Number less than 10 Digits");
 				return Response.status(400).entity(response).build();
 			}
-
+			leaseDetails.setSalutation("MR");
 			leaseDetails.setOfficeId(requestPayload.getLong("officeId"));
 			leaseDetails.setFirstName(requestPayload.getString("forename"));
 			leaseDetails.setLastName(requestPayload.getString("surname"));
@@ -264,6 +264,7 @@ public class ActivationProcessApiResource {
 			leaseDetails.setCity(requestPayload.getString("city"));
 			leaseDetails.setState(requestPayload.getString("state"));
 			leaseDetails.setCountry(requestPayload.getString("country"));
+			leaseDetails.setPinCode(requestPayload.getString("pinCode"));
 
 			String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
 			leaseDetails.setStatus("Otp_Pending");
@@ -340,8 +341,6 @@ public class ActivationProcessApiResource {
 		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 		return this.toApiJsonSerializer.serialize(result);
 	}
-	
-	
 
 	@GET
 	@Path("/resendotp")
@@ -349,17 +348,18 @@ public class ActivationProcessApiResource {
 	@Produces({ MediaType.APPLICATION_JSON })
 	public void getDocument(HttpServletResponse response) throws IOException, JRException {
 
-	String sourceFileName = ResourceUtils.getFile(FileUtils.MIFOSX_BASE_DIR + File.separator + "leaseAgrrement.jasper").getAbsolutePath();
-	// creating our list of beans
+		String sourceFileName = ResourceUtils
+				.getFile(FileUtils.MIFOSX_BASE_DIR + File.separator + "leaseAgrrement.jasper").getAbsolutePath();
+		// creating our list of beans
 
-	LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(null);
-	
-	// creating datasource from bean list
-	JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource((Collection<?>) leaseDetails);
-	Map parameters = new HashMap();
-	JasperPrint jasperPrint = JasperFillManager.fillReport(sourceFileName, parameters, beanColDataSource);
-	JasperExportManager.exportReportToPdfStream(jasperPrint, response.getOutputStream());
-	response.setContentType("application/pdf");
-	response.addHeader("Content-Disposition", "inline; filename=jasper.pdf;");
-		}
+		LeaseDetails leaseDetails = leaseDetailsRepository.findLeaseDetailsByMobileNo(null);
+
+		// creating datasource from bean list
+		JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource((Collection<?>) leaseDetails);
+		Map parameters = new HashMap();
+		JasperPrint jasperPrint = JasperFillManager.fillReport(sourceFileName, parameters, beanColDataSource);
+		JasperExportManager.exportReportToPdfStream(jasperPrint, response.getOutputStream());
+		response.setContentType("application/pdf");
+		response.addHeader("Content-Disposition", "inline; filename=jasper.pdf;");
+	}
 }
