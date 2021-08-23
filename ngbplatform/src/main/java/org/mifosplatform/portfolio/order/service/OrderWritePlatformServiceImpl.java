@@ -398,6 +398,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 					EventActionConstants.EVENT_CREATE_ORDER, command.json(), userId);
 
 			Plan plan = this.planRepository.findPlanCheckDeletedStatus(command.longValueOfParameterNamed("planCode"));
+			
 			Order order = this.orderAssembler.assembleOrderDetails(command, clientId, plan);
 			// this condition is for updating order_No for multiple plans
 			if (command.stringValueOfParameterName("orderNo") != null) {

@@ -85,8 +85,8 @@
 		<band height="657">
 			<staticText>
 				<reportElement x="0" y="-20" width="572" height="670" uuid="d504ada0-e2c1-4c97-b26a-c6fa055fed26"/>
-				<text><![CDATA[THIS  LEASE  AGREEMENT is made the date on section 11 of this agreement, BETWEEN MOREPLEX TV Ltd, a limited liability company duly incorporated under the laws of the Federal Republic of Nigeria, with registered office address at NO 15B KUDIRAT ABIOLA WAY, IKEJA, LAGOS  NIGERIA (hereinafter called ‘COMPANY’ and shall for the sake of this agreement be referred to as ‘The Company’ which expression shall where the context permits include its successors-in-title, privies and assigns) of the first part AND                                             with                             
-				 address_____________________________________________________________________________________________ (hereinafter referred to as  “The Customer” which expression shall where the context permits include its successors-in-title, privies and assigns) of the other part.
+				<text><![CDATA[THIS  LEASE  AGREEMENT is made the date on section 11 of this agreement, BETWEEN MOREPLEX TV Ltd, a limited liability company duly incorporated under the laws of the Federal Republic of Nigeria, with registered office address at NO 15B KUDIRAT ABIOLA WAY, IKEJA, LAGOS  NIGERIA (hereinafter called ‘COMPANY’ and shall for the sake of this agreement be referred to as ‘The Company’ which expression shall where the context permits include its successors-in-title, privies and assigns) of the first part AND               with   
+	 address_____________________________________________________________________________________________ (hereinafter referred to as  “The Customer” which expression shall where the context permits include its successors-in-title, privies and assigns) of the other part.
 WHEREAS 
     1. The Company is the owner and operator of a Direct –To – Home Satellite platform known as MOREPLEX TV and is desirous of maintaining and smoothly operating same and to give out its Decoders to interested customers for lease The Customer  has presented to the company his  willingness  in taking the company’s products for lease and capacity to pay the agreed total sum in the manner as in Section 11 of this agreement.
     2. Parties have agreed and as such willfully, without duress entered into this agreement. 
@@ -115,14 +115,14 @@ iv. The customer agrees and accepts that online acknowledgement, or scanned docu
 				<reportElement x="0" y="656" width="100" height="1" uuid="06ae85e0-b284-4c90-b60a-c4d374c0ab2d"/>
 			</break>
 			<textField>
-				<reportElement x="352" y="27" width="94" height="15" uuid="60a5c621-af2f-4d11-b227-181750d4aafa">
+				<reportElement x="359" y="27" width="94" height="15" uuid="60a5c621-af2f-4d11-b227-181750d4aafa">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textFieldExpression><![CDATA[$F{fName}+" "+$F{lName}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="57" y="48" width="221" height="13" uuid="e5d2b734-d19e-453a-9680-6e4a297594f4">
+				<reportElement x="87" y="38" width="221" height="13" uuid="e5d2b734-d19e-453a-9680-6e4a297594f4">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>

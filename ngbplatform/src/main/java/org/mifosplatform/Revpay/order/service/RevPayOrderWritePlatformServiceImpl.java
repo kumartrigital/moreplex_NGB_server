@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.simple.JSONArray;
 import org.mifosplatform.Revpay.order.domain.RevPayOrderRepository;
 import org.mifosplatform.Revpay.order.exception.OrderNotCreatedException;
 import org.mifosplatform.billing.planprice.domain.Price;
@@ -393,23 +394,25 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 
 				JsonArray planCodes = fromApiJsonHelper.extractJsonArrayNamed("plans", elementjson);
 				System.out.println("RevPayOrderWritePlatformServiceImpl.createOrder()" + planCodes.toString());
-				String planCode = null;
+				Long planId = null;
 				ClientService clientService = clientServiceRepository
 						.findClientServicewithClientId(paymentGateway.getObsId());
+				JSONArray plans = new JSONArray();
+
 				for (JsonElement j : planCodes) {
 					JsonCommand deviceComm = new JsonCommand(null, j.toString(), j, fromApiJsonHelper, null, null, null,
 							null, null, null, null, null, null, null, null, null);
-					planCode = deviceComm.stringValueOfParameterName("planCode");
+				
+					planId = deviceComm.longValueOfParameterNamed("id");
+					
 					int contractPeriod = deviceComm.integerValueOfParameterNamed("contractPeriod");
 
-					System.out.println("RevPayOrderWritePlatformServiceImpl.createOrder()" + planCode);
-					final Plan plan = this.planRepository.findwithPlanCode(planCode);
+					final Plan plan = this.planRepository.findPlanCheckDeletedStatus(planId);
 
-					System.out.println("RevPayOrderWritePlatformServiceImpl.createOrder()" + plan.getId());
 					Price price = priceRepository.findplansByPlanIdChargeOwnerSelf(plan.getId());
 
 					JsonObject orderJson = new JsonObject();
-					orderJson.addProperty("planid", plan.getId());
+					orderJson.addProperty("id", plan.getId());
 					orderJson.addProperty("planCode", plan.getPlanCode());
 					orderJson.addProperty("plandescription", plan.getDescription());
 					orderJson.addProperty("planpoid", 0);
@@ -424,8 +427,12 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 					String dateFormat = "dd MMMM yyyy";
 					SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
 					orderJson.addProperty("startdate", formatter.format(new Date()));
-					paymentGateway.setReProcessDetail("\"plans\" :" + orderJson.toString());
+
+					plans.add(orderJson);
+
 				}
+				paymentGateway.setReProcessDetail(plans.toString());
+				plans.clear();
 				paymentGatewayRepository.save(paymentGateway);
 
 				revorder = new JSONObject();
@@ -481,8 +488,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 			JSONObject revRequest = new JSONObject();
 			revRequest.put("txref", txid);
 			// FLWPUBK-acb0630ea1c150dabf363efa007d3a0b-X
-			//revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
-			 revRequest.put("SECKEY", "FLWSECK-7a27e5bdaca5e7632e760f7aef00d40b-X");
+			// revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
+			revRequest.put("SECKEY", "FLWSECK-7a27e5bdaca5e7632e760f7aef00d40b-X");
 
 			HttpEntity<String> request = new HttpEntity<>(revRequest.toString(), headers);
 			revResponse = rest.postForObject(VERIFY_ENDPOINT, request, String.class);
