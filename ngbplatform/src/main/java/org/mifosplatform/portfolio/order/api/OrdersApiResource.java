@@ -471,6 +471,7 @@ public class OrdersApiResource {
 
 	@PUT
 	@Path("extension/{orderId}")
+	
 	@Consumes({ MediaType.APPLICATION_JSON })
 	@Produces({ MediaType.APPLICATION_JSON })
 	public String extendOrder(@PathParam("orderId") final Long orderId, final String apiRequestBodyAsJson) {
