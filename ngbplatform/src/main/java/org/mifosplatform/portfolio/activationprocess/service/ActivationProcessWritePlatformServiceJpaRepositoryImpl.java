@@ -2030,7 +2030,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 			String path = this.saveImage(ImageBase64Encoder);
 
-			this.photoVerification(leaseDetails.getNIN(), path);
+	//		this.photoVerification(leaseDetails.getNIN(), path);
 
 			// this.OTP_MESSAGE(details.getMobileNumber(), otp);
 
@@ -2079,10 +2079,10 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		} else if (leaseDetails.getStatus().equals("Photo_Verification_Pending")) {
 			String conformation = command.stringValueOfParameterName("conformation");
 			if (conformation == null) {
-				Boolean status = this.photoVerification(leaseDetails.getNIN(), leaseDetails.getImagePath());
-				if (status == false) {
+			//	Boolean status = this.photoVerification(leaseDetails.getNIN(), leaseDetails.getImagePath());
+			/*	if (status == false) {
 					throw new PhotoNotVerificationException("photo Not Verified");
-				}
+				}*/
 				leaseDetails.setImageVerification("API");
 			} else {
 				leaseDetails.setImageVerification("manual");
