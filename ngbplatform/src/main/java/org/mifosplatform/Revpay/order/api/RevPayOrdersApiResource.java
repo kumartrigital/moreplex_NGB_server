@@ -224,7 +224,7 @@ public class RevPayOrdersApiResource {
 			if (revpayOrder.getType().equalsIgnoreCase("LEASEVERIFICATION_Payment")) {
 				LeaseDetails leaseDetails = leaseDetailsRepository
 						.findLeaseDetailsByMobileNo(revpayOrder.getDeviceId());
-				if (leaseDetails.getStatus().equalsIgnoreCase("Payment_pending")) {
+				if (leaseDetails.getStatus().equalsIgnoreCase("Registration_Pending")) {
 					leaseDetails.setStatus("NIN_Pending");
 					leaseDetailsRepository.save(leaseDetails);
 				} else {

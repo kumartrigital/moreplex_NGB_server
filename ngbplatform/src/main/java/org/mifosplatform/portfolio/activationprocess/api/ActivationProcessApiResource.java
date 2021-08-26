@@ -242,52 +242,47 @@ public class ActivationProcessApiResource {
 
 			JSONObject requestPayload = new JSONObject(apiRequestBodyAsJson);
 			String mobile = requestPayload.getString("mobile");
+			
 			LeaseDetails leaseDetailscheck = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobile);
 
 			if (leaseDetailscheck != null) {
 				response.put("message", "Mobile Number Alredy present");
 				return Response.status(400).entity(response).build();
 			}
-			if (mobile.length() != 10) {
+			if (mobile.length() < 10) {
 				response.put("message", "Mobile Number less than 10 Digits");
 				return Response.status(400).entity(response).build();
 			}
+			
 			leaseDetails.setSalutation("MR");
 			leaseDetails.setOfficeId(requestPayload.getLong("officeId"));
 			leaseDetails.setFirstName(requestPayload.getString("forename"));
 			leaseDetails.setLastName(requestPayload.getString("surname"));
 			leaseDetails.setEmail(requestPayload.getString("email"));
 			leaseDetails.setMobileNumber(requestPayload.getString("mobile"));
-
-			leaseDetails.setNIN(requestPayload.getString("NIN"));
-			// leaseDetails.setBVN(requestPayload.getString("BVN"));
 			leaseDetails.setCity(requestPayload.getString("city"));
 			leaseDetails.setState(requestPayload.getString("state"));
 			leaseDetails.setCountry(requestPayload.getString("country"));
 			leaseDetails.setPinCode(requestPayload.getString("pinCode"));
-
+			leaseDetails.setAddress("addressNo");
+			
 			String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
 			leaseDetails.setStatus("Otp_Pending");
 			leaseDetails.setOtp(otp);
-			String ImageBase64Encoder = requestPayload.getString("image");
-			if (ImageBase64Encoder == null) {
-				response.put("message", "Image is Required");
-				return Response.status(400).entity(response).build();
-			}
-			String path = activationProcessWritePlatformService.saveImage(ImageBase64Encoder);
-			leaseDetails.setImagePath(path);
+		
 			try {
 				ResponseEntity<String> result = activationProcessWritePlatformService
 						.OTP_MESSAGE(leaseDetails.getMobileNumber(), otp);
-
+				
 				if (!result.getStatusCode().equals(HttpStatus.OK)) {
-
 					return Response.status(400).entity(result.getBody()).build();
 				}
+			
 			} catch (Exception e) {
 				response.put("message", "Please Check Your Mobile Number");
 				return Response.status(400).entity(response).build();
 			}
+			
 			leaseDetailsRepository.saveAndFlush(leaseDetails);
 
 		} catch (JSONException e) {

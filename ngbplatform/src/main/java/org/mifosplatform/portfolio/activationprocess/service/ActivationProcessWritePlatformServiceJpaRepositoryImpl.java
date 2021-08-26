@@ -414,8 +414,6 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 				if (itemData == null) {
 					throw new DeviceIdNotFoundException(deviceId);
 				}
-
-				// inviewWritePlatformService.createClient(newcommand);
 				command = convertIntoNGBJson(newcommand);
 
 				String jsoncommand = command.json();
@@ -505,7 +503,6 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			final CommandProcessingResult result = this.commandsSourceWritePlatformService
 					.logCommandSource(commandRequest);
 
-			logger.info("ActivationProcessWritePlatformServiceJpaRepositoryImpl.createSimpleActivation() ending");
 			// condition to avoid first month lease charge for newly activating customers by
 			// crediting after deduction
 			/*
@@ -2030,7 +2027,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 			String path = this.saveImage(ImageBase64Encoder);
 
-	//		this.photoVerification(leaseDetails.getNIN(), path);
+			// this.photoVerification(leaseDetails.getNIN(), path);
 
 			// this.OTP_MESSAGE(details.getMobileNumber(), otp);
 
@@ -2058,63 +2055,52 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 				throw new OTPNOTVerificationException("OTP is Not verified");
 			}
 			return CommandProcessingResult.parsingResult("otp verified");
-		} else if (leaseDetails.getStatus().equals("NIN_Pending")) {
-			try {
-				requestPayload.put("firstname", leaseDetails.getFirstName());
-				requestPayload.put("lastname", leaseDetails.getLastName());
-				requestPayload.put("phone", leaseDetails.getMobileNumber());
-			} catch (JSONException e) {
-				e.printStackTrace();
-				return new CommandProcessingResult(e.getLocalizedMessage());
-			}
-			ResponseEntity<String> apiResponse = this.validationNIN(Long.parseLong(leaseDetails.getNIN()),
-					requestPayload);
-			if (!apiResponse.getStatusCode().equals(HttpStatus.CREATED)) {
-				throw new NINNOTVerificationException("NIN Id is Not verified");
-			}
-
-			leaseDetails.setStatus("Photo_Verification_Pending");
-			leaseDetailsRepository.save(leaseDetails);
-			return CommandProcessingResult.parsingResult("NIN verified");
-		} else if (leaseDetails.getStatus().equals("Photo_Verification_Pending")) {
-			String conformation = command.stringValueOfParameterName("conformation");
-			if (conformation == null) {
-			//	Boolean status = this.photoVerification(leaseDetails.getNIN(), leaseDetails.getImagePath());
-			/*	if (status == false) {
-					throw new PhotoNotVerificationException("photo Not Verified");
-				}*/
-				leaseDetails.setImageVerification("API");
-			} else {
-				leaseDetails.setImageVerification("manual");
-			}
-			leaseDetails.setStatus("Bvn_Pending");
-			leaseDetailsRepository.save(leaseDetails);
-
-			return CommandProcessingResult.parsingResult(leaseDetails);
-		} else if (leaseDetails.getStatus().equals("Bvn_Pending")) {
-
-			try {
-				requestPayload.put("firstname", leaseDetails.getFirstName());
-				requestPayload.put("lastname", leaseDetails.getLastName());
-				requestPayload.put("phone", leaseDetails.getMobileNumber());
-			} catch (JSONException e) {
-				e.printStackTrace();
-				return new CommandProcessingResult(e.getLocalizedMessage());
-			}
-			// ResponseEntity<String> apiResponse =
-			// this.validationNIN(Long.parseLong(leaseDetails.getNIN()),
-			// requestPayload);
-
-			leaseDetails.setAccountNo(command.stringValueOfParameterName("accountNo"));
-			leaseDetails.setBankName(command.stringValueOfParameterName("bankName"));
-			leaseDetails.setStatus("Registration_Pending");
-
-			leaseDetailsRepository.save(leaseDetails);
-
-			return CommandProcessingResult.parsingResult(leaseDetails);
-		}
-
-		else if (leaseDetails.getStatus().equals("Registration_Pending")) {
+			/*
+			 * } else if (leaseDetails.getStatus().equals("NIN_Pending")) { try {
+			 * requestPayload.put("firstname", leaseDetails.getFirstName());
+			 * requestPayload.put("lastname", leaseDetails.getLastName());
+			 * requestPayload.put("phone", leaseDetails.getMobileNumber()); } catch
+			 * (JSONException e) { e.printStackTrace(); return new
+			 * CommandProcessingResult(e.getLocalizedMessage()); } //ResponseEntity<String>
+			 * apiResponse = this.validationNIN(Long.parseLong(leaseDetails.getNIN()), //
+			 * requestPayload); //if
+			 * (!apiResponse.getStatusCode().equals(HttpStatus.CREATED)) { //throw new
+			 * NINNOTVerificationException("NIN Id is Not verified"); //}
+			 * 
+			 * leaseDetails.setStatus("Photo_Verification_Pending");
+			 * leaseDetailsRepository.save(leaseDetails); return
+			 * CommandProcessingResult.parsingResult("NIN verified"); } else if
+			 * (leaseDetails.getStatus().equals("Photo_Verification_Pending")) { String
+			 * conformation = command.stringValueOfParameterName("conformation"); if
+			 * (conformation == null) { // Boolean status =
+			 * this.photoVerification(leaseDetails.getNIN(), leaseDetails.getImagePath());
+			 * if (status == false) { throw new
+			 * PhotoNotVerificationException("photo Not Verified"); }
+			 * leaseDetails.setImageVerification("API"); } else {
+			 * leaseDetails.setImageVerification("manual"); }
+			 * leaseDetails.setStatus("Bvn_Pending");
+			 * leaseDetailsRepository.save(leaseDetails);
+			 * 
+			 * return CommandProcessingResult.parsingResult(leaseDetails); } else if
+			 * (leaseDetails.getStatus().equals("Bvn_Pending")) {
+			 * 
+			 * try { requestPayload.put("firstname", leaseDetails.getFirstName());
+			 * requestPayload.put("lastname", leaseDetails.getLastName());
+			 * requestPayload.put("phone", leaseDetails.getMobileNumber()); } catch
+			 * (JSONException e) { e.printStackTrace(); return new
+			 * CommandProcessingResult(e.getLocalizedMessage()); } // ResponseEntity<String>
+			 * apiResponse = // this.validationNIN(Long.parseLong(leaseDetails.getNIN()), //
+			 * requestPayload);
+			 * 
+			 * leaseDetails.setAccountNo(command.stringValueOfParameterName("accountNo"));
+			 * leaseDetails.setBankName(command.stringValueOfParameterName("bankName"));
+			 * leaseDetails.setStatus("Registration_Pending");
+			 * 
+			 * leaseDetailsRepository.save(leaseDetails);
+			 * 
+			 * return CommandProcessingResult.parsingResult(leaseDetails); }
+			 */
+		} else if (leaseDetails.getStatus().equals("Registration_Pending")) {
 			String result = command.stringValueOfParameterName("ActivationResult");
 			if (result.equalsIgnoreCase("Success")) {
 				String deviceId = command.stringValueOfParameterName("deviceId");
@@ -2198,7 +2184,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		// String imagePath = "https://52.22.65.59:8877/Verification_Images/leaseImage"+ uniqueNumber + extension;
+		// String imagePath = "https://52.22.65.59:8877/Verification_Images/leaseImage"+
+		// uniqueNumber + extension;
 		String imagePath = "https://billing.moreplextv.com/Verification_Images/leaseImage" + uniqueNumber + extension;
 
 		return imagePath;

@@ -98,7 +98,7 @@
 			<staticText>
 				<reportElement x="0" y="-20" width="572" height="670" uuid="d504ada0-e2c1-4c97-b26a-c6fa055fed26"/>
 				<text><![CDATA[THIS  LEASE  AGREEMENT is made the date on section 11 of this agreement, BETWEEN MOREPLEX TV Ltd, a limited liability company duly incorporated under the laws of the Federal Republic of Nigeria, with registered office address at NO 15B KUDIRAT ABIOLA WAY, IKEJA, LAGOS  NIGERIA (hereinafter called ‘COMPANY’ and shall for the sake of this agreement be referred to as ‘The Company’ which expression shall where the context permits include its successors-in-title, privies and assigns) of the first part;                                                                  
-				 address_____________________________________________________________________________________________ (hereinafter referred to as  “The Customer” which expression shall where the context permits include its successors-in-title, privies and assigns) of the other part.
+				 address____________________________________________________________________________ (hereinafter referred to as  “The Customer” which expression shall where the context permits include its successors-in-title, privies and assigns) of the other part.
 WHEREAS 
     1. The Company is the owner and operator of a Direct –To – Home Satellite platform known as MOREPLEX TV and is desirous of maintaining and smoothly operating same and to give out its Decoders to interested customers for lease The Customer  has presented to the company his  willingness  in taking the company’s products for lease and capacity to pay the agreed total sum in the manner as in Section 11 of this agreement.
     2. Parties have agreed and as such willfully, without duress entered into this agreement. 
@@ -127,14 +127,14 @@ iv. The customer agrees and accepts that online acknowledgement, or scanned docu
 				<reportElement x="0" y="656" width="100" height="1" uuid="06ae85e0-b284-4c90-b60a-c4d374c0ab2d"/>
 			</break>
 			<textField>
-				<reportElement x="22" y="30" width="158" height="15" uuid="60a5c621-af2f-4d11-b227-181750d4aafa">
+				<reportElement x="314" y="28" width="158" height="15" uuid="60a5c621-af2f-4d11-b227-181750d4aafa">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textFieldExpression><![CDATA[" AND" + " "+$F{fName}+" "+$F{lName}+" ;with"]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="47" y="52" width="299" height="13" uuid="e5d2b734-d19e-453a-9680-6e4a297594f4">
+				<reportElement x="47" y="49" width="299" height="13" uuid="e5d2b734-d19e-453a-9680-6e4a297594f4">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
@@ -176,13 +176,13 @@ This agreement and any dispute or claim about it or its subject matter is govern
 		</band>
 		<band height="510">
 			<textField>
-				<reportElement x="81" y="24" width="229" height="15" uuid="9c051477-16fc-4d56-945b-b9e1a96055f3">
+				<reportElement x="101" y="24" width="229" height="15" uuid="9c051477-16fc-4d56-945b-b9e1a96055f3">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textFieldExpression><![CDATA[$F{fName}+" "+$F{lName}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="121" y="40" width="189" height="15" uuid="cae265b1-9ac1-4c48-8c8d-8ebef506c159">
+				<reportElement x="141" y="40" width="189" height="15" uuid="cae265b1-9ac1-4c48-8c8d-8ebef506c159">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -198,7 +198,7 @@ This agreement and any dispute or claim about it or its subject matter is govern
 				<textFieldExpression><![CDATA[$F{nin}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="85" y="428" width="122" height="13" uuid="d679890c-0c9c-4ceb-8605-87c48a69d3ec">
+				<reportElement x="105" y="428" width="122" height="13" uuid="d679890c-0c9c-4ceb-8605-87c48a69d3ec">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
@@ -251,18 +251,18 @@ This agreement and any dispute or claim about it or its subject matter is govern
 				<text><![CDATA[John Okorocha]]></text>
 			</staticText>
 			<image>
-				<reportElement x="143" y="367" width="132" height="39" uuid="22b60555-6296-46b3-9a0d-dba7ce19ab3e"/>
+				<reportElement x="173" y="367" width="132" height="39" uuid="22b60555-6296-46b3-9a0d-dba7ce19ab3e"/>
 				<imageExpression><![CDATA[$P{realPath}+"/jhon_sign-removebg-preview.png"]]></imageExpression>
 			</image>
 			<staticText>
-				<reportElement x="0" y="24" width="80" height="15" uuid="3f1efff4-2666-476d-a00c-6a4534988dca">
+				<reportElement x="0" y="24" width="99" height="15" uuid="3f1efff4-2666-476d-a00c-6a4534988dca">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Customer Name:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="40" width="120" height="15" uuid="cee5b83a-0494-4f84-a399-8bc5d8f8eb82">
+				<reportElement x="0" y="40" width="133" height="15" uuid="cee5b83a-0494-4f84-a399-8bc5d8f8eb82">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
@@ -304,7 +304,7 @@ This agreement and any dispute or claim about it or its subject matter is govern
 				<text><![CDATA[Effective Date(Today’s date):]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1" y="428" width="83" height="13" uuid="6856b9c7-1721-4245-b6ca-306b7bb6d048">
+				<reportElement x="1" y="428" width="99" height="13" uuid="6856b9c7-1721-4245-b6ca-306b7bb6d048">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
@@ -318,21 +318,21 @@ This agreement and any dispute or claim about it or its subject matter is govern
 				<text><![CDATA[Date:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="441" width="92" height="13" uuid="a5590da5-5564-4c8f-ba0a-83cb44aff595">
+				<reportElement x="0" y="441" width="112" height="13" uuid="a5590da5-5564-4c8f-ba0a-83cb44aff595">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Customer Signature: ]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="350" width="133" height="13" uuid="e7885fd1-77c3-4224-8d35-b0f71a464ab6">
+				<reportElement x="0" y="350" width="140" height="13" uuid="e7885fd1-77c3-4224-8d35-b0f71a464ab6">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<text><![CDATA[Moreplex Director’s Name:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1" y="372" width="139" height="13" uuid="6fcf9c06-6bae-48ed-9ed1-80ec5197ec12">
+				<reportElement x="1" y="372" width="179" height="18" uuid="6fcf9c06-6bae-48ed-9ed1-80ec5197ec12">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>

@@ -77,6 +77,9 @@ public class LeaseDetails {
 	@Column(name="postal_code")
 	private String pinCode;
 	
+	@Column(name="address")
+	private String address;
+	
 	public Long getId() {
 		return id;
 	}
@@ -282,6 +285,16 @@ public class LeaseDetails {
 	public void setPinCode(String pinCode) {
 		this.pinCode = pinCode;
 	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+	
+	
 	
 	
 }
