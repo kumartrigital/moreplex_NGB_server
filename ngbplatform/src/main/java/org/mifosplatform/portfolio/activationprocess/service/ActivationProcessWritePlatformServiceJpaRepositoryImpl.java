@@ -1973,25 +1973,25 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		try {
 			RestTemplate restTemplate = new RestTemplate();
 
-			String OTP_ENDPOINT = "https://termii.com/api/sms/send";
-			HttpHeaders headers = new HttpHeaders();
-
-			headers.add("Content-Type", "application/json");
-			headers.add("Cookie", "termii-sms=64Eq2KHTk3xNkRKHRaxrWA5WbfBp4lMNxHpMcx4Y");
-
-			System.out.println(OTP_ENDPOINT);
-			JSONObject requestpayload = new JSONObject();
-			requestpayload.put("to", "234" + mobileNo);
-			requestpayload.put("from", "Moreplex tv");
-			requestpayload.put("sms", "otp verification " + Otp);
-			requestpayload.put("type", "plain");
-			requestpayload.put("channel", "generic");
-			requestpayload.put("api_key", "TLISRdXrYknFK30dLcvfmtqGTdXHozF1QY0hhAe1JBcJDqRLr2Mwej3Q5We7J1");
-
-			HttpEntity<String> request = new HttpEntity<>(requestpayload.toString(), headers);
-			System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()");
-			result = restTemplate.postForEntity(OTP_ENDPOINT, request, String.class);
-			System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()" + result);
+		//	String OTP_ENDPOINT = "https://termii.com/api/sms/send";
+			String OTP_ENDPOINT = "http://bulksmsnigeria.test/api/v1/sms/create";
+			
+			
+			MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
+			params.add("api_token", "O0KM2E1yLKo2oE7gVoYwm7Dlu9NZCDp0K7LAp7LfwBSiN4jfa3Sv37TXNNsy");
+			params.add("from", "BulkSMS.ng");
+			params.add("to",mobileNo);
+			params.add("body", "otp verification " + Otp);
+	        System.out.println(OTP_ENDPOINT);
+     		HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(params);
+            result = restTemplate.exchange(OTP_ENDPOINT, HttpMethod.POST, requestEntity, String.class);	
+           
+			JSONObject jsonObject = new JSONObject(result.getBody());
+			if (jsonObject.has("error"))
+				{
+				throw new NINNOTVerificationException("Invalid Recipient " );
+				}
+			
 		} catch (HttpClientErrorException e) {
 			e.printStackTrace();
 			System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()" + result);
