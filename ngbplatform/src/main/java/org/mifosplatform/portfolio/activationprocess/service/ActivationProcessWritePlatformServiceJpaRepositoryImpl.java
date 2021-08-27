@@ -1969,43 +1969,76 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 	@Override
 	public ResponseEntity<String> OTP_MESSAGE(String mobileNo, String Otp) {
 		ResponseEntity<String> result = null;
-
+		System.out.println("mobileNo :" + mobileNo + ",otp :" + Otp);
 		try {
 			RestTemplate restTemplate = new RestTemplate();
 
-		//	String OTP_ENDPOINT = "https://termii.com/api/sms/send";
-			String OTP_ENDPOINT = "http://bulksmsnigeria.test/api/v1/sms/create";
-			
-			
-			MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
-			params.add("api_token", "O0KM2E1yLKo2oE7gVoYwm7Dlu9NZCDp0K7LAp7LfwBSiN4jfa3Sv37TXNNsy");
-			params.add("from", "BulkSMS.ng");
-			params.add("to",mobileNo);
-			params.add("body", "otp verification " + Otp);
-	        System.out.println(OTP_ENDPOINT);
-     		HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(params);
-            result = restTemplate.exchange(OTP_ENDPOINT, HttpMethod.POST, requestEntity, String.class);	
-           
-			JSONObject jsonObject = new JSONObject(result.getBody());
-			if (jsonObject.has("error"))
-				{
-				throw new NINNOTVerificationException("Invalid Recipient " );
-				}
-			
-		} catch (HttpClientErrorException e) {
-			e.printStackTrace();
-			System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()" + result);
-			throw new NINNOTVerificationException("something went wrong " + e.getLocalizedMessage());
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("User-agent", "BulkSMS.ng");
+			HttpEntity<String> entity = new HttpEntity<String>(headers);
 
-		} catch (Exception e) {
-			System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()" + result);
+			String OTP_ENDPOINT = "https://www.bulksmsnigeria.com/api/v1/sms/create?api_token=O0KM2E1yLKo2oE7gVoYwm7Dlu9NZCDp0K7LAp7LfwBSiN4jfa3Sv37TXNNsy"
+					+ "&from=BulkSMS.ng&to=" + mobileNo + "&body=" + "otp verification " + Otp;
+
+			result = restTemplate.exchange(OTP_ENDPOINT, HttpMethod.GET, entity, String.class);
+			System.out.println("sms response :" + result);
+			JSONObject jsonObject = new JSONObject(result.getBody());
+			if (jsonObject.has("error")) {
+				throw new OTPNOTVerificationException("Invalid Recipient ");
+			}
+
+		} catch (HttpClientErrorException e) {
+			System.out.println(
+					"ActivationProcessWritePlatformServiceJpaRepositoryImpl.OTP_MESSAGE() :" + e.getLocalizedMessage());
 			e.printStackTrace();
-			throw new NINNOTVerificationException("something went wrong " + e.getLocalizedMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			e.getLocalizedMessage();
+
+			throw new OTPNOTVerificationException("something went wrong " + e.getLocalizedMessage());
 
 		}
 		return result;
 	}
 
+	/*
+	 * @Override public ResponseEntity<String> OTP_MESSAGE(String mobileNo, String
+	 * Otp) { ResponseEntity<String> result = null;
+	 * 
+	 * try { RestTemplate restTemplate = new RestTemplate();
+	 * 
+	 * String OTP_ENDPOINT = "https://termii.com/api/sms/send"; HttpHeaders headers
+	 * = new HttpHeaders();
+	 * 
+	 * headers.add("Content-Type", "application/json"); headers.add("Cookie",
+	 * "termii-sms=64Eq2KHTk3xNkRKHRaxrWA5WbfBp4lMNxHpMcx4Y");
+	 * 
+	 * System.out.println(OTP_ENDPOINT); JSONObject requestpayload = new
+	 * JSONObject(); requestpayload.put("to", "234" + mobileNo);
+	 * requestpayload.put("from", "Moreplex tv"); requestpayload.put("sms",
+	 * "otp verification " + Otp); requestpayload.put("type", "plain");
+	 * requestpayload.put("channel", "generic"); requestpayload.put("api_key",
+	 * "TLISRdXrYknFK30dLcvfmtqGTdXHozF1QY0hhAe1JBcJDqRLr2Mwej3Q5We7J1");
+	 * 
+	 * HttpEntity<String> request = new HttpEntity<>(requestpayload.toString(),
+	 * headers);
+	 * System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()");
+	 * result = restTemplate.postForEntity(OTP_ENDPOINT, request, String.class);
+	 * System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()" +
+	 * result); } catch (HttpClientErrorException e) { e.printStackTrace();
+	 * System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()" +
+	 * result); throw new NINNOTVerificationException("something went wrong " +
+	 * e.getLocalizedMessage());
+	 * 
+	 * } catch (Exception e) {
+	 * System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()" +
+	 * result); e.printStackTrace(); throw new
+	 * NINNOTVerificationException("something went wrong " +
+	 * e.getLocalizedMessage());
+	 * 
+	 * } return result; }
+	 * 
+	 */
 	@Override
 	public CommandProcessingResult createLeaseDetails(JsonCommand command) {
 		LeaseDetails details = new LeaseDetails();
@@ -2202,6 +2235,33 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 	}
 
 	public static void main(String args[]) {
-		ActivationProcessWritePlatformService.OTP_MESSAGEs("8135742906", "123456");
+
+		ResponseEntity<String> result = null;
+		try {
+
+			RestTemplate restTemplate = new RestTemplate();
+			String OTP_ENDPOINT = "https://www.bulksmsnigeria.com/api/v1/sms/create?api_token=O0KM2E1yLKo2oE7gVoYwm7Dlu9NZCDp0K7LAp7LfwBSiN4jfa3Sv37TXNNsy"
+					+ "&from=BulkSMS.ng&to=" + "8033619354" + "&body=" + "otp verification " + 123434;
+
+			HttpHeaders headers = new HttpHeaders();
+
+			headers.add("Cookie", "termii-sms=64Eq2KHTk3xNkRKHRaxrWA5WbfBp4lMNxHpMcx4Y");
+
+			HttpEntity<String> request = new HttpEntity<>(null, headers);
+			result = restTemplate.postForEntity(OTP_ENDPOINT, request, String.class);
+
+			JSONObject jsonObject = new JSONObject(result.getBody());
+			if (jsonObject.has("error")) {
+				throw new OTPNOTVerificationException("Invalid Recipient ");
+			}
+
+			System.out.println("ActivationProcessWritePlatformServiceJpaRepositoryImpl.main()" + result);
+		} catch (Exception e) {
+			System.out.println("ActivationProcessWritePlatformService.OTP_MESSAGEs()" + result);
+			e.printStackTrace();
+			throw new OTPNOTVerificationException("something went wrong " + e.getLocalizedMessage());
+
+		}
+
 	}
 }
