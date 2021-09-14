@@ -40,11 +40,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
+import org.mifosplatform.logistics.agent.domain.ItemSale;
+import org.mifosplatform.logistics.agent.domain.ItemSaleRepository;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
+import org.mifosplatform.logistics.item.domain.ItemRepository;
+import org.mifosplatform.logistics.item.domain.ItemMaster;
 @Service
 public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlatformService {
 
@@ -75,12 +77,16 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	private final PlanRepository planRepository;
 
 	private final ClientServiceRepository clientServiceRepository;
+	
+	private final ItemRepository itemRepository;
+
 
 	@Autowired
 	public RevPayOrderWritePlatformServiceImpl(final RevPayOrderRepository revPayOrderRepo,
 			OrderWritePlatformService orderWritePlatformService, FromJsonHelper fromApiJsonHelper,
 			PaymentGatewayRepository paymentGatewayRepository,
 			final ClientProspectJpaRepository clientProspectJpaRepository,
+			final ItemRepository itemRepository,
 			final ItemSaleAPiResource itemSaleAPiResource, final ItemDetailsRepository itemDetailsRepository,
 			final OfficeBalanceRepository officeBalanceRepository, final OrderRepository orderRepository,
 			final PriceRepository priceRepository, final ContractRepository contractRepository,
@@ -98,6 +104,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 		this.contractRepository = contractRepository;
 		this.planRepository = planRepository;
 		this.clientServiceRepository = clientServiceRepository;
+		this.itemRepository=itemRepository;
 
 	}
 
@@ -373,6 +380,50 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 			}
 
+			else if (type.equalsIgnoreCase("Voucher Payment")) {
+				paymentGateway.setDeviceId(command.stringValueOfParameterName("stbNo"));
+				paymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
+				paymentGateway.setPaymentId(getTxid());
+				paymentGateway.setPartyId(paymentGateway.getPaymentId());
+				paymentGateway.setReceiptNo("RAVE_" + paymentGateway.getPaymentId());
+				paymentGateway.setStatus("intiated");
+				paymentGateway.setPaymentDate(new Date());
+				paymentGateway.setSource("REVPAY");
+				paymentGateway.setReffernceId(command.stringValueOfParameterName("clientId"));
+				paymentGateway.setRemarks("NOTHING");
+				paymentGateway.setType(type);
+				
+				final ItemSale itemSale = ItemSale.fromJson(command);
+				final ItemMaster itemMaster = this.itemRepository.findOne(itemSale.getId());
+		    
+				JSONObject ItemSaleJson = new JSONObject();
+   
+				ItemSaleJson.put("itemId", itemSale.getItemId());
+				ItemSaleJson.put("unitPrice", itemSale.getUnitPrice());
+				ItemSaleJson.put("chargeCode", itemSale.getChargeCode());
+				ItemSaleJson.put("purchaseBy", itemSale.getPurchaseBy());
+				ItemSaleJson.put("purchaseFrom", itemSale.getPurchaseFrom());
+				ItemSaleJson.put("orderQuantity", itemSale.getOrderQuantity());
+				ItemSaleJson.put("chargeAmount", itemSale.getChargeAmount());
+				ItemSaleJson.put("locale", "en");
+				ItemSaleJson.put("dateFormat", "dd MMMM yyyy");
+				String dateFormat = "dd MMMM yyyy";
+				SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
+				ItemSaleJson.put("purchaseDate", formatter.format(new Date()));
+				
+			
+				paymentGatewayRepository.save(paymentGateway);
+				revorder = new JSONObject();
+				revorder.put("txid", paymentGateway.getPaymentId());
+				paymentGatewayRepository.save(paymentGateway);
+				revorder.put("revorder", "order created sucussfully");
+				revorder.put("callbackUrl",
+						base_URL + "/ngbplatform/api/v1/itemsales/" + itemSale.getId() + "/");
+			}
+			
+			
+			
+			
 			else if (type.equalsIgnoreCase("subscription_add")) {
 				paymentGateway.setObsId(Long.parseLong(command.stringValueOfParameterName("clientId")));
 				paymentGateway.setOfficeId(Long.parseLong(command.stringValueOfParameterName("officeId")));
