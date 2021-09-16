@@ -47,6 +47,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.mifosplatform.logistics.item.domain.ItemRepository;
 import org.mifosplatform.logistics.item.domain.ItemMaster;
+
 @Service
 public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlatformService {
 
@@ -77,16 +78,14 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	private final PlanRepository planRepository;
 
 	private final ClientServiceRepository clientServiceRepository;
-	
-	private final ItemRepository itemRepository;
 
+	private final ItemRepository itemRepository;
 
 	@Autowired
 	public RevPayOrderWritePlatformServiceImpl(final RevPayOrderRepository revPayOrderRepo,
 			OrderWritePlatformService orderWritePlatformService, FromJsonHelper fromApiJsonHelper,
 			PaymentGatewayRepository paymentGatewayRepository,
-			final ClientProspectJpaRepository clientProspectJpaRepository,
-			final ItemRepository itemRepository,
+			final ClientProspectJpaRepository clientProspectJpaRepository, final ItemRepository itemRepository,
 			final ItemSaleAPiResource itemSaleAPiResource, final ItemDetailsRepository itemDetailsRepository,
 			final OfficeBalanceRepository officeBalanceRepository, final OrderRepository orderRepository,
 			final PriceRepository priceRepository, final ContractRepository contractRepository,
@@ -104,7 +103,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 		this.contractRepository = contractRepository;
 		this.planRepository = planRepository;
 		this.clientServiceRepository = clientServiceRepository;
-		this.itemRepository=itemRepository;
+		this.itemRepository = itemRepository;
 
 	}
 
@@ -130,13 +129,35 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGateway.setSource("REVPAY");
 				paymentGateway.setRemarks("NOTHING");
 				paymentGateway.setType(type);
-				paymentGateway.setDeviceId(command.stringValueOfParameterName("itemsaleId"));
+				paymentGateway.setReffernceId(command.stringValueOfParameterName("itemsaleId"));
+				paymentGateway.setDeviceId("itemsale voucher:" + command.stringValueOfParameterName("itemsaleId"));
 				paymentGatewayRepository.save(paymentGateway);
 				revorder = new JSONObject();
 				revorder.put("txid", paymentGateway.getPaymentId());
 				revorder.put("revorder", "order created sucussfully");
 				revorder.put("callbackUrl",
 						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
+			} else if (type.equalsIgnoreCase("Voucher_Payment")) {
+				paymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
+				paymentGateway.setPaymentId(getTxid());
+				paymentGateway.setPartyId(paymentGateway.getPaymentId());
+				paymentGateway.setReceiptNo("RAVE_" + paymentGateway.getPaymentId());
+				paymentGateway.setStatus("intiated");
+				paymentGateway.setPaymentDate(new Date());
+				paymentGateway.setSource("REVPAY");
+				paymentGateway.setReffernceId(command.stringValueOfParameterName("clientId"));
+				paymentGateway.setRemarks("NOTHING");
+				paymentGateway.setType(type);
+				paymentGateway.setReffernceId(command.stringValueOfParameterName("itemsaleId"));
+				paymentGateway.setDeviceId("itemsale voucher:" + command.stringValueOfParameterName("itemsaleId"));
+
+				paymentGatewayRepository.save(paymentGateway);
+				revorder = new JSONObject();
+				revorder.put("txid", paymentGateway.getPaymentId());
+				paymentGatewayRepository.save(paymentGateway);
+				revorder.put("revorder", "order created sucussfully");
+				revorder.put("callbackUrl",
+						base_URL + "/ngbplatform/api/v1/itemsales/" + paymentGateway.getPaymentId() + "/");
 			}
 
 			else if (type.equalsIgnoreCase("leaseverification_payment")) {
@@ -380,50 +401,6 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 			}
 
-			else if (type.equalsIgnoreCase("Voucher Payment")) {
-				paymentGateway.setDeviceId(command.stringValueOfParameterName("stbNo"));
-				paymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
-				paymentGateway.setPaymentId(getTxid());
-				paymentGateway.setPartyId(paymentGateway.getPaymentId());
-				paymentGateway.setReceiptNo("RAVE_" + paymentGateway.getPaymentId());
-				paymentGateway.setStatus("intiated");
-				paymentGateway.setPaymentDate(new Date());
-				paymentGateway.setSource("REVPAY");
-				paymentGateway.setReffernceId(command.stringValueOfParameterName("clientId"));
-				paymentGateway.setRemarks("NOTHING");
-				paymentGateway.setType(type);
-				
-				final ItemSale itemSale = ItemSale.fromJson(command);
-				final ItemMaster itemMaster = this.itemRepository.findOne(itemSale.getId());
-		    
-				JSONObject ItemSaleJson = new JSONObject();
-   
-				ItemSaleJson.put("itemId", itemSale.getItemId());
-				ItemSaleJson.put("unitPrice", itemSale.getUnitPrice());
-				ItemSaleJson.put("chargeCode", itemSale.getChargeCode());
-				ItemSaleJson.put("purchaseBy", itemSale.getPurchaseBy());
-				ItemSaleJson.put("purchaseFrom", itemSale.getPurchaseFrom());
-				ItemSaleJson.put("orderQuantity", itemSale.getOrderQuantity());
-				ItemSaleJson.put("chargeAmount", itemSale.getChargeAmount());
-				ItemSaleJson.put("locale", "en");
-				ItemSaleJson.put("dateFormat", "dd MMMM yyyy");
-				String dateFormat = "dd MMMM yyyy";
-				SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
-				ItemSaleJson.put("purchaseDate", formatter.format(new Date()));
-				
-			
-				paymentGatewayRepository.save(paymentGateway);
-				revorder = new JSONObject();
-				revorder.put("txid", paymentGateway.getPaymentId());
-				paymentGatewayRepository.save(paymentGateway);
-				revorder.put("revorder", "order created sucussfully");
-				revorder.put("callbackUrl",
-						base_URL + "/ngbplatform/api/v1/itemsales/" + itemSale.getId() + "/");
-			}
-			
-			
-			
-			
 			else if (type.equalsIgnoreCase("subscription_add")) {
 				paymentGateway.setObsId(Long.parseLong(command.stringValueOfParameterName("clientId")));
 				paymentGateway.setOfficeId(Long.parseLong(command.stringValueOfParameterName("officeId")));
@@ -453,9 +430,9 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				for (JsonElement j : planCodes) {
 					JsonCommand deviceComm = new JsonCommand(null, j.toString(), j, fromApiJsonHelper, null, null, null,
 							null, null, null, null, null, null, null, null, null);
-				
+
 					planId = deviceComm.longValueOfParameterNamed("id");
-					
+
 					int contractPeriod = deviceComm.integerValueOfParameterNamed("contractPeriod");
 
 					final Plan plan = this.planRepository.findPlanCheckDeletedStatus(planId);
@@ -539,8 +516,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 			JSONObject revRequest = new JSONObject();
 			revRequest.put("txref", txid);
 			// FLWPUBK-acb0630ea1c150dabf363efa007d3a0b-X
-			// revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
-			revRequest.put("SECKEY", "FLWSECK-7a27e5bdaca5e7632e760f7aef00d40b-X");
+			revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
+			//revRequest.put("SECKEY", "FLWSECK-7a27e5bdaca5e7632e760f7aef00d40b-X");
 
 			HttpEntity<String> request = new HttpEntity<>(revRequest.toString(), headers);
 			revResponse = rest.postForObject(VERIFY_ENDPOINT, request, String.class);

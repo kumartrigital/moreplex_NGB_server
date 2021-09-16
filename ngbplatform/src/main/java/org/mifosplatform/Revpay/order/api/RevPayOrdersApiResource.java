@@ -46,6 +46,7 @@ import org.mifosplatform.logistics.agent.domain.ItemSaleRepository;
 import org.mifosplatform.logistics.itemdetails.domain.ItemDetailsRepository;
 import org.mifosplatform.logistics.mrn.api.MRNDetailsApiResource;
 import org.mifosplatform.organisation.officepayments.api.OfficePaymentsApiResource;
+import org.mifosplatform.organisation.voucher.api.VoucherPinApiResource;
 import org.mifosplatform.portfolio.activationprocess.api.ActivationProcessApiResource;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
@@ -96,6 +97,7 @@ public class RevPayOrdersApiResource {
 	private final FromJsonHelper fromJsonHelper;
 	private final PaymentGatewayReadPlatformService paymentGatewayReadPlatformService;
 	final private PlatformSecurityContext context;
+	private final VoucherPinApiResource voucherPinApiResource;
 
 	private final static int RECONNECT_ORDER_STATUS = 3;
 	private final static int RENEWAL_ORDER_STATUS = 1;
@@ -121,7 +123,8 @@ public class RevPayOrdersApiResource {
 			final LeaseDetailsRepository leaseDetailsRepository, final OrderRepository orderRepository,
 			final OrderWritePlatformService orderWritePlatformService, final OrderPriceRepository orderPriceRepository,
 			final PlanRepository planRepository, final PriceRepository priceRepository,
-			final ContractRepository contractRepository, final FromJsonHelper fromJsonHelper) {
+			final ContractRepository contractRepository, final FromJsonHelper fromJsonHelper,
+			final VoucherPinApiResource voucherPinApiResource) {
 
 		this.toApiJsonSerializer = apiJsonSerializer;
 		this.context = context;
@@ -149,6 +152,7 @@ public class RevPayOrdersApiResource {
 		this.priceRepository = priceRepository;
 		this.contractRepository = contractRepository;
 		this.fromJsonHelper = fromApiJsonHelper;
+		this.voucherPinApiResource = voucherPinApiResource;
 
 	}
 
@@ -188,6 +192,9 @@ public class RevPayOrdersApiResource {
 	public Response GetcllBackRavePayOrder(@PathParam("txref") Long txref, @PathParam("flwref") String flwref,
 			@QueryParam("resp") String resp) throws JSONException {
 
+		//String callBackUrl = "https://billing.moreplextv.com";
+		String callBackUrl = "https://52.22.65.59";
+
 		URI indexPath = null;
 		String flwrefKey = null;
 		String status = null;
@@ -224,15 +231,15 @@ public class RevPayOrdersApiResource {
 			if (revpayOrder.getType().equalsIgnoreCase("LEASEVERIFICATION_Payment")) {
 				LeaseDetails leaseDetails = leaseDetailsRepository
 						.findLeaseDetailsByMobileNo(revpayOrder.getDeviceId());
-				if (leaseDetails.getStatus().equalsIgnoreCase("Registration_Pending")) {
-					leaseDetails.setStatus("NIN_Pending");
+				if (leaseDetails.getStatus().equalsIgnoreCase("Payment_pending")) {
+					leaseDetails.setStatus("Registration_Pending");
 					leaseDetailsRepository.save(leaseDetails);
 				} else {
 					leaseDetails.setStatus("something went wrong");
 				}
 				try {
-					indexPath = new URI("https://52.22.65.59:8877/#/Registration/LeaseVerification/"
-							+ leaseDetails.getMobileNumber());
+					indexPath = new URI(
+							callBackUrl + "/#/Registration/LeaseVerification/" + leaseDetails.getMobileNumber());
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
@@ -250,11 +257,42 @@ public class RevPayOrdersApiResource {
 				paymentJson.put("collectionBy", 2);
 				paymentJson.put("collectorName", "MOREPLEX");
 				officePaymentsApiResource.createOfficePayment(revpayOrder.getObsId(), paymentJson.toString());
-				ItemSale itemSale = itemSaleRepository.findOne(Long.parseLong(revpayOrder.getDeviceId()));
+				ItemSale itemSale = itemSaleRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
 				itemSale.setStatus("PENDING");
 				itemSaleRepository.save(itemSale);
 				try {
-					indexPath = new URI("https://billing.moreplextv.com/#/inventory/" + txref);
+					indexPath = new URI(callBackUrl + "/#/inventory/" + txref);
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+
+			} else if (revpayOrder.getType().equalsIgnoreCase("Voucher_Payment")) {
+				paymentJson.put("paymentCode", 23);
+				paymentJson.put("amountPaid", revpayOrder.getAmountPaid());
+				paymentJson.put("receiptNo", revpayOrder.getReceiptNo());
+				paymentJson.put("remarks", "STB PAYMENT");
+				paymentJson.put("locale", "en");
+				paymentJson.put("dateFormat", "dd MMMM yyyy");
+				paymentJson.put("paymentDate", formatter.format(revpayOrder.getPaymentDate()));
+				paymentJson.put("collectionBy", 2);
+				paymentJson.put("collectorName", "MOREPLEX");
+				officePaymentsApiResource.createOfficePayment(revpayOrder.getObsId(), paymentJson.toString());
+				ItemSale itemSale = itemSaleRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
+				itemSale.setStatus("PENDING");
+				itemSaleRepository.save(itemSale);
+
+				JSONObject moveVouchers = new JSONObject();
+				moveVouchers.put("type", "sale");
+				moveVouchers.put("saleRefNo", itemSale.getId());
+				moveVouchers.put("quantity", itemSale.getOrderQuantity());
+				moveVouchers.put("toOffice", itemSale.getPurchaseFrom());
+				moveVouchers.put("fromOffice", itemSale.getPurchaseBy());
+				moveVouchers.put("dateFormat", "dd MMMM yyyy");
+				moveVouchers.put("paymentDate", formatter.format(revpayOrder.getPaymentDate()));
+				voucherPinApiResource.moveVoucher(itemSale.getPurchaseBy(), moveVouchers.toString());
+
+				try {
+					indexPath = new URI(callBackUrl + "/#/inventory/" + txref);
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
@@ -284,7 +322,7 @@ public class RevPayOrdersApiResource {
 				paymentsApiResource.createPayment(jsonResult.getLong("clientId"), paymentJson.toString());
 
 				try {
-					indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
+					indexPath = new URI(callBackUrl + "/#/DTH-OnlinePayment/" + txref);
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
@@ -304,7 +342,7 @@ public class RevPayOrdersApiResource {
 				officePaymentsApiResource.createOfficePayment(9l, paymentJson.toString());
 
 				try {
-					indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
+					indexPath = new URI(callBackUrl + "/#/DTH-OnlinePayment/" + txref);
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
@@ -344,7 +382,7 @@ public class RevPayOrdersApiResource {
 				multipleOrdersApiResource.createMultipleOrder(revpayOrder.getObsId(), orderJson.toString());
 
 				try {
-					indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
+					indexPath = new URI(callBackUrl + "/#/DTH-OnlinePayment/" + txref);
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
@@ -374,7 +412,7 @@ public class RevPayOrdersApiResource {
 				paymentsApiResource.createPayment(jsonResult.getLong("clientId"), paymentJson.toString());
 
 				try {
-					indexPath = new URI("https://52.22.65.59:8877/#/DTH-OnlinePayment/" + txref);
+					indexPath = new URI(callBackUrl + "/#/DTH-OnlinePayment/" + txref);
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
@@ -397,7 +435,7 @@ public class RevPayOrdersApiResource {
 				paymentsApiResource.createPayment(Long.parseLong(revpayOrder.getReffernceId()), paymentJson.toString());
 
 				try {
-					indexPath = new URI("https://billing.moreplextv.com/#/renewal-customer/" + txref);
+					indexPath = new URI(callBackUrl + "/#/renewal-customer/" + txref);
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}

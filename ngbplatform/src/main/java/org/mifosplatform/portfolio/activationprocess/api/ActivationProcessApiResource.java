@@ -3,12 +3,10 @@ package org.mifosplatform.portfolio.activationprocess.api;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -35,6 +33,7 @@ import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.serialization.ToApiJsonSerializer;
 import org.mifosplatform.infrastructure.core.service.FileUtils;
 import org.mifosplatform.logistics.itemdetails.service.ItemDetailsReadPlatformService;
+import org.mifosplatform.organisation.message.service.MessageGmailBackedPlatformEmailService;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetails;
 import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsRepository;
 import org.mifosplatform.portfolio.activationprocess.exception.LeaseDetailsNotFoundException;
@@ -70,6 +69,7 @@ public class ActivationProcessApiResource {
 	private final LeaseDetailsRepository leaseDetailsRepository;
 	private final ApiRequestParameterHelper apiRequestParameterHelper;
 	private final ActivationProcessWritePlatformService activationProcessWritePlatformService;
+	private final MessageGmailBackedPlatformEmailService messageGmailBackedPlatformEmailService;
 
 	@Autowired
 	public ActivationProcessApiResource(final ToApiJsonSerializer<ClientData> toApiJsonSerializer,
@@ -77,13 +77,15 @@ public class ActivationProcessApiResource {
 			final ItemDetailsReadPlatformService itemDetailsReadPlatformService,
 			final LeaseDetailsRepository leaseDetailsRepository,
 			final ApiRequestParameterHelper apiRequestParameterHelper,
-			final ActivationProcessWritePlatformService activationProcessWritePlatformService) {
+			final ActivationProcessWritePlatformService activationProcessWritePlatformService,
+			final MessageGmailBackedPlatformEmailService messageGmailBackedPlatformEmailService) {
 		this.toApiJsonSerializer = toApiJsonSerializer;
 		this.commandsSourceWritePlatformService = commandsSourceWritePlatformService;
 		this.itemDetailsReadPlatformService = itemDetailsReadPlatformService;
 		this.leaseDetailsRepository = leaseDetailsRepository;
 		this.apiRequestParameterHelper = apiRequestParameterHelper;
 		this.activationProcessWritePlatformService = activationProcessWritePlatformService;
+		this.messageGmailBackedPlatformEmailService = messageGmailBackedPlatformEmailService;
 
 	}
 
@@ -242,7 +244,7 @@ public class ActivationProcessApiResource {
 
 			JSONObject requestPayload = new JSONObject(apiRequestBodyAsJson);
 			String mobile = requestPayload.getString("mobile");
-			
+
 			LeaseDetails leaseDetailscheck = leaseDetailsRepository.findLeaseDetailsByMobileNo(mobile);
 
 			if (leaseDetailscheck != null) {
@@ -253,7 +255,7 @@ public class ActivationProcessApiResource {
 				response.put("message", "Mobile Number less than 10 Digits");
 				return Response.status(400).entity(response).build();
 			}
-			
+
 			leaseDetails.setSalutation("MR");
 			leaseDetails.setOfficeId(requestPayload.getLong("officeId"));
 			leaseDetails.setFirstName(requestPayload.getString("forename"));
@@ -265,24 +267,30 @@ public class ActivationProcessApiResource {
 			leaseDetails.setCountry(requestPayload.getString("country"));
 			leaseDetails.setPinCode(requestPayload.getString("pinCode"));
 			leaseDetails.setAddress("addressNo");
-			
+
 			String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
 			leaseDetails.setStatus("Otp_Pending");
 			leaseDetails.setOtp(otp);
-		
+
 			try {
 				ResponseEntity<String> result = activationProcessWritePlatformService
 						.OTP_MESSAGE(leaseDetails.getMobileNumber(), otp);
-				
 				if (!result.getStatusCode().equals(HttpStatus.OK)) {
 					return Response.status(400).entity(result.getBody()).build();
 				}
-			
+
 			} catch (Exception e) {
 				response.put("message", "Please Check Your Mobile Number");
 				return Response.status(400).entity(response).build();
 			}
-			
+
+			try {
+				messageGmailBackedPlatformEmailService.sendGeneralMessage(leaseDetails.getEmail(), "otp message",
+						"Your OTP " + otp + " for lease verification");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 			leaseDetailsRepository.saveAndFlush(leaseDetails);
 
 		} catch (JSONException e) {

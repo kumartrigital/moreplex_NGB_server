@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 public interface PlanRepository  extends JpaRepository<Plan, Long>,
 JpaSpecificationExecutor<Plan>{
 
+	
+	
 	@Query("from Plan plan where plan.id =:planId and is_deleted='N'")
 	Plan findPlanCheckDeletedStatus(@Param("planId") Long planId);
 	
@@ -28,6 +30,8 @@ JpaSpecificationExecutor<Plan>{
 
 	@Query(value = "select plan_code from b_plan_master where is_deleted='N'",nativeQuery = true)
 	List<String> findAllPlanCode();
+	
+	
 	
 
 	
