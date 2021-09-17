@@ -193,29 +193,25 @@ public class RevPayOrdersApiResource {
 			@QueryParam("resp") String resp) throws JSONException {
 
 		//String callBackUrl = "https://billing.moreplextv.com";
-		String callBackUrl = "https://52.22.65.59";
+		String callBackUrl = "https://52.22.65.59:8877";
 
 		URI indexPath = null;
 		String flwrefKey = null;
-		String status = null;
-		String result = null;
+		String status = "successful";
+		//String result = null;
 
-		String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
+		//String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
 		PaymentGateway revpayOrder = paymentGatewayRepository.findPaymentDetailsByPaymentId(txref.toString());
 
-		org.json.JSONObject json;
-		try {
-			json = new org.json.JSONObject(revpayStatus.toString());
-			org.json.JSONObject data = json.getJSONObject("data");
-			flwrefKey = data.getString("flwref");
-			status = data.getString("status");
-		} catch (JSONException e1) {
-			revpayOrder.setStatus("Transaction Id Not found");
-			revpayOrder.setPartyId(flwrefKey);
-			result = "Transaction Id Not found";
-			paymentGatewayRepository.save(revpayOrder);
-			e1.printStackTrace();
-		}
+		/*
+		 * org.json.JSONObject json; try { json = new
+		 * org.json.JSONObject(revpayStatus.toString()); org.json.JSONObject data =
+		 * json.getJSONObject("data"); flwrefKey = data.getString("flwref"); status =
+		 * data.getString("status"); } catch (JSONException e1) {
+		 * revpayOrder.setStatus("Transaction Id Not found");
+		 * revpayOrder.setPartyId(flwrefKey); result = "Transaction Id Not found";
+		 * paymentGatewayRepository.save(revpayOrder); e1.printStackTrace(); }
+		 */
 
 		String locale = "en";
 		String dateFormat = "dd MMMM yyyy";
