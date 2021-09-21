@@ -110,8 +110,9 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	@Override
 	public CommandProcessingResult createOrder(JsonCommand command) {
 		JSONObject revorder = null;
-		String base_URL = "https://billing.moreplextv.com";
+		//String base_URL = "https://billing.moreplextv.com";
 		// String base_URL = "https://52.22.65.59:8877";
+		 String base_URL = "https://localhost:8877";
 
 		try {
 
@@ -149,6 +150,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGateway.setRemarks("NOTHING");
 				paymentGateway.setType(type);
 				paymentGateway.setReffernceId(command.stringValueOfParameterName("itemsaleId"));
+				paymentGateway.setObsId(command.longValueOfParameterNamed("officeid"));
 				paymentGateway.setDeviceId("itemsale voucher:" + command.stringValueOfParameterName("itemsaleId"));
 
 				paymentGatewayRepository.save(paymentGateway);
