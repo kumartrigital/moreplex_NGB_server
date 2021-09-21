@@ -893,6 +893,7 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 
 				sql = "select count(0) as count from b_pin_details pd join b_pin_master pm on pm.id=pd.pin_id where pd.status= '"
 						+ status + "' and pd.office_id=" + fromOffice + " and pm.pin_value=" + unitPrice + " ";
+				
 			}
 			return this.jdbcTemplate.queryForLong(sql);
 

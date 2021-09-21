@@ -420,6 +420,7 @@ public class VoucherPinApiResource {
 			Long fromOffice = jsonObject.getLong("fromOffice");
 			ItemData itemData = this.itemReadPlatformService.retrieveSingleItemDetails(null, itemSale.getItemId(), null,
 					false);
+				
 			List<String> planList = new ArrayList<String>();
 			planList = this.planRepository.findAllPlanCode();
 			
@@ -435,7 +436,7 @@ public class VoucherPinApiResource {
 				}
 			} else {
 				newStatuscount = this.readPlatformService.retriveQuantityByStatus("NEW", fromOffice,
-						itemSale.getUnitPrice(), null,isProduct);
+						itemData.getUnitPrice(), null,isProduct);
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
