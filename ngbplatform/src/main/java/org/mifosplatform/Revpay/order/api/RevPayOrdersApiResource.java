@@ -193,8 +193,8 @@ public class RevPayOrdersApiResource {
 			@QueryParam("resp") String resp) throws JSONException {
 
 		//String callBackUrl = "https://billing.moreplextv.com";
-		//String callBackUrl = "https://52.22.65.59:8877";
-		String callBackUrl = "https://localhost:8877";
+		String callBackUrl = "https://52.22.65.59:8877";
+		//String callBackUrl = "https://localhost:8877";
 
 		URI indexPath = null;
 		String flwrefKey = null;
