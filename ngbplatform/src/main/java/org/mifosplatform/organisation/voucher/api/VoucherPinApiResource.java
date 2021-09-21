@@ -422,8 +422,8 @@ public class VoucherPinApiResource {
 					false);
 			List<String> planList = new ArrayList<String>();
 			planList = this.planRepository.findAllPlanCode();
+			
 			if(planList.contains(itemData.getItemCode())) {
-				//if (itemData.getItemCode().equalsIgnoreCase("DAF") || itemData.getItemCode().equalsIgnoreCase("DAFT")) {
 				isProduct = true;
 				Plan plan = this.planRepository.findwithPlanCode(itemData.getItemCode());
 				Price price = this.priceRepository.findplansByPlanIdChargeOwnerSelf(plan.getId());	
@@ -440,6 +440,8 @@ public class VoucherPinApiResource {
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
+		
+		System.out.println("VoucherPinApiResource.moveVoucher() newStatuscount :" + newStatuscount + "reqQuantity :" +reqQuantity);
 		if (newStatuscount >= reqQuantity) {
 			final CommandWrapper commandRequest = new CommandWrapperBuilder().moveVoucher(officeId)
 					.withJson(apiRequestBodyAsJson).build();

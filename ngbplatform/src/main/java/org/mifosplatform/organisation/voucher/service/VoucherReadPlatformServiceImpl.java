@@ -303,13 +303,13 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 					if (null != isPaywizard && isPaywizard.isEnabled()) {
 
 						sql = "SELECT pm.batch_name AS batchName,'PINN00000000' AS Retailer , pd.serial_no AS serialNumber,"
-								+ " pd.pin_no AS voucherCode,case" + 
-								"                            when pm.pin_type='PRODUCT' then 1500 " + 
-								"                            else  pm.pin_value " + 
-								"                            end as value ,"
+								+ " pd.pin_no AS voucherCode,case"
+								+ "                            when pm.pin_type='PRODUCT' then 1500 "
+								+ "                            else  pm.pin_value "
+								+ "                            end as value ,"
 								+ "'NGN' as currencyCode,pm.created_date as startDate,pm.expiry_date as endDate"
-								+ " FROM b_pin_master pm, b_pin_details pd"
-								+ " WHERE pd.pin_id = pm.id AND pm.id =" + pinId + " order by serialNumber desc ";
+								+ " FROM b_pin_master pm, b_pin_details pd" + " WHERE pd.pin_id = pm.id AND pm.id ="
+								+ pinId + " order by serialNumber desc ";
 					} else {
 						sql = "SELECT pm.id AS batchId, pd.serial_no AS serialNum, pd.pin_no AS hiddenNum,"
 								+ " pd.client_id as clientId, pd.status FROM b_pin_master pm, b_pin_details pd"
@@ -463,7 +463,7 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 			context.authenticatedUser();
 			String sql;
 			PinMapper mapper = new PinMapper();
-			if(pinType.equalsIgnoreCase("PRODUCT"))
+			if (pinType.equalsIgnoreCase("PRODUCT"))
 				sql = "SELECT  " + mapper.schema1();
 			else
 				sql = "SELECT  " + mapper.schema2();
@@ -478,12 +478,12 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 
 	private static final class PinMapper implements RowMapper<VoucherData> {
 
-		
 		public String schema1() {
 			return " pm.pin_type as pinType,pd.office_id as officeId, pp.price as pinValue, pm.expiry_date as expiryDate "
 					+ " from b_pin_master pm, b_pin_details pd, b_plan_pricing pp where pd.pin_id = pm.id and pm.pin_value=pp.plan_id  and pp.is_deleted='n' and pd.status !='USED' and pd.is_deleted='N' and pd.pin_no=? ";
 
 		}
+
 		public String schema2() {
 			return " pm.pin_type as pinType,pd.office_id as officeId, pm.pin_value as pinValue, pm.expiry_date as expiryDate "
 					+ " from b_pin_master pm, b_pin_details pd where pd.pin_id = pm.id and pd.status !='USED' and pd.is_deleted='N' and pd.pin_no=? ";
@@ -492,13 +492,13 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 
 		@Override
 		public VoucherData mapRow(final ResultSet rs, final int rowNum) throws SQLException {
-		String pinValue = null;
-		BigDecimal pinPrice = rs.getBigDecimal("pinValue");
+			String pinValue = null;
+			BigDecimal pinPrice = rs.getBigDecimal("pinValue");
 			Date expiryDate = rs.getDate("expiryDate");
 			String pinType = rs.getString("pinType");
 			Long officeId = rs.getLong("officeId");
 
-			return new VoucherData(pinType, pinValue, expiryDate, officeId,pinPrice);
+			return new VoucherData(pinType, pinValue, expiryDate, officeId, pinPrice);
 		}
 	}
 
@@ -577,12 +577,12 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 
 	}
 
-	private  final class VoucherValueMapper implements RowMapper<VoucherData> {
+	private final class VoucherValueMapper implements RowMapper<VoucherData> {
 
 		public String schema() {
 			Configuration restrictToHierarchy = configurationRepository
 					.findOneByName(ConfigurationConstants.Restrict_To_Hierarchy);
-			
+
 			String schema = null;
 			if (restrictToHierarchy.isEnabled()) {
 
@@ -615,49 +615,43 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 
 			context.authenticatedUser();
 			RetrieveAllRandomMapper mapper = new RetrieveAllRandomMapper();
-			
-           StringBuilder sqlBuilder = new StringBuilder();
-			
+
+			StringBuilder sqlBuilder = new StringBuilder();
+
 			sqlBuilder.append("SELECT ");
 			sqlBuilder.append(mapper.schema());
-	        sqlBuilder.append(" where m.id IS NOT NULL ");
+			sqlBuilder.append(" where m.id IS NOT NULL ");
 			String sqlSearch = searchVouchers.getSqlSearch();
-	        String extraCriteria = null;
-	        
-		    if (sqlSearch != null) {
-		    	sqlSearch = sqlSearch.trim();
-		    	extraCriteria = " and (m.id like '%"+sqlSearch+"%' OR" 
-		    			+ " m.batch_name like '%"+sqlSearch+"%' OR"
-		    			+ " m.office_id like '%"+sqlSearch+"%' OR"
-		    			+ " m.length like '%"+sqlSearch+"%' OR"
-		    			+ " m.begin_with like '%"+sqlSearch+"%' OR"
-		    			+ " m.pin_category like '%"+sqlSearch+"%' OR"
-		    			+ " m.quantity like '%"+sqlSearch+"%' OR"
-		    			+ " m.serial_no like '%"+sqlSearch+"%' OR"
-		    			+ " m.pin_type like '%"+sqlSearch+"%' OR"
-		    			+ " m.pin_value like '%"+sqlSearch+"%' OR"
-		    			+ " m.expiry_date like '%"+sqlSearch+"%' OR"
-		    			+ " m.batch_type like '%"+sqlSearch+"%' OR"
-		    			+ " m.pin_type like '%"+sqlSearch+"%' OR"
-		    			+ " pr.promotion_description like '%"+sqlSearch+"%' OR"
-		    			+ " p.plan_code like '%"+sqlSearch+"%')";
-		    }
-		   
-		    if (null != extraCriteria) {
-	            sqlBuilder.append(extraCriteria);
-	        }
-		    sqlBuilder.append(" order by m.created_date desc ");
-		    
+			String extraCriteria = null;
+
+			if (sqlSearch != null) {
+				sqlSearch = sqlSearch.trim();
+				extraCriteria = " and (m.id like '%" + sqlSearch + "%' OR" + " m.batch_name like '%" + sqlSearch
+						+ "%' OR" + " m.office_id like '%" + sqlSearch + "%' OR" + " m.length like '%" + sqlSearch
+						+ "%' OR" + " m.begin_with like '%" + sqlSearch + "%' OR" + " m.pin_category like '%"
+						+ sqlSearch + "%' OR" + " m.quantity like '%" + sqlSearch + "%' OR" + " m.serial_no like '%"
+						+ sqlSearch + "%' OR" + " m.pin_type like '%" + sqlSearch + "%' OR" + " m.pin_value like '%"
+						+ sqlSearch + "%' OR" + " m.expiry_date like '%" + sqlSearch + "%' OR" + " m.batch_type like '%"
+						+ sqlSearch + "%' OR" + " m.pin_type like '%" + sqlSearch + "%' OR"
+						+ " pr.promotion_description like '%" + sqlSearch + "%' OR" + " p.plan_code like '%" + sqlSearch
+						+ "%')";
+			}
+
+			if (null != extraCriteria) {
+				sqlBuilder.append(extraCriteria);
+			}
+			sqlBuilder.append(" order by m.created_date desc ");
+
 			if (searchVouchers.isLimited()) {
 				sqlBuilder.append(" limit ").append(searchVouchers.getLimit());
-		    }
+			}
 
-		    if (searchVouchers.isOffset()) {
-		        sqlBuilder.append(" offset ").append(searchVouchers.getOffset());
-		    }
-		    
+			if (searchVouchers.isOffset()) {
+				sqlBuilder.append(" offset ").append(searchVouchers.getOffset());
+			}
+
 			return this.paginationHelper.fetchPage(this.jdbcTemplate, "SELECT FOUND_ROWS()", sqlBuilder.toString(),
-		            new Object[] {}, mapper);
+					new Object[] {}, mapper);
 
 		} catch (EmptyResultDataAccessException e) {
 			return null;
@@ -881,29 +875,22 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public Long retriveQuantityByStatus(String status, Long fromOffice, BigDecimal unitPrice,Long pinValue, Boolean isProduct) {
+	public Long retriveQuantityByStatus(String status, Long fromOffice, BigDecimal unitPrice, Long pinValue,
+			Boolean isProduct) {
 
 		// TODO Auto-generated method stub
 		this.context.authenticatedUser();
 		try {
 			String sql = null;
-			/*
-			 * if (isProduct) { sql =
-			 * "select count(*) from b_pin_master pm left join  b_plan_pricing pp " +
-			 * "on pm.price_id=pp.id join  b_pin_details pd on pm.id=pd.pin_id " +
-			 * " WHERE pm.pin_type= 'PRODUCT' and pd.status='" + status + "' " +
-			 * "and pd.office_id= " + fromOffice + " and pp.price=" + unitPrice + " ";
-			 * 
-			 * 
-			 * 
-			 * }
-			 */ if(isProduct)
-			{
-				
+			if (isProduct) {
+				System.out.println("VoucherReadPlatformServiceImpl.retriveQuantityByStatus() product");
+
 				sql = "select count(0) as count from b_pin_details pd join b_pin_master pm on pm.id=pd.pin_id where pd.status= '"
-						+ status + "' and pd.office_id=" + fromOffice + " and pm.price_id="+ pinValue + " and pm.pin_type='PRODUCT' ";
-			}
-			else {
+						+ status + "' and pd.office_id=" + fromOffice + " and pm.price_id=" + pinValue
+						+ " and pm.pin_type='PRODUCT' ";
+			} else {
+				System.out.println("VoucherReadPlatformServiceImpl.retriveQuantityByStatus() value");
+
 				sql = "select count(0) as count from b_pin_details pd join b_pin_master pm on pm.id=pd.pin_id where pd.status= '"
 						+ status + "' and pd.office_id=" + fromOffice + " and pm.pin_value=" + unitPrice + " ";
 			}
@@ -950,7 +937,9 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 			List<VoucherData> vouchers = retrieveVocherDetails(saleRefId);
 
 			VoucheRequestDetailsMapper reqMapper = new VoucheRequestDetailsMapper();
-			final String sql = "select " + reqMapper.schema()+" from b_itemsale its , b_pin_details pd, b_item_master im where its.id= pd.sale_ref_no  and im.id=its.item_id and its.id = "+saleRefId+" group by its.id";
+			final String sql = "select " + reqMapper.schema()
+					+ " from b_itemsale its , b_pin_details pd, b_item_master im where its.id= pd.sale_ref_no  and im.id=its.item_id and its.id = "
+					+ saleRefId + " group by its.id";
 			// List<VoucherData> vouchers = (List<VoucherData>) this.jdbcTemplate.query(sql,
 			// mapper, new Object[] {});
 
@@ -982,19 +971,19 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 		 * }
 		 */
 		public String schema() {
-			return "sum(CASE WHEN pd.status = 'EXPORTED' THEN 1\n" + 
-					"                    ELSE 0 end) as 'exportedQuantity',\n" + 
-					"                   sum(CASE WHEN pd.status = 'ALLOCATED' THEN 1\n" + 
-					"                    ELSE 0 end) as 'allocatedQuantity',\n" + 
-					"                     sum(CASE WHEN pd.status = 'USED' THEN 1\n" + 
-					"                    ELSE 0 end) as 'reedeemedQuantity',\n" + 
-					"                    its.id as id,its.purchase_date as requestedDate, \n" + 
-					"					im.item_description  as item,\n" + 
-					"				    its.order_quantity as orderdQuantity, \n" + 
-					"					its.received_quantity as receivedQuantity,\n" + 
-					"					its.status as status, \n" + 
-					"                    its.charge_amount as chargeAmount,\n" + 
-					"                    its.unit_price as unitPrice";
+			return "sum(CASE WHEN pd.status = 'EXPORTED' THEN 1\n"
+					+ "                    ELSE 0 end) as 'exportedQuantity',\n"
+					+ "                   sum(CASE WHEN pd.status = 'ALLOCATED' THEN 1\n"
+					+ "                    ELSE 0 end) as 'allocatedQuantity',\n"
+					+ "                     sum(CASE WHEN pd.status = 'USED' THEN 1\n"
+					+ "                    ELSE 0 end) as 'reedeemedQuantity',\n"
+					+ "                    its.id as id,its.purchase_date as requestedDate, \n"
+					+ "					im.item_description  as item,\n"
+					+ "				    its.order_quantity as orderdQuantity, \n"
+					+ "					its.received_quantity as receivedQuantity,\n"
+					+ "					its.status as status, \n"
+					+ "                    its.charge_amount as chargeAmount,\n"
+					+ "                    its.unit_price as unitPrice";
 		}
 
 		@Override
@@ -1019,14 +1008,13 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 		}
 	}
 
-
 	@Override
-	public List<ExportVoucherData> retrieveExportRequestDetails(Long officeId , Long saleRefno) {
+	public List<ExportVoucherData> retrieveExportRequestDetails(Long officeId, Long saleRefno) {
 		// TODO Auto-generated method stub
 		try {
 			ExportRequestMapper exportMapper = new ExportRequestMapper();
-			String sql = "select " + exportMapper.retrieveExportRequestDetailsschema() ;
-			return this.jdbcTemplate.query(sql, exportMapper, new Object[] {officeId , saleRefno});
+			String sql = "select " + exportMapper.retrieveExportRequestDetailsschema();
+			return this.jdbcTemplate.query(sql, exportMapper, new Object[] { officeId, saleRefno });
 		} catch (EmptyResultDataAccessException e) {
 			return null;
 		}
@@ -1039,6 +1027,7 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 			return "  request_id as requestId , request_date as requestedDate, status as status, quantity as quantity, request_by as officeId,"
 					+ " sale_ref_no as saleRefNo ";
 		}
+
 		public String retrieveExportRequestDetailsschema() {
 			return "  request_id as requestId , request_date as requestedDate, status as status, quantity as quantity, request_by as officeId,"
 					+ " sale_ref_no as saleRefNo from b_voucher_export_request where request_by =? and sale_ref_no =? ";
@@ -1208,8 +1197,9 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 			return new VoucherData(pinType, pinValue, expiryDate, serial, pinNum, status);
 		}
 	}
+
 	@Override
-	public VoucherData retriveVoucherDetailsOfficeIdAndValueType(Long officeId, String pinType,BigDecimal value) {
+	public VoucherData retriveVoucherDetailsOfficeIdAndValueType(Long officeId, String pinType, BigDecimal value) {
 
 		try {
 			context.authenticatedUser();
@@ -1217,13 +1207,14 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 			PindetailsByOfficeIdAndValueType mapper = new PindetailsByOfficeIdAndValueType();
 			sql = "SELECT  " + mapper.schema();
 
-			return this.jdbcTemplate.queryForObject(sql, mapper, new Object[] { officeId, pinType,value });
+			return this.jdbcTemplate.queryForObject(sql, mapper, new Object[] { officeId, pinType, value });
 
 		} catch (EmptyResultDataAccessException e) {
 			return null;
 		}
 
 	}
+
 	private static final class PindetailsByOfficeIdAndValueType implements RowMapper<VoucherData> {
 
 		public String schema() {
@@ -1246,26 +1237,22 @@ public class VoucherReadPlatformServiceImpl implements VoucherReadPlatformServic
 		}
 	}
 
-	
-
-	
 	@Override
-	public void batchUpdate(List<VoucherData> voucherList,String exportReqId) {
+	public void batchUpdate(List<VoucherData> voucherList, String exportReqId) {
 		String sql = "update b_pin_details pd set pd.export_req_id = ?, pd.status = 'EXPORTED' where pd.pin_no=?";
 
-		int[] updateCounts = this.jdbcTemplate.batchUpdate(sql,
-		new BatchPreparedStatementSetter() {
-		@Override
-		public void setValues(PreparedStatement ps, int i) throws SQLException {
-			VoucherData voucher = voucherList.get(i);
-		ps.setString(1,exportReqId);
-		ps.setString(2, voucher.getPinNo());
-		}
+		int[] updateCounts = this.jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps, int i) throws SQLException {
+				VoucherData voucher = voucherList.get(i);
+				ps.setString(1, exportReqId);
+				ps.setString(2, voucher.getPinNo());
+			}
 
-		@Override
-		public int getBatchSize() {
-		return voucherList.size();
-		}
+			@Override
+			public int getBatchSize() {
+				return voucherList.size();
+			}
 		});
-		}
+	}
 }

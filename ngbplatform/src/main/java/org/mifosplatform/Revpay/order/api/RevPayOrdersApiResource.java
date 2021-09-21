@@ -273,6 +273,7 @@ public class RevPayOrdersApiResource {
 				paymentJson.put("collectionBy", 2);
 				paymentJson.put("collectorName", "MOREPLEX");
 				officePaymentsApiResource.createOfficePayment(revpayOrder.getObsId(), paymentJson.toString());
+				
 				ItemSale itemSale = itemSaleRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
 				itemSale.setStatus("PENDING");
 				itemSaleRepository.save(itemSale);
