@@ -146,12 +146,14 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGateway.setStatus("intiated");
 				paymentGateway.setPaymentDate(new Date());
 				paymentGateway.setSource("REVPAY");
-				paymentGateway.setReffernceId(command.stringValueOfParameterName("clientId"));
+				//paymentGateway.setReffernceId(command.stringValueOfParameterName("clientId"));
+				paymentGateway.setDeviceId(command.stringValueOfParameterName("orderQuantity"));
 				paymentGateway.setRemarks("NOTHING");
 				paymentGateway.setType(type);
 				paymentGateway.setReffernceId(command.stringValueOfParameterName("itemsaleId"));
 				paymentGateway.setObsId(command.longValueOfParameterNamed("officeid"));
-				paymentGateway.setDeviceId("itemsale voucher:" + command.stringValueOfParameterName("itemsaleId"));
+				paymentGateway.setOfficeId(command.longValueOfParameterNamed("PurchaseBy"));
+				//paymentGateway.setDeviceId("itemsale voucher:" + command.stringValueOfParameterName("itemsaleId"));
 
 				paymentGatewayRepository.save(paymentGateway);
 				revorder = new JSONObject();
@@ -159,7 +161,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGatewayRepository.save(paymentGateway);
 				revorder.put("revorder", "order created sucussfully");
 				revorder.put("callbackUrl",
-						base_URL + "/ngbplatform/api/v1/itemsales/" + paymentGateway.getPaymentId() + "/");
+						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 			}
 
 			else if (type.equalsIgnoreCase("leaseverification_payment")) {

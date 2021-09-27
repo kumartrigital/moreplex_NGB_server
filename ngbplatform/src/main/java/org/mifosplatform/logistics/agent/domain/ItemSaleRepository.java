@@ -17,4 +17,7 @@ public interface ItemSaleRepository extends JpaRepository<ItemSale, Long>{
 	@Query(value ="update b_itemsale set received_quantity =:quantity , status =:status where item_id =:itemSaleId", nativeQuery = true)
 	void saveDetails(@Param("quantity") Long quantity , @Param("status") String status , @Param("itemSaleId") Long itemSaleId);
 
+	@Query("from Itemsale itemsale where itemsale.item_id=:itemSaleId")
+	ItemSale findItemdetailsItem_id(@Param("itemSaleId") String itemSaleId);
+	
 }
