@@ -193,8 +193,8 @@ public class RevPayOrdersApiResource {
 			@QueryParam("resp") String resp) throws JSONException {
 
 		//String callBackUrl = "https://billing.moreplextv.com";
-		//String callBackUrl = "https://52.22.65.59:8877";
-		String callBackUrl = "https://localhost:8877";
+		String callBackUrl = "https://52.22.65.59:8877";
+		//String callBackUrl = "https://localhost:8877";
 
 		URI indexPath = null;
 		String flwrefKey = null;
@@ -276,22 +276,21 @@ public class RevPayOrdersApiResource {
 				paymentJson.put("collectorName", "MOREPLEX");
 				officePaymentsApiResource.createOfficePayment(revpayOrder.getObsId(), paymentJson.toString());
 				
-				ItemSale itemSale = itemSaleRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
-				
-               // ItemSale itemSale = itemSaleRepository.findItemdetailsItem_id(revpayOrder.getReffernceId());
-	            itemSale.setStatus("New");
-			    itemSale.setReceivedQuantity(Long.parseLong(revpayOrder.getDeviceId()));
-				itemSaleRepository.save(itemSale);
+				//ItemSale itemSale = itemSaleRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
+				  //itemsaledetails.setStatus("New");
+                ItemSale itemsaledetails = itemSaleRepository.findItemsaleDetails(Long.parseLong(revpayOrder.getReffernceId()));
+                itemsaledetails.setReceivedQuantity(Long.parseLong(revpayOrder.getDeviceId()));
+				itemSaleRepository.save(itemsaledetails);
 				
 				JSONObject moveVouchers = new JSONObject();
 				moveVouchers.put("type", "sale");
-				moveVouchers.put("saleRefNo",itemSale.getItemId());
-				moveVouchers.put("quantity", itemSale.getReceivedQuantity());
-				moveVouchers.put("toOffice", itemSale.getPurchaseBy());
-				moveVouchers.put("fromOffice",itemSale.getPurchaseFrom() );
+				moveVouchers.put("saleRefNo",itemsaledetails.getId());
+				moveVouchers.put("quantity", itemsaledetails.getReceivedQuantity());
+				moveVouchers.put("toOffice", itemsaledetails.getPurchaseBy());
+				moveVouchers.put("fromOffice",itemsaledetails.getPurchaseFrom() );
 				moveVouchers.put("dateFormat", "dd MMMM yyyy");
-				moveVouchers.put("paymentDate", formatter.format(itemSale.getPurchaseDate()));
-				voucherPinApiResource.moveVoucher(itemSale.getPurchaseBy(), moveVouchers.toString());
+				moveVouchers.put("paymentDate", formatter.format(itemsaledetails.getPurchaseDate()));
+				voucherPinApiResource.moveVoucher(itemsaledetails.getPurchaseBy(), moveVouchers.toString());
 				
 				
 				

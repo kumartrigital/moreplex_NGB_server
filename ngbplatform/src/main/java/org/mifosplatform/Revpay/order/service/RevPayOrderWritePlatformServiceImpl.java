@@ -111,8 +111,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	public CommandProcessingResult createOrder(JsonCommand command) {
 		JSONObject revorder = null;
 		//String base_URL = "https://billing.moreplextv.com";
-		// String base_URL = "https://52.22.65.59:8877";
-		 String base_URL = "https://localhost:8877";
+		 String base_URL = "https://52.22.65.59:8877";
+		// String base_URL = "https://localhost:8877";
 
 		try {
 
@@ -147,10 +147,10 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGateway.setPaymentDate(new Date());
 				paymentGateway.setSource("REVPAY");
 				//paymentGateway.setReffernceId(command.stringValueOfParameterName("clientId"));
-				paymentGateway.setDeviceId(command.stringValueOfParameterName("orderQuantity"));
+				paymentGateway.setDeviceId(command.stringValueOfParameterName("ReceivedQuantity"));
 				paymentGateway.setRemarks("NOTHING");
 				paymentGateway.setType(type);
-				paymentGateway.setReffernceId(command.stringValueOfParameterName("itemsaleId"));
+				paymentGateway.setReffernceId(command.stringValueOfParameterName("itemId"));
 				paymentGateway.setObsId(command.longValueOfParameterNamed("officeid"));
 				paymentGateway.setOfficeId(command.longValueOfParameterNamed("PurchaseBy"));
 				//paymentGateway.setDeviceId("itemsale voucher:" + command.stringValueOfParameterName("itemsaleId"));
