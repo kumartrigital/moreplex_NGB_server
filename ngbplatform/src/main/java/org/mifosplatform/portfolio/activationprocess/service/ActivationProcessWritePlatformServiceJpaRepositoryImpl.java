@@ -75,6 +75,7 @@ import org.mifosplatform.organisation.address.exception.AddressNoRecordsFoundExc
 import org.mifosplatform.organisation.address.service.AddressReadPlatformService;
 import org.mifosplatform.organisation.message.domain.BillingMessageRepository;
 import org.mifosplatform.organisation.message.domain.BillingMessageTemplateRepository;
+import org.mifosplatform.organisation.message.service.MessageGmailBackedPlatformEmailService;
 import org.mifosplatform.organisation.message.service.MessagePlatformEmailService;
 import org.mifosplatform.organisation.office.domain.Office;
 import org.mifosplatform.organisation.office.domain.OfficeRepository;
@@ -201,6 +202,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 	private final VoucherDetailsRepository voucherDetailsRepository;
 	private final ChargingOrderWritePlatformService chargingOrderWritePlatformService;
 	private final LeaseDetailsRepository leaseDetailsRepository;
+	private final MessageGmailBackedPlatformEmailService messageGmailBackedPlatformEmailService;
 	// private final ResendOtpMessage resendOtpMessage;
 
 	static JSONObject activation = new JSONObject();
@@ -277,7 +279,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			final NetworkElementReadPlatformService networkElementReadPlatformService,
 			final VoucherDetailsRepository voucherDetailsRepository,
 			final ChargingOrderWritePlatformService chargingOrderWritePlatformService,
-			final LeaseDetailsRepository leaseDetailsRepository)
+			final LeaseDetailsRepository leaseDetailsRepository,
+			final MessageGmailBackedPlatformEmailService messageGmailBackedPlatformEmailService)
 
 	{
 
@@ -329,6 +332,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 		this.voucherDetailsRepository = voucherDetailsRepository;
 		this.chargingOrderWritePlatformService = chargingOrderWritePlatformService;
 		this.leaseDetailsRepository = leaseDetailsRepository;
+		this.messageGmailBackedPlatformEmailService = messageGmailBackedPlatformEmailService;
 		// this.resendOtpMessage = resendOtpMessage;
 	}
 
@@ -2177,6 +2181,8 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			messageGmailBackedPlatformEmailService.sendOtpToUserEmail(leaseDetails.getEmail(), otp);
+
 			leaseDetailsRepository.saveAndFlush(leaseDetails);
 			return CommandProcessingResult.parsingResult(leaseDetails);
 
