@@ -204,15 +204,6 @@ public class RevPayOrdersApiResource {
 		//String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
 		PaymentGateway revpayOrder = paymentGatewayRepository.findPaymentDetailsByPaymentId(txref.toString());
 
-		/*
-		 * org.json.JSONObject json; try { json = new
-		 * org.json.JSONObject(revpayStatus.toString()); org.json.JSONObject data =
-		 * json.getJSONObject("data"); flwrefKey = data.getString("flwref"); status =
-		 * data.getString("status"); } catch (JSONException e1) {
-		 * revpayOrder.setStatus("Transaction Id Not found");
-		 * revpayOrder.setPartyId(flwrefKey); result = "Transaction Id Not found";
-		 * paymentGatewayRepository.save(revpayOrder); e1.printStackTrace(); }
-		 */
 		flwrefKey=flwref;
 		revpayOrder.setPartyId(flwrefKey); 
 		String locale = "en";
@@ -291,10 +282,7 @@ public class RevPayOrdersApiResource {
 				moveVouchers.put("dateFormat", "dd MMMM yyyy");
 				moveVouchers.put("paymentDate", formatter.format(revpayOrder.getPaymentDate()));
 				voucherPinApiResource.moveVoucher(itemSale.getPurchaseBy(), moveVouchers.toString());
-				
-				
-				
-
+	
 				try {
 					indexPath = new URI(callBackUrl + "/#/inventory/" + txref);
 				} catch (URISyntaxException e) {

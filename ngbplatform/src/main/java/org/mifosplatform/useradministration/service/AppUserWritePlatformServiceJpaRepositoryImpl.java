@@ -389,4 +389,6 @@ public class AppUserWritePlatformServiceJpaRepositoryImpl implements AppUserWrit
 
 	}
 
+	
+
 }

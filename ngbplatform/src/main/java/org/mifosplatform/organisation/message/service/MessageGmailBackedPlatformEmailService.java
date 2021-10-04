@@ -3,14 +3,12 @@ package org.mifosplatform.organisation.message.service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.Date;
 import java.util.Properties;
@@ -19,6 +17,7 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
@@ -30,13 +29,8 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.mail.DefaultAuthenticator;
-import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
-import org.apache.commons.mail.SimpleEmail;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,6 +38,7 @@ import org.mifosplatform.infrastructure.configuration.domain.Configuration;
 import org.mifosplatform.infrastructure.configuration.domain.ConfigurationConstants;
 import org.mifosplatform.infrastructure.configuration.domain.ConfigurationRepository;
 import org.mifosplatform.infrastructure.configuration.exception.ConfigurationPropertyNotFoundException;
+import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.mifosplatform.infrastructure.core.service.DateUtils;
 import org.mifosplatform.organisation.message.data.BillingMessageDataForProcessing;
 import org.mifosplatform.organisation.message.domain.BillingMessage;
@@ -116,7 +111,7 @@ public class MessageGmailBackedPlatformEmailService implements MessagePlatformEm
 
 	}
 
-	@SuppressWarnings("deprecation")
+	//@SuppressWarnings("deprecation")
 	@Override
 	public String sendToUserEmail(BillingMessageDataForProcessing emailDetail) {
 
@@ -124,12 +119,16 @@ public class MessageGmailBackedPlatformEmailService implements MessagePlatformEm
 		if (configuration != null) {
 
 			// 1) get the session object
-			Properties properties = System.getProperties();
-			properties.setProperty("mail.smtp.host", hostName);
-			properties.put("mail.smtp.ssl.trust", hostName);
-			properties.put("mail.smtp.auth", "true");
-			properties.put("mail.smtp.starttls.enable", starttlsValue);// put as false
-			properties.put("mail.smtp.starttls.required", starttlsValue);// put as false
+		//	Properties properties = System.getProperties();
+			Properties properties = new Properties();
+			
+			properties.put("mail.smtp.auth", true);
+			properties.put("mail.smtp.starttls.enable", "true");
+			properties.put("mail.smtp.host", "smtp.gmail.com");
+			properties.put("mail.smtp.port", port);
+			properties.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+
+			System.out.println("username" + authpwd + "password" + authpwd);
 
 			Session session = Session.getDefaultInstance(properties, new javax.mail.Authenticator() {
 				protected PasswordAuthentication getPasswordAuthentication() {
@@ -266,7 +265,7 @@ public class MessageGmailBackedPlatformEmailService implements MessagePlatformEm
 				// String url =
 				// "http://202.62.67.34/smpp.sms?username=obs&password=9989275041&from=RADIUS&to="
 				// + messageTo + "&text=" + encodedMessage;
-				
+
 				String url = urlString + "&Message=" + messageBody + "&MobileNumbers=" + messageTo + "&ApiKey="
 						+ "U3WEY4V9D3YBwxUOc5YmG6zFG9Kzv08cH5DsioX9coA=" + "&ClientId="
 						+ "e4048eee-d3f6-44bb-bed8-db625ceff36c";
@@ -467,5 +466,70 @@ public class MessageGmailBackedPlatformEmailService implements MessagePlatformEm
 		}
 
 	}
+
+	public void sendOtpToUserEmail(String email, String otp) {
+
+		configuration = repository.findOneByName(ConfigurationConstants.CONFIG_PROPERTY_SMTP);
+
+		String value = configuration.getValue();
+		try {
+			JSONObject object = new JSONObject(value);
+
+			authuser = (String) object.get("mailId");
+
+			encodedPassword = (String) object.get("password");
+			authpwd = new String(Base64.decodeBase64(encodedPassword));
+
+			hostName = (String) object.get("hostName");
+			port = object.getString("port");
+			if (port.isEmpty()) {
+				portNumber = Integer.parseInt("25");
+			} else {
+				portNumber = Integer.parseInt(port);
+			}
+			starttlsValue = (String) object.get("starttls");
+			setContentString = (String) object.get("setContentString");
+		} catch (Exception e) {
+			throw new PlatformDataIntegrityException("Json exception", "Json Exception", "Json Exception");
+		}
+		if (configuration != null) {
+			Properties properties = new Properties();
+			properties.put("mail.smtp.auth", true);
+			properties.put("mail.smtp.starttls.enable", "true");
+			properties.put("mail.smtp.host", "smtp.gmail.com");
+			properties.put("mail.smtp.port", port);
+			properties.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+
+			Session session = Session.getInstance(properties, new javax.mail.Authenticator() {
+				protected PasswordAuthentication getPasswordAuthentication() {
+					return new PasswordAuthentication(authuser, authpwd);
+				}
+			});
+
+			try {
+
+				MimeMessage message = new MimeMessage(session);
+				message.setFrom(new InternetAddress(authuser));
+				message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(email));
+				message.setSubject("Lease Verification");
+
+				message.setText("Dear customer your OTP for lease verification is " + otp);
+
+				Transport.send(message);
+
+			} catch (MessagingException e) {
+				e.printStackTrace();
+				throw new PlatformDataIntegrityException("Wrong Authuser or Password", "error.authentication failure",
+						"Please confirm from address email and password");
+
+			}
+
+		} else {
+			throw new ConfigurationPropertyNotFoundException("SMTP GlobalConfiguration Property Not Found");
+
+		}
+
+	}
+	
 
 }

@@ -14,19 +14,20 @@ import org.mifosplatform.organisation.message.data.BillingMessageDataForProcessi
  */
 public interface MessagePlatformEmailService {
 
-    String sendToUserEmail(BillingMessageDataForProcessing emailDetail);
+	String sendToUserEmail(BillingMessageDataForProcessing emailDetail);
 
 	String sendToUserMobile(String message, Long id, String messageTo, String messageBody);
 
 	String createEmail(String pdfFileName, String emailId);
 
 	String sendGeneralMessage(String uniqueReference, String body, String subject);
-	
+
 	String sendTicketMessage(BillingMessageDataForProcessing emailDetail);
 
-	/*String sendToMobile(String message, Long id, String messageTo, String body);*/
-	
-	
-	
-	
+	void sendOtpToUserEmail(String email, String otp);
+
+	/*
+	 * String sendToMobile(String message, Long id, String messageTo, String body);
+	 */
+
 }

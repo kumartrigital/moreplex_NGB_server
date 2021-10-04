@@ -39,6 +39,7 @@ import org.mifosplatform.portfolio.activationprocess.domain.LeaseDetailsReposito
 import org.mifosplatform.portfolio.activationprocess.exception.LeaseDetailsNotFoundException;
 import org.mifosplatform.portfolio.activationprocess.service.ActivationProcessWritePlatformService;
 import org.mifosplatform.portfolio.client.data.ClientData;
+import org.mifosplatform.useradministration.service.AppUserWritePlatformServiceJpaRepositoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -279,16 +280,10 @@ public class ActivationProcessApiResource {
 					return Response.status(400).entity(result.getBody()).build();
 				}
 
+				messageGmailBackedPlatformEmailService.sendOtpToUserEmail(leaseDetails.getEmail(), otp);
 			} catch (Exception e) {
 				response.put("message", "Please Check Your Mobile Number");
 				return Response.status(400).entity(response).build();
-			}
-
-			try {
-				messageGmailBackedPlatformEmailService.sendGeneralMessage(leaseDetails.getEmail(), "otp message",
-						"Your OTP " + otp + " for lease verification");
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
 
 			leaseDetailsRepository.saveAndFlush(leaseDetails);
