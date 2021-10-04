@@ -267,22 +267,27 @@ public class RevPayOrdersApiResource {
 				paymentJson.put("collectorName", "MOREPLEX");
 				officePaymentsApiResource.createOfficePayment(revpayOrder.getObsId(), paymentJson.toString());
 				
-				ItemSale itemSale = itemSaleRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
-				
-
-				itemSale.setStatus("PENDING");
-				itemSaleRepository.save(itemSale);
+				//ItemSale itemSale = itemSaleRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
+				  //itemsaledetails.setStatus("New");
+                ItemSale itemsaledetails = itemSaleRepository.findItemsaleDetails(Long.parseLong(revpayOrder.getReffernceId()));
+                itemsaledetails.setReceivedQuantity(Long.parseLong(revpayOrder.getDeviceId()));
+				itemSaleRepository.save(itemsaledetails);
 				
 				JSONObject moveVouchers = new JSONObject();
 				moveVouchers.put("type", "sale");
-				moveVouchers.put("saleRefNo", itemSale.getItemId());
-				moveVouchers.put("quantity", itemSale.getOrderQuantity());
-				moveVouchers.put("toOffice", itemSale.getPurchaseFrom());
-				moveVouchers.put("fromOffice", itemSale.getPurchaseBy());
+				moveVouchers.put("saleRefNo",itemsaledetails.getId());
+				moveVouchers.put("quantity", itemsaledetails.getReceivedQuantity());
+				moveVouchers.put("toOffice", itemsaledetails.getPurchaseBy());
+				moveVouchers.put("fromOffice",itemsaledetails.getPurchaseFrom() );
 				moveVouchers.put("dateFormat", "dd MMMM yyyy");
-				moveVouchers.put("paymentDate", formatter.format(revpayOrder.getPaymentDate()));
-				voucherPinApiResource.moveVoucher(itemSale.getPurchaseBy(), moveVouchers.toString());
-	
+
+				moveVouchers.put("paymentDate", formatter.format(itemsaledetails.getPurchaseDate()));
+				voucherPinApiResource.moveVoucher(itemsaledetails.getPurchaseBy(), moveVouchers.toString());
+				
+				
+				
+				
+
 				try {
 					indexPath = new URI(callBackUrl + "/#/inventory/" + txref);
 				} catch (URISyntaxException e) {

@@ -111,8 +111,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	public CommandProcessingResult createOrder(JsonCommand command) {
 		JSONObject revorder = null;
 		//String base_URL = "https://billing.moreplextv.com";
-		// String base_URL = "https://52.22.65.59:8877";
-		 String base_URL = "https://localhost:8877";
+		 String base_URL = "https://52.22.65.59:8877";
+		// String base_URL = "https://localhost:8877";
 
 		try {
 
@@ -146,12 +146,14 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGateway.setStatus("intiated");
 				paymentGateway.setPaymentDate(new Date());
 				paymentGateway.setSource("REVPAY");
-				paymentGateway.setReffernceId(command.stringValueOfParameterName("clientId"));
+				//paymentGateway.setReffernceId(command.stringValueOfParameterName("clientId"));
+				paymentGateway.setDeviceId(command.stringValueOfParameterName("ReceivedQuantity"));
 				paymentGateway.setRemarks("NOTHING");
 				paymentGateway.setType(type);
-				paymentGateway.setReffernceId(command.stringValueOfParameterName("itemsaleId"));
+				paymentGateway.setReffernceId(command.stringValueOfParameterName("itemId"));
 				paymentGateway.setObsId(command.longValueOfParameterNamed("officeid"));
-				paymentGateway.setDeviceId("itemsale voucher:" + command.stringValueOfParameterName("itemsaleId"));
+				paymentGateway.setOfficeId(command.longValueOfParameterNamed("PurchaseBy"));
+				//paymentGateway.setDeviceId("itemsale voucher:" + command.stringValueOfParameterName("itemsaleId"));
 
 				paymentGatewayRepository.save(paymentGateway);
 				revorder = new JSONObject();
@@ -159,7 +161,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGatewayRepository.save(paymentGateway);
 				revorder.put("revorder", "order created sucussfully");
 				revorder.put("callbackUrl",
-						base_URL + "/ngbplatform/api/v1/itemsales/" + paymentGateway.getPaymentId() + "/");
+						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 			}
 
 			else if (type.equalsIgnoreCase("leaseverification_payment")) {
