@@ -337,7 +337,6 @@ public class ActivationProcessApiResource {
 		final CommandWrapper commandRequest = new CommandWrapperBuilder().resendOtpMessage()
 				.withJson(apiRequestBodyAsJson).build();
 		final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-		messageGmailBackedPlatformEmailService.sendOtpToUserEmail(leaseDetails.getEmail(), otp);
 
 		return this.toApiJsonSerializer.serialize(result);
 	}
