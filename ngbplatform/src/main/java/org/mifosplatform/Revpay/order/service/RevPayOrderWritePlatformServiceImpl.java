@@ -360,7 +360,30 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				revorder.put("callbackUrl",
 						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 
-			} else if (type.equalsIgnoreCase("subscription_renewal")) {
+			} else if (type.equalsIgnoreCase("Customer_topup")) {
+			   
+				paymentGateway.setObsId(command.longValueOfParameterNamed("clientid"));
+				paymentGateway.setAmountPaid(new BigDecimal(command.stringValueOfParameterName("amount")));
+				paymentGateway.setPaymentId(getTxid());
+				paymentGateway.setPartyId(paymentGateway.getPaymentId());
+				paymentGateway.setReceiptNo("RAVE_STB_" + paymentGateway.getPaymentId());
+				paymentGateway.setStatus("intiated");
+				paymentGateway.setPaymentDate(new Date());
+				paymentGateway.setSource("REVPAY");
+				paymentGateway.setRemarks("NOTHING");
+				paymentGateway.setType(type);
+				paymentGateway.setDeviceId(command.stringValueOfParameterName("stb"));
+				paymentGatewayRepository.save(paymentGateway);
+				revorder = new JSONObject();
+
+				revorder.put("txid", paymentGateway.getPaymentId());
+				revorder.put("revorder", "order created sucussfully");
+				revorder.put("callbackUrl",
+						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
+
+			}
+
+			else if (type.equalsIgnoreCase("subscription_renewal")) {
 				paymentGateway.setObsId(Long.parseLong(command.stringValueOfParameterName("clientId")));
 				paymentGateway.setOfficeId(Long.parseLong(command.stringValueOfParameterName("officeId")));
 				paymentGateway.setDeviceId(command.stringValueOfParameterName("stb"));

@@ -199,6 +199,7 @@ public class RevPayOrdersApiResource {
 		URI indexPath = null;
 		String flwrefKey = null;
 		String status = "";
+		//String status = "successful";
 		String result = null;
 
 		String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
@@ -355,7 +356,30 @@ public class RevPayOrdersApiResource {
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
-			} else if (revpayOrder.getType().equalsIgnoreCase("subscription_renewal")) {
+			} else if (revpayOrder.getType().equalsIgnoreCase("Customer_topup")) {
+				
+			   paymentJson.put("isSubscriptionPayment", "false");
+				paymentJson.put("isChequeSelected", "No");
+				paymentJson.put("paymentCode", 27);
+				paymentJson.put("receiptNo", revpayOrder.getReceiptNo());
+				paymentJson.put("remarks", "nothing");
+				paymentJson.put("amountPaid", revpayOrder.getAmountPaid());
+				paymentJson.put("paymentType", "Online Payment");
+				paymentJson.put("locale", locale);
+				paymentJson.put("dateFormat", dateFormat);
+				paymentJson.put("paymentSource", null);
+				paymentJson.put("paymentDate", formatter.format(revpayOrder.getPaymentDate()));
+				paymentsApiResource.createPayment(revpayOrder.getObsId(), paymentJson.toString());
+				
+
+				try {
+					indexPath = new URI(callBackUrl + "/#/DTH-OnlinePayment/" + txref);
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
+			} 
+			
+			else if (revpayOrder.getType().equalsIgnoreCase("subscription_renewal")) {
 
 				Order order = this.orderRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
 
