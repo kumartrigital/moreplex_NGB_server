@@ -124,11 +124,11 @@ public class MessageGmailBackedPlatformEmailService implements MessagePlatformEm
 			
 			properties.put("mail.smtp.auth", true);
 			properties.put("mail.smtp.starttls.enable", "true");
-			properties.put("mail.smtp.host", "smtp.gmail.com");
+			properties.put("mail.smtp.host", hostName);
 			properties.put("mail.smtp.port", port);
-			properties.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+			properties.put("mail.smtp.ssl.trust", hostName);
 
-			System.out.println("username" + authpwd + "password" + authpwd);
+			System.out.println("username:" + authuser + " password:" + authpwd);
 
 			Session session = Session.getDefaultInstance(properties, new javax.mail.Authenticator() {
 				protected PasswordAuthentication getPasswordAuthentication() {
@@ -183,6 +183,9 @@ public class MessageGmailBackedPlatformEmailService implements MessagePlatformEm
 
 			} catch (Exception e) {
 				System.out.println("message sending failed :" + e.getMessage());
+				BillingMessage billingMessage = this.messageDataRepository.findOne(emailDetail.getId());
+				billingMessage.setStatus("F");
+				this.messageDataRepository.save(billingMessage);
 
 				handleCodeDataIntegrityIssues(null, e);
 				return e.getMessage();

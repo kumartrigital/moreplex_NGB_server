@@ -79,20 +79,20 @@ public class EmailService {
 
 		properties.put("mail.smtp.auth", true);
 		properties.put("mail.smtp.starttls.enable", "true");
-		properties.put("mail.smtp.host", "smtp.gmail.com");
+		properties.put("mail.smtp.host", "smtp.moreplexgroup.com");
 		properties.put("mail.smtp.port", 587);
-		properties.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+		properties.put("mail.smtp.ssl.trust", "smtp.moreplexgroup.com");
 
 		Session session = Session.getDefaultInstance(properties, new javax.mail.Authenticator() {
 			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication("mplexbilling@gmail.com", "Forusbyus");
+				return new PasswordAuthentication("welcome@moreplexgroup.com", "DH2CWNRV8UH8");
 			}
 		});
 
 		// 2) compose message
 		try {
 			MimeMessage message = new MimeMessage(session);
-			message.setFrom(new InternetAddress("mplexbilling@gmail.com"));
+			message.setFrom(new InternetAddress("welcome@moreplexgroup.com"));
 			message.addRecipient(Message.RecipientType.TO, new InternetAddress("rajkumar03954@gmail.com"));
 			message.setSubject("hello");
 

@@ -110,8 +110,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	@Override
 	public CommandProcessingResult createOrder(JsonCommand command) {
 		JSONObject revorder = null;
-		//String base_URL = "https://billing.moreplextv.com";
-		 String base_URL = "https://52.22.65.59:8877";
+		String base_URL = "https://billing.moreplextv.com";
+		// String base_URL = "https://52.22.65.59:8877";
 		// String base_URL = "https://localhost:8877";
 
 		try {
@@ -146,14 +146,15 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				paymentGateway.setStatus("intiated");
 				paymentGateway.setPaymentDate(new Date());
 				paymentGateway.setSource("REVPAY");
-				//paymentGateway.setReffernceId(command.stringValueOfParameterName("clientId"));
+				// paymentGateway.setReffernceId(command.stringValueOfParameterName("clientId"));
 				paymentGateway.setDeviceId(command.stringValueOfParameterName("ReceivedQuantity"));
 				paymentGateway.setRemarks("NOTHING");
 				paymentGateway.setType(type);
 				paymentGateway.setReffernceId(command.stringValueOfParameterName("itemId"));
 				paymentGateway.setObsId(command.longValueOfParameterNamed("officeid"));
 				paymentGateway.setOfficeId(command.longValueOfParameterNamed("PurchaseBy"));
-				//paymentGateway.setDeviceId("itemsale voucher:" + command.stringValueOfParameterName("itemsaleId"));
+				// paymentGateway.setDeviceId("itemsale voucher:" +
+				// command.stringValueOfParameterName("itemsaleId"));
 
 				paymentGatewayRepository.save(paymentGateway);
 				revorder = new JSONObject();
@@ -494,6 +495,7 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 				revorder.put("callbackUrl",
 						base_URL + "/ngbplatform/api/v1/revpay/orderlock/" + paymentGateway.getPaymentId() + "/");
 			}
+
 			return new CommandProcessingResult(revorder);
 
 		} catch (Exception e) {
@@ -520,8 +522,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 			JSONObject revRequest = new JSONObject();
 			revRequest.put("txref", txid);
 			// FLWPUBK-acb0630ea1c150dabf363efa007d3a0b-X
-			revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
-			//revRequest.put("SECKEY", "FLWSECK-7a27e5bdaca5e7632e760f7aef00d40b-X");
+			// revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
+			revRequest.put("SECKEY", "FLWSECK-7a27e5bdaca5e7632e760f7aef00d40b-X");
 
 			HttpEntity<String> request = new HttpEntity<>(revRequest.toString(), headers);
 			revResponse = rest.postForObject(VERIFY_ENDPOINT, request, String.class);

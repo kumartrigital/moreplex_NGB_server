@@ -192,20 +192,34 @@ public class RevPayOrdersApiResource {
 	public Response GetcllBackRavePayOrder(@PathParam("txref") Long txref, @PathParam("flwref") String flwref,
 			@QueryParam("resp") String resp) throws JSONException {
 
-		//String callBackUrl = "https://billing.moreplextv.com";
-		String callBackUrl = "https://52.22.65.59:8877";
-		//String callBackUrl = "https://localhost:8877";
+		String callBackUrl = "https://billing.moreplextv.com";
+		// String callBackUrl = "https://52.22.65.59:8877";
+		// String callBackUrl = "https://localhost:8877";
 
 		URI indexPath = null;
 		String flwrefKey = null;
-		String status = "successful";
-		//String result = null;
+		String status = "";
+		String result = null;
 
-		//String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
+		String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
 		PaymentGateway revpayOrder = paymentGatewayRepository.findPaymentDetailsByPaymentId(txref.toString());
 
-		flwrefKey=flwref;
-		revpayOrder.setPartyId(flwrefKey); 
+		org.json.JSONObject json;
+		try {
+			json = new org.json.JSONObject(revpayStatus.toString());
+			org.json.JSONObject data = json.getJSONObject("data");
+			flwrefKey = data.getString("flwref");
+			status = data.getString("status");
+		} catch (JSONException e1) {
+			revpayOrder.setStatus("Transaction Id Not found");
+			revpayOrder.setPartyId(flwrefKey);
+			result = "Transaction Id Not found";
+			paymentGatewayRepository.save(revpayOrder);
+			e1.printStackTrace();
+		}
+
+		flwrefKey = flwref;
+		revpayOrder.setPartyId(flwrefKey);
 		String locale = "en";
 		String dateFormat = "dd MMMM yyyy";
 
@@ -266,27 +280,25 @@ public class RevPayOrdersApiResource {
 				paymentJson.put("collectionBy", 2);
 				paymentJson.put("collectorName", "MOREPLEX");
 				officePaymentsApiResource.createOfficePayment(revpayOrder.getObsId(), paymentJson.toString());
-				
-				//ItemSale itemSale = itemSaleRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
-				  //itemsaledetails.setStatus("New");
-                ItemSale itemsaledetails = itemSaleRepository.findItemsaleDetails(Long.parseLong(revpayOrder.getReffernceId()));
-                itemsaledetails.setReceivedQuantity(Long.parseLong(revpayOrder.getDeviceId()));
+
+				// ItemSale itemSale =
+				// itemSaleRepository.findOne(Long.parseLong(revpayOrder.getReffernceId()));
+				// itemsaledetails.setStatus("New");
+				ItemSale itemsaledetails = itemSaleRepository
+						.findItemsaleDetails(Long.parseLong(revpayOrder.getReffernceId()));
+				itemsaledetails.setReceivedQuantity(Long.parseLong(revpayOrder.getDeviceId()));
 				itemSaleRepository.save(itemsaledetails);
-				
+
 				JSONObject moveVouchers = new JSONObject();
 				moveVouchers.put("type", "sale");
-				moveVouchers.put("saleRefNo",itemsaledetails.getId());
+				moveVouchers.put("saleRefNo", itemsaledetails.getId());
 				moveVouchers.put("quantity", itemsaledetails.getReceivedQuantity());
 				moveVouchers.put("toOffice", itemsaledetails.getPurchaseBy());
-				moveVouchers.put("fromOffice",itemsaledetails.getPurchaseFrom() );
+				moveVouchers.put("fromOffice", itemsaledetails.getPurchaseFrom());
 				moveVouchers.put("dateFormat", "dd MMMM yyyy");
 
 				moveVouchers.put("paymentDate", formatter.format(itemsaledetails.getPurchaseDate()));
 				voucherPinApiResource.moveVoucher(itemsaledetails.getPurchaseBy(), moveVouchers.toString());
-				
-				
-				
-				
 
 				try {
 					indexPath = new URI(callBackUrl + "/#/inventory/" + txref);
