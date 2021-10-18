@@ -21,6 +21,8 @@ public interface GenerateChargesForOrderService {
 	Map<String, List<Charge>> calculateNewChargesForServices(List<ChargeData> billingOrderCommands,
 			Map<String, List<Charge>> groupOfCharges);
 
+	List<BillItem> createBillItemRecordsOffice(Map<String, List<Charge>> mappedCharges, Long clientId, Long OfficeId);
+
 
 
 }

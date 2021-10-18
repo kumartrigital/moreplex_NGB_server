@@ -779,7 +779,7 @@ public class GenerateChargesForOrderServiceImp implements GenerateChargesForOrde
 					 * OfficeBalanceIsNotEnoughException(officeBalance.getBalanceAmount()); } else {
 					 */
 					// System.out.println("chargeOfficeclinetId" +office.getClientId());
-					clientBalanceObject.addProperty("clientId", office.getClientId());
+					clientBalanceObject.addProperty("clientId", office.getClientId());//office ID
 					clientBalanceObject.addProperty("amount", billItem.getInvoiceAmount());
 					clientBalanceObject.addProperty("isWalletEnable", false);
 					clientBalanceObject.addProperty("clientServiceId", orderData.get(0).getClientServiceId());
@@ -805,13 +805,263 @@ public class GenerateChargesForOrderServiceImp implements GenerateChargesForOrde
 					 * clientData.getBalanceAmount().compareTo(billItem.getInvoiceAmount())>0) {
 					 * throw new ClientBalanceNotEnoughException(); }else {
 					 */
-					Configuration dealerBalanceCheck = this.configurationRepository
-							.findOneByName(ConfigurationConstants.DEALER_BALANCE_CHECK);
-					if ((null != dealerBalanceCheck && dealerBalanceCheck.isEnabled())) {
-						clientBalanceObject.addProperty("clientId", office.getClientId());
+
+					clientBalanceObject.addProperty("clientId", clientId);
+					// System.out.println("chargeclinetId" + clientId);
+					clientBalanceObject.addProperty("amount", billItem.getInvoiceAmount());
+					clientBalanceObject.addProperty("isWalletEnable", false);
+					clientBalanceObject.addProperty("clientServiceId", orderData.get(0).getClientServiceId());
+					clientBalanceObject.addProperty("currencyId", billItem.getCurrencyId());
+					clientBalanceObject.addProperty("locale", "en");
+
+					final JsonElement clientServiceElementNew = fromJsonHelper.parse(clientBalanceObject.toString());
+					JsonCommand clientBalanceCommand = new JsonCommand(null, clientServiceElementNew.toString(),
+							clientServiceElementNew, fromJsonHelper, null, null, null, null, null, null, null, null,
+							null, null, null, null);
+					this.chargingOrderWritePlatformService.updateClientBalance(clientBalanceCommand);
+					System.out.println("charging for self");
+				}
+				// }
+				billItemList.add(entry.getValue());
+
+			}
+
+			/*
+			 * invoiceAmount = totalChargeAmount.add(netTaxAmount);
+			 * billItem.setNetChargeAmount(totalChargeAmount);
+			 * billItem.setTaxAmount(netTaxAmount); billItem.setInvoic
+			 * eAmount(invoiceAmount);
+			 * billItem.setCurrencyId(clientBillInfoData.getBillCurrency());
+			 */
+			// billItem = this.billItemRepository.saveAndFlush(billItem);
+
+		}
+		return billItemList;
+	}
+
+	
+	
+	@Override
+	public List<BillItem> createBillItemRecordsOffice(Map<String, List<Charge>> mappedCharges, Long clientId,Long OfficeId) {
+
+		Configuration prepaidConfiguration = this.configurationRepository
+				.findOneByName(ConfigurationConstants.PREPAID_SERVICE);
+		// Configuration isBalanceCheck =
+		// this.configurationRepository.findOneByName(ConfigurationConstants.BALANCE_CHECK);
+		OfficeData officeData = this.officeReadPlatformService.retriveOfficeDetail(clientId);
+		boolean isChargeowner = false;
+		String chargeOwner = null;
+		BillItem billItem = null;
+		List<BillItem> billItemList = new ArrayList<BillItem>();
+		Map<Long, BillItem> billItemMap = new HashMap<Long, BillItem>();
+
+		Office office = null;
+		Long orderId = null;
+
+		for (Entry<String, List<Charge>> key : mappedCharges.entrySet()) {
+
+			ClientBillInfoData clientBillInfoData = this.clientBillInfoReadPlatformService
+					.retrieveClientBillInfoDetails(clientId);
+
+			/*
+			 * BigDecimal conversionPrice =
+			 * this.clientBalanceWritePlatformService.conversion(orderData.getCurrencyId(),
+			 * clientBillInfoData.getBillCurrency(),billItem.getInvoiceAmount());
+			 */
+			/*
+			 * if(billingOrderCommand.getChargeOwner().equalsIgnoreCase("self")) {
+			 * if(billItemMap.containsKey(billingOrderCommand.getClientId())) { invoice =
+			 * billItemMap.get(billingOrderCommand.getClientId()); }else { invoice = new
+			 * BillItem(billingOrderCommand.getClientId(),
+			 * DateUtils.getLocalDateOfTenant().toDate(), invoiceAmount, invoiceAmount,
+			 * netTaxAmount, "active"); billItemMap.put(billingOrderCommand.getClientId(),
+			 * invoice); } }else { officeData =
+			 * this.officeReadPlatformService.retriveOfficeDetail(billingOrderCommand.
+			 * getClientId());
+			 * 
+			 * if(billItemMap.containsKey(officeData.getClientId())) { invoice =
+			 * billItemMap.get(officeData.getClientId()); }else { invoice = new
+			 * BillItem(officeData.getClientId(), DateUtils.getLocalDateOfTenant().toDate(),
+			 * invoiceAmount, invoiceAmount, netTaxAmount, "active");
+			 * billItemMap.put(officeData.getClientId(), invoice); } }
+			 */
+			/*
+			 * billItem = new BillItem(clientId, DateUtils.getLocalDateOfTenant().toDate(),
+			 * invoiceAmount, invoiceAmount, netTaxAmount, "active");
+			 */
+			for (Charge charge : key.getValue()) {
+				BigDecimal netTaxAmount = BigDecimal.ZERO;
+				BigDecimal invoiceAmount = BigDecimal.ZERO;
+				BigDecimal totalChargeAmount = BigDecimal.ZERO;
+
+				if (charge.getChargeOwner() != null && charge.getChargeOwner().equalsIgnoreCase("self")) {
+
+					for (ChargeTax chargeTax : charge.getChargeTaxs()) {
+						netTaxAmount = netTaxAmount.add(chargeTax.getTaxAmount());
+					}
+					if (billItemMap.containsKey(clientId)) {
+
+						BigDecimal netTaxAmount_local = BigDecimal.ZERO;
+						BigDecimal invoiceAmount_local = BigDecimal.ZERO;
+						BigDecimal totalChargeAmount_local = BigDecimal.ZERO;
+						// billItem = billItemMap.get(charge.getClientId());
+						billItem = billItemMap.get(clientId);
+
+						for (ChargeTax chargeTax : charge.getChargeTaxs()) {
+							chargeTax.setBillItem(billItem);
+						}
+
+						// invoiceAmount_local = billItem.getInvoiceAmount();
+						invoiceAmount_local = charge.getChargeAmount();
+						netTaxAmount_local = billItem.getTaxAmount();
+						// totalChargeAmount_local = billItem.getNetChargeAmount();
+
+						totalChargeAmount_local = totalChargeAmount_local.add(charge.getNetChargeAmount());
+						netTaxAmount_local = netTaxAmount_local.add(netTaxAmount);
+						invoiceAmount_local = invoiceAmount_local.add(netTaxAmount_local);
+
+						// invoiceAmount_local =
+						// invoiceAmount_local.add(totalChargeAmount_local.add(netTaxAmount_local));
+						orderId = charge.getOrderId();
+						billItem.setNetChargeAmount(totalChargeAmount_local);
+						billItem.setTaxAmount(netTaxAmount_local);
+						billItem.setInvoiceAmount(invoiceAmount_local);
+
 					} else {
-						clientBalanceObject.addProperty("clientId", clientId);
-					} // System.out.println("chargeclinetId" + clientId);
+						invoiceAmount = BigDecimal.ZERO;
+						totalChargeAmount = totalChargeAmount.add(charge.getNetChargeAmount());
+						invoiceAmount = totalChargeAmount.add(netTaxAmount);
+						billItem = new BillItem(clientId, DateUtils.getLocalDateOfTenant().toDate(), invoiceAmount,
+								invoiceAmount, netTaxAmount, "active");
+						for (ChargeTax chargeTax : charge.getChargeTaxs()) {
+							chargeTax.setBillItem(billItem);
+						}
+
+					}
+
+				} else {
+					officeData = this.officeReadPlatformService.retriveOfficeDetail(clientId);
+					// if(billItemMap.containsKey(officeData.getClientId())) {
+					if (billItemMap.containsKey(0l)) {
+
+						BigDecimal netTaxAmount_local = BigDecimal.ZERO;
+						BigDecimal invoiceAmount_local = BigDecimal.ZERO;
+						BigDecimal totalChargeAmount_local = BigDecimal.ZERO;
+						billItem = billItemMap.get(officeData.getClientId());
+						for (ChargeTax chargeTax : charge.getChargeTaxs()) {
+							chargeTax.setBillItem(billItem);
+						}
+
+						invoiceAmount_local = billItem.getInvoiceAmount();
+						netTaxAmount_local = billItem.getTaxAmount();
+						totalChargeAmount_local = billItem.getNetChargeAmount();
+
+						// totalChargeAmount_local =
+						// totalChargeAmount_local.add(charge.getNetChargeAmount());
+						netTaxAmount_local = netTaxAmount_local.add(netTaxAmount);
+						// invoiceAmount_local =
+						// invoiceAmount_local.add(totalChargeAmount_local.add(netTaxAmount_local));
+						invoiceAmount_local = invoiceAmount_local.add(netTaxAmount_local);
+
+						orderId = charge.getOrderId();
+						billItem.setNetChargeAmount(totalChargeAmount_local);
+						billItem.setTaxAmount(netTaxAmount_local);
+						billItem.setInvoiceAmount(invoiceAmount_local);
+					} else {
+						invoiceAmount = BigDecimal.ZERO;
+
+						totalChargeAmount = totalChargeAmount.add(charge.getNetChargeAmount());
+						invoiceAmount = totalChargeAmount.add(netTaxAmount);
+						billItem = new BillItem(officeData.getClientId(), DateUtils.getLocalDateOfTenant().toDate(),
+								invoiceAmount, invoiceAmount, netTaxAmount, "active");
+
+						for (ChargeTax chargeTax : charge.getChargeTaxs()) {
+							chargeTax.setBillItem(billItem);
+						}
+
+					}
+
+				}
+
+				orderId = charge.getOrderId();
+				billItem.setCurrencyId(clientBillInfoData.getBillCurrency());
+				billItem.addCharges(charge);
+				if (charge.getChargeOwner() != null && charge.getChargeOwner().equalsIgnoreCase("self")) {
+					billItem.setClientId(charge.getClientId());
+					billItemMap.put(charge.getClientId(), billItem);
+				} else {
+					isChargeowner = true;
+					office = this.officeRepository.findOne(officeData.getId());
+					billItem.setClientId(office.getClientId());
+					billItemMap.put(office.getClientId(), billItem);
+				}
+
+			}
+			for (Map.Entry<Long, BillItem> entry : billItemMap.entrySet()) {
+
+				/* Save item record */
+				billItem = this.billItemRepository.saveAndFlush(entry.getValue());
+				// this.billItemRepository.saveAndFlush(entry.getValue());
+
+				List<OrderData> orderData = this.orderReadPlatformService.orderDetailsForClientBalance(orderId);
+
+				if (prepaidConfiguration.isEnabled()) {
+					if (officeData.getBusinessType().equalsIgnoreCase("Secondary")) {
+						if (officeData.getSubscriberDues()) {
+							if (orderData.get(0).getIsPrepaid().equalsIgnoreCase("Y")) {
+								CommandProcessingResult result = this.secondarySubscriberDuesWritePlatformService
+										.secondarySubscriberDues(clientId, officeData.getId(),
+												billItem.getInvoiceAmount());
+							}
+						} else {
+							throw new PlatformDataIntegrityException("No SubscriberDue", "No SubscriberDue",
+									"No SubscriberDue");
+						}
+					}
+				}
+
+				JsonObject clientBalanceObject = new JsonObject();
+				clientBalanceObject.addProperty("id", billItem.getId());
+				OfficeBalance officeBalance = this.officeBalanceRepository.findOneByOfficeId(officeData.getId());
+
+				if (billItem.getCharges().get(0).getChargeOwner().equalsIgnoreCase("parent")) {
+
+					/*
+					 * if (office.getPayment() == '3' &&
+					 * (officeBalance.getBalanceAmount()).compareTo(billItem.getInvoiceAmount()) >
+					 * 0) { throw new
+					 * OfficeBalanceIsNotEnoughException(officeBalance.getBalanceAmount()); } else {
+					 */
+					// System.out.println("chargeOfficeclinetId" +office.getClientId());
+					clientBalanceObject.addProperty("clientId", OfficeId);//office ID
+					clientBalanceObject.addProperty("amount", billItem.getInvoiceAmount());
+					clientBalanceObject.addProperty("isWalletEnable", false);
+					clientBalanceObject.addProperty("clientServiceId", orderData.get(0).getClientServiceId());
+					clientBalanceObject.addProperty("currencyId", billItem.getCurrencyId());
+					clientBalanceObject.addProperty("locale", "en");
+
+					final JsonElement clientServiceElementNew = fromJsonHelper.parse(clientBalanceObject.toString());
+					JsonCommand clientBalanceCommand = new JsonCommand(null, clientServiceElementNew.toString(),
+							clientServiceElementNew, fromJsonHelper, null, null, null, null, null, null, null, null,
+							null, null, null, null);
+
+					// updating office balance
+					officeBalance.updateBalance("DEBIT", billItem.getInvoiceAmount());
+					this.officeBalanceRepository.saveAndFlush(officeBalance);
+					this.chargingOrderWritePlatformService.updateClientBalance(clientBalanceCommand);
+					System.out.println("charging for parent");
+					// }
+				} else if (billItem.getCharges().get(0).getChargeOwner().equalsIgnoreCase("self")) {
+					// ClientData clientData = this.clientReadPlatformService.retrieveOne("id",
+					// clientId.toString());
+					/*
+					 * if(clientData!=null &&
+					 * clientData.getBalanceAmount().compareTo(billItem.getInvoiceAmount())>0) {
+					 * throw new ClientBalanceNotEnoughException(); }else {
+					 */
+
+					clientBalanceObject.addProperty("clientId", clientId);
+					// System.out.println("chargeclinetId" + clientId);
 					clientBalanceObject.addProperty("amount", billItem.getInvoiceAmount());
 					clientBalanceObject.addProperty("isWalletEnable", false);
 					clientBalanceObject.addProperty("clientServiceId", orderData.get(0).getClientServiceId());

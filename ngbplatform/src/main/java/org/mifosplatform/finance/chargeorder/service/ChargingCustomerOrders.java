@@ -89,7 +89,10 @@ public class ChargingCustomerOrders {
 			// validation not written
 			this.apiJsonDeserializer.validateForCreate(command.json());
 			LocalDate processDate = ProcessDate.fromJson(command);
-			List<BillItem> invoice = this.invoicingSingleClient(command.entityId(), processDate);
+			//List<BillItem> invoice = this.invoicingSingleClient(command.entityId(), processDate);
+			
+			List<BillItem> invoice = this.invoicingSingleClientForOffice(command.entityId(), processDate,command.getSupportedEntityId());
+
 			return new CommandProcessingResultBuilder().withCommandId(command.commandId())
 					.withEntityId(invoice.get(0).getId()).build();
 		} catch (DataIntegrityViolationException dve) {
@@ -151,6 +154,62 @@ public class ChargingCustomerOrders {
 			return billItem;
 		}
 	}
+	
+	
+	public List<BillItem> invoicingSingleClientForOffice(Long clientId, LocalDate processDate,Long OfficeId) {
+
+		LocalDate initialProcessDate = processDate;
+		Date nextBillableDate = null;
+		// Get list of qualified orders of customer
+		List<BillingOrderData> billingOrderDatas = chargingOrderReadPlatformService.retrieveOrderIds(clientId,
+				processDate);
+
+		if (billingOrderDatas.size() != 0) {
+
+			boolean prorataWithNextBillFlag = this
+					.checkInvoiceConfigurations(ConfigurationConstants.CONFIG_PRORATA_WITH_NEXT_BILLING_CYCLE);
+			Map<String, List<Charge>> groupOfCharges = new HashMap<String, List<Charge>>();
+
+			for (BillingOrderData billingOrderData : billingOrderDatas) {
+
+				nextBillableDate = billingOrderData.getNextBillableDate();
+				if (prorataWithNextBillFlag && ("Y".equalsIgnoreCase(billingOrderData.getBillingAlign()))
+						&& billingOrderData.getInvoiceTillDate() == null) {
+					LocalDate alignEndDate = new LocalDate(nextBillableDate).dayOfMonth().withMaximumValue();
+					if (!processDate.toDate().after(alignEndDate.toDate()))
+						processDate = alignEndDate.plusDays(2);
+				} else {
+					processDate = initialProcessDate;
+				}
+				while (processDate.toDate().after(nextBillableDate)
+						|| processDate.toDate().compareTo(nextBillableDate) == 0) {
+
+					groupOfCharges = chargeLinesForServices(billingOrderData, clientId, processDate, groupOfCharges);
+
+					if (!groupOfCharges.isEmpty()
+							&& groupOfCharges.containsKey(billingOrderData.getOrderId().toString())) {
+						List<Charge> charges = groupOfCharges.get(billingOrderData.getOrderId().toString());
+						nextBillableDate = new LocalDate(charges.get(charges.size() - 1).getEntDate()).plusDays(1)
+								.toDate();
+					} else if (!groupOfCharges.isEmpty()
+							&& groupOfCharges.containsKey(billingOrderData.getChargeCode())) {
+						List<Charge> charges = groupOfCharges.get(billingOrderData.getChargeCode());
+						nextBillableDate = new LocalDate(charges.get(charges.size() - 1).getEntDate()).plusDays(1)
+								.toDate();
+					}
+				}
+
+			}
+
+			return this.generateChargesForOrderService.createBillItemRecordsOffice(groupOfCharges, clientId,OfficeId);
+
+		} else {
+			//throw new BillingOrderNoRecordsFoundException();
+			List<BillItem> billItem = new ArrayList<BillItem>();
+			return billItem;
+		}
+	}
+
 
 	public Map<String, List<Charge>> chargeLinesForServices(BillingOrderData billingOrderData, Long clientId,
 			LocalDate processDate, Map<String, List<Charge>> groupOfCharges) {
