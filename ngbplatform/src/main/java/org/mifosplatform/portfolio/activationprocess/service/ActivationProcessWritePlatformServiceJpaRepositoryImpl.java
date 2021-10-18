@@ -2247,7 +2247,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 
 			RestTemplate restTemplate = new RestTemplate();
 			String OTP_ENDPOINT = "https://www.bulksmsnigeria.com/api/v1/sms/create?api_token=O0KM2E1yLKo2oE7gVoYwm7Dlu9NZCDp0K7LAp7LfwBSiN4jfa3Sv37TXNNsy"
-					+ "&from=BulkSMS.ng&to=" + "8033619354" + "&body=" + "otp verification " + 123434;
+					+ "&from=BulkSMS.ng&to=" + "7060733104" + "&body=" + "otp verification " + 123434;
 
 			HttpHeaders headers = new HttpHeaders();
 

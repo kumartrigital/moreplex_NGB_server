@@ -276,6 +276,7 @@ public class ActivationProcessApiResource {
 			try {
 				ResponseEntity<String> result = activationProcessWritePlatformService
 						.OTP_MESSAGE(leaseDetails.getMobileNumber(), otp);
+			
 				if (!result.getStatusCode().equals(HttpStatus.OK)) {
 					return Response.status(400).entity(result.getBody()).build();
 				}
@@ -283,7 +284,7 @@ public class ActivationProcessApiResource {
 				messageGmailBackedPlatformEmailService.sendOtpToUserEmail(leaseDetails.getEmail(), otp);
 			} catch (Exception e) {
 				response.put("message", "Please Check Your Mobile Number");
-				return Response.status(400).entity(response).build();
+				System.out.println("email failed to send");
 			}
 
 			leaseDetailsRepository.saveAndFlush(leaseDetails);

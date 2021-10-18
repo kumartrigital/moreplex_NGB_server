@@ -768,8 +768,9 @@ public class GenerateChargesForOrderServiceImp implements GenerateChargesForOrde
 
 				JsonObject clientBalanceObject = new JsonObject();
 				clientBalanceObject.addProperty("id", billItem.getId());
+				OfficeBalance officeBalance = this.officeBalanceRepository.findOneByOfficeId(officeData.getId());
+
 				if (billItem.getCharges().get(0).getChargeOwner().equalsIgnoreCase("parent")) {
-					OfficeBalance officeBalance = this.officeBalanceRepository.findOneByOfficeId(officeData.getId());
 
 					/*
 					 * if (office.getPayment() == '3' &&
@@ -797,14 +798,20 @@ public class GenerateChargesForOrderServiceImp implements GenerateChargesForOrde
 					System.out.println("charging for parent");
 					// }
 				} else if (billItem.getCharges().get(0).getChargeOwner().equalsIgnoreCase("self")) {
-				//	ClientData clientData = this.clientReadPlatformService.retrieveOne("id", clientId.toString());
+					// ClientData clientData = this.clientReadPlatformService.retrieveOne("id",
+					// clientId.toString());
 					/*
 					 * if(clientData!=null &&
 					 * clientData.getBalanceAmount().compareTo(billItem.getInvoiceAmount())>0) {
 					 * throw new ClientBalanceNotEnoughException(); }else {
 					 */
-					clientBalanceObject.addProperty("clientId", clientId);
-					// System.out.println("chargeclinetId" + clientId);
+					Configuration dealerBalanceCheck = this.configurationRepository
+							.findOneByName(ConfigurationConstants.DEALER_BALANCE_CHECK);
+					if ((null != dealerBalanceCheck && dealerBalanceCheck.isEnabled())) {
+						clientBalanceObject.addProperty("clientId", office.getClientId());
+					} else {
+						clientBalanceObject.addProperty("clientId", clientId);
+					} // System.out.println("chargeclinetId" + clientId);
 					clientBalanceObject.addProperty("amount", billItem.getInvoiceAmount());
 					clientBalanceObject.addProperty("isWalletEnable", false);
 					clientBalanceObject.addProperty("clientServiceId", orderData.get(0).getClientServiceId());

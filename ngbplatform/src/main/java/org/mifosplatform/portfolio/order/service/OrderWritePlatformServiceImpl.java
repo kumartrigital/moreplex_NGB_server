@@ -398,7 +398,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 					EventActionConstants.EVENT_CREATE_ORDER, command.json(), userId);
 
 			Plan plan = this.planRepository.findPlanCheckDeletedStatus(command.longValueOfParameterNamed("planCode"));
-			
+
 			Order order = this.orderAssembler.assembleOrderDetails(command, clientId, plan);
 			// this condition is for updating order_No for multiple plans
 			if (command.stringValueOfParameterName("orderNo") != null) {
@@ -439,7 +439,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 				// For Order History
 				OrderHistory orderHistory = new OrderHistory(order.getId(), DateUtils.getLocalDateOfTenant(),
 						DateUtils.getLocalDateOfTenant(), commandId, requstStatus, userId, null);
-				//System.out.println(orderHistory);
+				// System.out.println(orderHistory);
 				this.orderHistoryRepository.save(orderHistory);
 
 			}
@@ -469,7 +469,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			 * .associationWriteplatformService.createNewHardwareAssociation( clientId,
 			 * plan.getId(), serialnum, order.getId(), allocationType); }
 			 */
-			if (plan.getIsPrepaid() == 'Y' || plan.getIsPrepaid() == 'y' || plan.getPlanType()==211) {
+			if (plan.getIsPrepaid() == 'Y' || plan.getIsPrepaid() == 'y' || plan.getPlanType() == 211) {
 				// charging
 				JSONObject jsonObject = new JSONObject();
 				SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss");
@@ -483,8 +483,8 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 							"error.message.charging.exception");
 				}
 			}
-			
-			if (plan.getProvisionSystem().equalsIgnoreCase("None") && plan.getPlanType()!=211) {
+
+			if (plan.getProvisionSystem().equalsIgnoreCase("None") && plan.getPlanType() != 211) {
 
 				Client client = this.clientRepository.findOne(clientId);
 				client.setStatus(ClientStatus.ACTIVE.getValue());
@@ -530,13 +530,13 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			if ("Y".equalsIgnoreCase(String.valueOf(plan.isPrepaid()))) {
 				order1.setStatus(OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.PENDING).getId());
 			}
-			if(plan.getPlanType() == 211) {
+			if (plan.getPlanType() == 211) {
 				order1.setStatus(OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.ACTIVE).getId());
 			}
 			order.setActiveDate(new Date());
 			order = this.orderRepository.saveAndFlush(order1);
 
-			if (!plan.getProvisionSystem().equalsIgnoreCase("None") && plan.getPlanType()!=211) {
+			if (!plan.getProvisionSystem().equalsIgnoreCase("None") && plan.getPlanType() != 211) {
 				this.provisioningRequesting(order, oldOrder, plan.isPrepaid());
 			} else {
 				clientService = this.clientServiceRepository.findOne(order.getClientServiceId());
@@ -865,7 +865,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 	@Override
 	public CommandProcessingResult renewalClientOrder(JsonCommand command, Long orderId) {
 
-		try {		
+		try {
 			LocalDate newStartdate = null;
 			String requstStatus = null;
 			String requestStatusForProv = null;
@@ -2448,8 +2448,8 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			Configuration dealerBalanceCheck = this.configurationRepository
 					.findOneByName(ConfigurationConstants.DEALER_BALANCE_CHECK);
 			if ((null != officeBalanceCheck && officeBalanceCheck.isEnabled())
-					|| (null != clientBalanceCheck && clientBalanceCheck.isEnabled())||
-					(null !=dealerBalanceCheck && dealerBalanceCheck.isEnabled())) {
+					|| (null != clientBalanceCheck && clientBalanceCheck.isEnabled())
+					|| (null != dealerBalanceCheck && dealerBalanceCheck.isEnabled())) {
 				for (JsonElement planElement : multiplePlans) {
 					JsonCommand planCommand = new JsonCommand(null, planElement.toString(), planElement, fromJsonHelper,
 							null, null, null, null, null, null, null, null, null, null, null, null);
@@ -2470,47 +2470,48 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 				}
 			}
 			if (null != dealerBalanceCheck && dealerBalanceCheck.isEnabled()) {
+
 				officeData = this.officeReadPlatformService.retriveOfficeDetail(clientId);
 				office = this.officeRepository.findOne(officeData.getId());
 				officeBalance = this.officeBalanceRepository.findOneByOfficeId(officeData.getId());
+
 				if (officeBalance.getBalanceAmount().compareTo(new BigDecimal(0)) == 0
 						&& parentAmount.compareTo(new BigDecimal(0)) == 0) {
 					System.out.println("FTA PLAN " + officeBalance.getBalanceAmount());
 				} else if (office.getPayment() == '3'
 						&& officeBalance.getBalanceAmount().compareTo(new BigDecimal(0)) >= 0
-						|| (officeBalance.getBalanceAmount().abs()).compareTo(parentAmount) < 0) {
+						|| (officeBalance.getBalanceAmount().abs()).compareTo(selfAmount) < 0) {
 					throw new OfficeBalanceIsNotEnoughException(officeBalance.getBalanceAmount());
 				}
-			}else {
-				
-			
-			if (null != officeBalanceCheck && officeBalanceCheck.isEnabled()) {
-				officeData = this.officeReadPlatformService.retriveOfficeDetail(clientId);
-				office = this.officeRepository.findOne(officeData.getId());
-				officeBalance = this.officeBalanceRepository.findOneByOfficeId(officeData.getId());
-				if (officeBalance.getBalanceAmount().compareTo(new BigDecimal(0)) == 0
-						&& parentAmount.compareTo(new BigDecimal(0)) == 0) {
-					System.out.println("FTA PLAN " + officeBalance.getBalanceAmount());
-				} else if (office.getPayment() == '3'
-						&& officeBalance.getBalanceAmount().compareTo(new BigDecimal(0)) >= 0
-						|| (officeBalance.getBalanceAmount().abs()).compareTo(parentAmount) < 0) {
-					throw new OfficeBalanceIsNotEnoughException(officeBalance.getBalanceAmount());
+			} else {
+
+				if (null != officeBalanceCheck && officeBalanceCheck.isEnabled()) {
+					officeData = this.officeReadPlatformService.retriveOfficeDetail(clientId);
+					office = this.officeRepository.findOne(officeData.getId());
+					officeBalance = this.officeBalanceRepository.findOneByOfficeId(officeData.getId());
+					if (officeBalance.getBalanceAmount().compareTo(new BigDecimal(0)) == 0
+							&& parentAmount.compareTo(new BigDecimal(0)) == 0) {
+						System.out.println("FTA PLAN " + officeBalance.getBalanceAmount());
+					} else if (office.getPayment() == '3'
+							&& officeBalance.getBalanceAmount().compareTo(new BigDecimal(0)) >= 0
+							|| (officeBalance.getBalanceAmount().abs()).compareTo(parentAmount) < 0) {
+						throw new OfficeBalanceIsNotEnoughException(officeBalance.getBalanceAmount());
+					}
+				}
+
+				if (null != clientBalanceCheck && clientBalanceCheck.isEnabled()) {
+					ClientData clientData = this.clientReadPlatformService.retrieveOne("id", clientId.toString());
+					if (selfAmount.compareTo(new BigDecimal(0)) == 0
+							&& clientData.getBalanceAmount().compareTo(new BigDecimal(0)) == 0)
+						System.out.println("FTA PLAN " + clientData.getBalanceAmount());
+
+					else if (clientData.getBalanceAmount().compareTo(new BigDecimal(0)) >= 0
+							|| clientData.getBalanceAmount().abs().compareTo(selfAmount) < 0) {
+						throw new ClientBalanceNotEnoughException();
+					}
 				}
 			}
 
-			if (null != clientBalanceCheck && clientBalanceCheck.isEnabled()) {
-				ClientData clientData = this.clientReadPlatformService.retrieveOne("id", clientId.toString());
-				if (selfAmount.compareTo(new BigDecimal(0)) == 0
-						&& clientData.getBalanceAmount().compareTo(new BigDecimal(0)) == 0)
-					System.out.println("FTA PLAN " + clientData.getBalanceAmount());
-
-				else if (clientData.getBalanceAmount().compareTo(new BigDecimal(0)) >= 0
-						|| clientData.getBalanceAmount().abs().compareTo(selfAmount) < 0) {
-					throw new ClientBalanceNotEnoughException();
-				}
-			}
-			}
-			
 			for (JsonElement planElement : multiplePlans) {
 				JsonObject planObject = planElement.getAsJsonObject();
 				if (substancesArray != null) {
@@ -2518,10 +2519,11 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 					planObject.addProperty("orderNo", this.retreiveOrderNo(substancesArray[i]));
 				}
 				planElement = planObject;
+
 				newCommand = new JsonCommand(null, planElement.toString(), planElement, this.fromJsonHelper, null, null,
 						null, null, null, null, null, null, null, null, null, null);
-
 				this.createOrder(clientId, newCommand, oldOrder);
+
 				i++;
 			}
 			/* return new CommandProcessingResult((long) 0); */
