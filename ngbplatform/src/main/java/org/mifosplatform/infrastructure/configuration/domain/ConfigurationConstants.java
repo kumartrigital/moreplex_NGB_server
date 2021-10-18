@@ -152,7 +152,7 @@ public class ConfigurationConstants {
 	public static final String LEASE_STB_CHARGE_AMOUNT_PLANCODE = "leaseSTBMonthlyCharge";
 	public static final String NIN_VERIFICATION= "NINVerification";
 
-
+	public static final String DEALER_BALANCE_CHECK="dealerBalanceCheck";
 
 
 

@@ -2445,8 +2445,11 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 					.findOneByName(ConfigurationConstants.OFFICE_BALANCE_CHECK);
 			Configuration clientBalanceCheck = this.configurationRepository
 					.findOneByName(ConfigurationConstants.CLIENT_BALANCE_CHECK);
+			Configuration dealerBalanceCheck = this.configurationRepository
+					.findOneByName(ConfigurationConstants.DEALER_BALANCE_CHECK);
 			if ((null != officeBalanceCheck && officeBalanceCheck.isEnabled())
-					|| (null != clientBalanceCheck && clientBalanceCheck.isEnabled())) {
+					|| (null != clientBalanceCheck && clientBalanceCheck.isEnabled())||
+					(null !=dealerBalanceCheck && dealerBalanceCheck.isEnabled())) {
 				for (JsonElement planElement : multiplePlans) {
 					JsonCommand planCommand = new JsonCommand(null, planElement.toString(), planElement, fromJsonHelper,
 							null, null, null, null, null, null, null, null, null, null, null, null);
@@ -2466,6 +2469,21 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 					}
 				}
 			}
+			if (null != dealerBalanceCheck && dealerBalanceCheck.isEnabled()) {
+				officeData = this.officeReadPlatformService.retriveOfficeDetail(clientId);
+				office = this.officeRepository.findOne(officeData.getId());
+				officeBalance = this.officeBalanceRepository.findOneByOfficeId(officeData.getId());
+				if (officeBalance.getBalanceAmount().compareTo(new BigDecimal(0)) == 0
+						&& parentAmount.compareTo(new BigDecimal(0)) == 0) {
+					System.out.println("FTA PLAN " + officeBalance.getBalanceAmount());
+				} else if (office.getPayment() == '3'
+						&& officeBalance.getBalanceAmount().compareTo(new BigDecimal(0)) >= 0
+						|| (officeBalance.getBalanceAmount().abs()).compareTo(parentAmount) < 0) {
+					throw new OfficeBalanceIsNotEnoughException(officeBalance.getBalanceAmount());
+				}
+			}else {
+				
+			
 			if (null != officeBalanceCheck && officeBalanceCheck.isEnabled()) {
 				officeData = this.officeReadPlatformService.retriveOfficeDetail(clientId);
 				office = this.officeRepository.findOne(officeData.getId());
@@ -2491,7 +2509,8 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 					throw new ClientBalanceNotEnoughException();
 				}
 			}
-
+			}
+			
 			for (JsonElement planElement : multiplePlans) {
 				JsonObject planObject = planElement.getAsJsonObject();
 				if (substancesArray != null) {
