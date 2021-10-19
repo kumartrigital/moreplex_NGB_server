@@ -2482,6 +2482,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 
 				if (null != logInofficeBalanceCheck && logInofficeBalanceCheck.isEnabled()) {
 					officeId = command.longValueOfParameterNamed("officeId");
+					office = this.officeRepository.findOne(officeId);
 					officeBalance = this.officeBalanceRepository.findOneByOfficeId(officeId);
 				} else {
 					officeData = this.officeReadPlatformService.retriveOfficeDetail(clientId);
