@@ -23,7 +23,7 @@ import com.google.gson.reflect.TypeToken;
 @Component
 public class ChargingOrderCommandFromApiJsonDeserializer {
 
-	private final Set<String> supportedParameters = new HashSet<String>(Arrays.asList("dateFormat","locale","systemDate","isPrepaid"));
+	private final Set<String> supportedParameters = new HashSet<String>(Arrays.asList("dateFormat","locale","systemDate","isPrepaid","officeId"));
 	
 	private final FromJsonHelper fromApiJsonHelper;
 	

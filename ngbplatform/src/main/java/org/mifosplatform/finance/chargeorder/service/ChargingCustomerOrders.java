@@ -89,9 +89,17 @@ public class ChargingCustomerOrders {
 			// validation not written
 			this.apiJsonDeserializer.validateForCreate(command.json());
 			LocalDate processDate = ProcessDate.fromJson(command);
-			//List<BillItem> invoice = this.invoicingSingleClient(command.entityId(), processDate);
-			
-			List<BillItem> invoice = this.invoicingSingleClientForOffice(command.entityId(), processDate,command.getSupportedEntityId());
+			List<BillItem> invoice = null;
+			Configuration logInofficeBalanceCheck = this.globalConfigurationRepository
+					.findOneByName(ConfigurationConstants.LogIN_OFFICE_BALANCE_CHECK);
+			if (null != logInofficeBalanceCheck && logInofficeBalanceCheck.isEnabled()) {
+				invoice = this.invoicingSingleClientForOffice(command.entityId(), processDate,
+						command.longValueOfParameterNamed("officeId"));
+
+			} else {
+				invoice = this.invoicingSingleClient(command.entityId(), processDate);
+
+			}
 
 			return new CommandProcessingResultBuilder().withCommandId(command.commandId())
 					.withEntityId(invoice.get(0).getId()).build();
@@ -149,14 +157,13 @@ public class ChargingCustomerOrders {
 			return this.generateChargesForOrderService.createBillItemRecords(groupOfCharges, clientId);
 
 		} else {
-			//throw new BillingOrderNoRecordsFoundException();
+			// throw new BillingOrderNoRecordsFoundException();
 			List<BillItem> billItem = new ArrayList<BillItem>();
 			return billItem;
 		}
 	}
-	
-	
-	public List<BillItem> invoicingSingleClientForOffice(Long clientId, LocalDate processDate,Long OfficeId) {
+
+	public List<BillItem> invoicingSingleClientForOffice(Long clientId, LocalDate processDate, Long OfficeId) {
 
 		LocalDate initialProcessDate = processDate;
 		Date nextBillableDate = null;
@@ -201,15 +208,14 @@ public class ChargingCustomerOrders {
 
 			}
 
-			return this.generateChargesForOrderService.createBillItemRecordsOffice(groupOfCharges, clientId,OfficeId);
+			return this.generateChargesForOrderService.createBillItemRecordsOffice(groupOfCharges, clientId, OfficeId);
 
 		} else {
-			//throw new BillingOrderNoRecordsFoundException();
+			// throw new BillingOrderNoRecordsFoundException();
 			List<BillItem> billItem = new ArrayList<BillItem>();
 			return billItem;
 		}
 	}
-
 
 	public Map<String, List<Charge>> chargeLinesForServices(BillingOrderData billingOrderData, Long clientId,
 			LocalDate processDate, Map<String, List<Charge>> groupOfCharges) {

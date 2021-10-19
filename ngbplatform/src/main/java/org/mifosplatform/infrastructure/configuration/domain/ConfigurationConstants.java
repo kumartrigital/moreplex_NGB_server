@@ -153,6 +153,7 @@ public class ConfigurationConstants {
 	public static final String NIN_VERIFICATION= "NINVerification";
 
 	public static final String DEALER_BALANCE_CHECK="dealerBalanceCheck";
+	public static final String LogIN_OFFICE_BALANCE_CHECK = "logInofficeBalanceCheck";
 
 
 

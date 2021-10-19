@@ -469,6 +469,9 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			 * .associationWriteplatformService.createNewHardwareAssociation( clientId,
 			 * plan.getId(), serialnum, order.getId(), allocationType); }
 			 */
+			Configuration logInofficeBalanceCheck = this.configurationRepository
+					.findOneByName(ConfigurationConstants.LogIN_OFFICE_BALANCE_CHECK);
+
 			if (plan.getIsPrepaid() == 'Y' || plan.getIsPrepaid() == 'y' || plan.getPlanType() == 211) {
 				// charging
 				JSONObject jsonObject = new JSONObject();
@@ -477,8 +480,11 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 					jsonObject.put("dateFormat", "dd MMMM yyyy HH:mm:ss");
 					jsonObject.put("locale", "en");
 					jsonObject.put("systemDate", dateFormat.format(new Date()));
-					jsonObject.put("officeId", command.getSupportedEntityId());
+					if (null != logInofficeBalanceCheck && logInofficeBalanceCheck.isEnabled()) {
+						jsonObject.put("officeId", command.getSupportedEntityId());
+					}
 					this.chargingOrderApiResourse.createChargesToOrders(order.getClientId(), jsonObject.toString());
+
 				} catch (Exception e) {
 					throw new PlatformDataIntegrityException("error.msg.charge.exception",
 							"error.message.charging.exception");
@@ -2431,8 +2437,8 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			BigDecimal parentAmount = BigDecimal.ZERO;
 			OfficeData officeData = null;
 			Office office = null;
+			Long officeId = null;
 			OfficeBalance officeBalance = null;
-			Long officeId = command.longValueOfParameterNamed("officeId");
 
 			CommandProcessingResult commandProcessingResult = this.crmServices.addPlans(command);
 			String[] substancesArray = null;
@@ -2447,6 +2453,8 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 					.findOneByName(ConfigurationConstants.OFFICE_BALANCE_CHECK);
 			Configuration clientBalanceCheck = this.configurationRepository
 					.findOneByName(ConfigurationConstants.CLIENT_BALANCE_CHECK);
+			Configuration logInofficeBalanceCheck = this.configurationRepository
+					.findOneByName(ConfigurationConstants.LogIN_OFFICE_BALANCE_CHECK);
 
 			if ((null != officeBalanceCheck && officeBalanceCheck.isEnabled())
 					|| (null != clientBalanceCheck && clientBalanceCheck.isEnabled())) {
@@ -2471,14 +2479,15 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			}
 
 			if (null != officeBalanceCheck && officeBalanceCheck.isEnabled()) {
-				officeData = this.officeReadPlatformService.retriveOfficeDetail(clientId);
-				office = this.officeRepository.findOne(officeData.getId());
-				// officeBalance =
-				// this.officeBalanceRepository.findOneByOfficeId(officeData.getId());//replace
-				// with officeId
-				officeBalance = this.officeBalanceRepository
-						.findOneByOfficeId(officeId);// replace with officeId
 
+				if (null != logInofficeBalanceCheck && logInofficeBalanceCheck.isEnabled()) {
+					officeId = command.longValueOfParameterNamed("officeId");
+					officeBalance = this.officeBalanceRepository.findOneByOfficeId(officeId);
+				} else {
+					officeData = this.officeReadPlatformService.retriveOfficeDetail(clientId);
+					office = this.officeRepository.findOne(officeData.getId());
+					officeBalance = this.officeBalanceRepository.findOneByOfficeId(officeData.getId());
+				}
 				if (officeBalance.getBalanceAmount().compareTo(new BigDecimal(0)) == 0
 						&& parentAmount.compareTo(new BigDecimal(0)) == 0) {
 					System.out.println("FTA PLAN " + officeBalance.getBalanceAmount());
@@ -2509,9 +2518,13 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 				}
 				planElement = planObject;
 
-				newCommand = new JsonCommand(null, planElement.toString(), planElement, this.fromJsonHelper, null, null,
-						null, null, null, null, null, null, null,officeId , null, null);
-				
+				if (null != logInofficeBalanceCheck && logInofficeBalanceCheck.isEnabled()) {
+					newCommand = new JsonCommand(null, planElement.toString(), planElement, this.fromJsonHelper, null,
+							null, null, null, null, null, null, null, null, officeId, null, null);
+				} else {
+					newCommand = new JsonCommand(null, planElement.toString(), planElement, this.fromJsonHelper, null,
+							null, null, null, null, null, null, null, null, null, null, null);
+				}
 				this.createOrder(clientId, newCommand, oldOrder);
 
 				i++;
