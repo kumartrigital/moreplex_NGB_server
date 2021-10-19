@@ -779,7 +779,7 @@ public class GenerateChargesForOrderServiceImp implements GenerateChargesForOrde
 					 * OfficeBalanceIsNotEnoughException(officeBalance.getBalanceAmount()); } else {
 					 */
 					// System.out.println("chargeOfficeclinetId" +office.getClientId());
-					clientBalanceObject.addProperty("clientId", office.getClientId());//office ID
+					clientBalanceObject.addProperty("clientId", office.getClientId());// office ID
 					clientBalanceObject.addProperty("amount", billItem.getInvoiceAmount());
 					clientBalanceObject.addProperty("isWalletEnable", false);
 					clientBalanceObject.addProperty("clientServiceId", orderData.get(0).getClientServiceId());
@@ -839,10 +839,9 @@ public class GenerateChargesForOrderServiceImp implements GenerateChargesForOrde
 		return billItemList;
 	}
 
-	
-	
 	@Override
-	public List<BillItem> createBillItemRecordsOffice(Map<String, List<Charge>> mappedCharges, Long clientId,Long OfficeId) {
+	public List<BillItem> createBillItemRecordsOffice(Map<String, List<Charge>> mappedCharges, Long clientId,
+			Long OfficeId) {
 
 		Configuration prepaidConfiguration = this.configurationRepository
 				.findOneByName(ConfigurationConstants.PREPAID_SERVICE);
@@ -991,16 +990,16 @@ public class GenerateChargesForOrderServiceImp implements GenerateChargesForOrde
 					billItemMap.put(charge.getClientId(), billItem);
 				} else {
 					isChargeowner = true;
-					office = this.officeRepository.findOne(officeData.getId());
+					office = this.officeRepository.findOne(OfficeId);
 					billItem.setClientId(office.getClientId());
 					billItemMap.put(office.getClientId(), billItem);
 				}
 
 			}
 			for (Map.Entry<Long, BillItem> entry : billItemMap.entrySet()) {
-
+				System.out.println(entry);
 				/* Save item record */
-				billItem = this.billItemRepository.saveAndFlush(entry.getValue());
+				//billItem = this.billItemRepository.saveAndFlush(entry.getValue());
 				// this.billItemRepository.saveAndFlush(entry.getValue());
 
 				List<OrderData> orderData = this.orderReadPlatformService.orderDetailsForClientBalance(orderId);
@@ -1033,7 +1032,7 @@ public class GenerateChargesForOrderServiceImp implements GenerateChargesForOrde
 					 * OfficeBalanceIsNotEnoughException(officeBalance.getBalanceAmount()); } else {
 					 */
 					// System.out.println("chargeOfficeclinetId" +office.getClientId());
-					clientBalanceObject.addProperty("clientId", OfficeId);//office ID
+					clientBalanceObject.addProperty("clientId", OfficeId);// office ID
 					clientBalanceObject.addProperty("amount", billItem.getInvoiceAmount());
 					clientBalanceObject.addProperty("isWalletEnable", false);
 					clientBalanceObject.addProperty("clientServiceId", orderData.get(0).getClientServiceId());
