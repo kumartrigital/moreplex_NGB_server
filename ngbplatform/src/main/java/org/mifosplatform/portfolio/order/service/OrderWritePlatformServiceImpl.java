@@ -2437,7 +2437,9 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			BigDecimal parentAmount = BigDecimal.ZERO;
 			OfficeData officeData = null;
 			Office office = null;
-			Long officeId = null;
+			// Long officeId = null;
+
+			Long officeId = command.longValueOfParameterNamed("officeId");
 			OfficeBalance officeBalance = null;
 
 			CommandProcessingResult commandProcessingResult = this.crmServices.addPlans(command);
@@ -2483,6 +2485,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 				if (null != logInofficeBalanceCheck && logInofficeBalanceCheck.isEnabled()) {
 					officeId = command.longValueOfParameterNamed("officeId");
 					office = this.officeRepository.findOne(officeId);
+
 					officeBalance = this.officeBalanceRepository.findOneByOfficeId(officeId);
 				} else {
 					officeData = this.officeReadPlatformService.retriveOfficeDetail(clientId);
