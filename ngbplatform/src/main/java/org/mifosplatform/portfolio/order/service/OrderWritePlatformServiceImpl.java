@@ -2535,7 +2535,8 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			}
 			/* return new CommandProcessingResult((long) 0); */
 			return new CommandProcessingResultBuilder().withClientId(clientId).build();
-		} catch (DataIntegrityViolationException dve) {
+		} catch (Exception dve) {
+			dve.printStackTrace();
 			handleCodeDataIntegrityIssues(command, dve);
 			return new CommandProcessingResult(Long.valueOf(-1));
 		}
