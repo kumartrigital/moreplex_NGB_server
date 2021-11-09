@@ -374,6 +374,7 @@ public class ActivationProcessWritePlatformServiceJpaRepositoryImpl implements A
 			String forename = null;
 			final JsonElement elementjson = fromJsonHelper.parse(newcommand.json());
 
+			
 			// CONVERT INVIEW FORMAT TO NGB FORMAT
 			Configuration isPaywizard = configurationRepository
 					.findOneByName(ConfigurationConstants.PAYWIZARD_INTEGRATION);

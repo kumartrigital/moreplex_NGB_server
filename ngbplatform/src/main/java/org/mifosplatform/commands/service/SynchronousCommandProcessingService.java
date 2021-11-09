@@ -1239,6 +1239,9 @@ public class SynchronousCommandProcessingService implements CommandProcessingSer
 			if (wrapper.isCreate()) {
 				handler = applicationContext.getBean("createOfficePaymentsCommandHandler",
 						NewCommandSourceHandler.class);
+			} else if (wrapper.isCreate()) {
+				handler = applicationContext.getBean("createOfficeOnlinePaymentsCommandHandler",
+						NewCommandSourceHandler.class);
 			} else {
 				throw new UnsupportedCommandException(wrapper.commandName());
 			}

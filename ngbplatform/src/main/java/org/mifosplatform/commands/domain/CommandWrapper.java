@@ -1101,7 +1101,10 @@ public class CommandWrapper {
 		return this.actionName.equalsIgnoreCase("CREATE") && this.entityName.equalsIgnoreCase("OFFICEPAYMENT");
 
 	}
+	public boolean isOnlineOfficePaymentResource() {
+		return this.actionName.equalsIgnoreCase("CREATE") && this.entityName.equalsIgnoreCase("OFFICEONLINEPAYMENT");
 
+	}
 	public boolean isPaypalEnquirey() {
 		return this.actionName.equalsIgnoreCase("CREATEENQUIREY") && this.entityName.equalsIgnoreCase("PAYMENT");
 	}

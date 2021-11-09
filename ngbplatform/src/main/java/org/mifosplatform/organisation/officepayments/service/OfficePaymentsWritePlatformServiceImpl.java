@@ -185,10 +185,6 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 	@Transactional
 	@Override
 	public CommandProcessingResult createOfficeOnlinePayment(final JsonCommand command) {
-		
-	
-		
-//add currency code
 		try {
 			context.authenticatedUser();
 			this.fromApiJsonDeserializer.validateForCreate(command.json());
@@ -206,9 +202,7 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 				Long collectionBy = object.getLong("collectionBy");
                 String collectorName=object.getString("collectorName");
 			
-			
-		//	final String collectorName = command.stringValueOfParameterNamed("collectorName");
-		//	final Long collectionBy = command.longValueOfParameterNamed("collectionBy");
+	
 			final BigDecimal amountPaid = command.bigDecimalValueOfParameterNamed("amountPaid");
 
 			if (!collectorName.equalsIgnoreCase("Service Provider")) {
@@ -222,41 +216,7 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 				this.journalvoucherDetailsRepository.saveAndFlush(journalVoucherDetail);
 				this.journalvoucherDetailsRepository.saveAndFlush(journalVoucherDetails);
 			}
-
-/*			Configuration isPaywizard = configurationRepository
-					.findOneByName(ConfigurationConstants.PAYWIZARD_INTEGRATION);
-
-			if (null != isPaywizard && isPaywizard.isEnabled()) {
-				if (collectionBy != null) {
-					OfficeBalance officeBalance = this.officeBalanceRepository.findOneByOfficeId(collectionBy);
-
-					if (officeBalance != null) {
-						officeBalance.updateBalance("CREDIT", officePayments.getAmountPaid());
-
-					} else if (officeBalance == null) {
-
-						BigDecimal balance = BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
-						officeBalance = OfficeBalance.create(collectionBy, balance);
-					}
-					this.officeBalanceRepository.saveAndFlush(officeBalance);
-				}
-
-				if (officePayments.getOfficeId() != null) {
-					OfficeBalance officeBalances = this.officeBalanceRepository
-							.findOneByOfficeId(officePayments.getOfficeId());
-
-					if (officeBalances != null) {
-						officeBalances.updateBalance("DEBIT", officePayments.getAmountPaid());
-
-					} else if (officeBalances == null) {
-
-						BigDecimal balance = officePayments.getAmountPaid();
-						officeBalances = OfficeBalance.create(officePayments.getOfficeId(), balance);
-					}
-					this.officeBalanceRepository.saveAndFlush(officeBalances);
-				}
-			} else {*/
-				/* office payment's Balance update in office balance table*/
+			
 				if(collectionBy != null){
 					OfficeBalance officeBalance =this.officeBalanceRepository.findOneByOfficeId(collectionBy);
 					

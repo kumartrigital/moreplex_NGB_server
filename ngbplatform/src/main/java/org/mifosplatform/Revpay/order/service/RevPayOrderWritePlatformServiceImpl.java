@@ -110,8 +110,8 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 	@Override
 	public CommandProcessingResult createOrder(JsonCommand command) {
 		JSONObject revorder = null;
-		String base_URL = "https://billing.moreplextv.com";
-		// String base_URL = "https://52.22.65.59:8877";
+		//String base_URL = "https://billing.moreplextv.com";
+		 String base_URL = "https://52.22.65.59:8877";
 		// String base_URL = "https://localhost:8877";
 
 		try {
@@ -544,9 +544,10 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			JSONObject revRequest = new JSONObject();
 			revRequest.put("txref", txid);
+			//FLWPUBK_TEST-b44d4ffbb233b471234a16d0eafc73db-X
 			// FLWPUBK-acb0630ea1c150dabf363efa007d3a0b-X
-			// revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
-			revRequest.put("SECKEY", "FLWSECK-7a27e5bdaca5e7632e760f7aef00d40b-X");
+		 revRequest.put("SECKEY", "FLWSECK_TEST-09b25bed4e4027011c8d5613fc73945a-X");
+		//	revRequest.put("SECKEY", "FLWSECK-7a27e5bdaca5e7632e760f7aef00d40b-X");
 
 			HttpEntity<String> request = new HttpEntity<>(revRequest.toString(), headers);
 			revResponse = rest.postForObject(VERIFY_ENDPOINT, request, String.class);

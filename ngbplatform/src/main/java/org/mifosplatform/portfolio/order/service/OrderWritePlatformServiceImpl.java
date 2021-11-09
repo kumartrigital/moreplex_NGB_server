@@ -556,6 +556,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			return new CommandProcessingResult(order1.getId(), order1.getClientId());
 
 		} catch (DataIntegrityViolationException dve) {
+			dve.printStackTrace();
 			handleCodeDataIntegrityIssues(command, dve);
 			return new CommandProcessingResult(Long.valueOf(-1));
 		}
@@ -2535,7 +2536,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			}
 			/* return new CommandProcessingResult((long) 0); */
 			return new CommandProcessingResultBuilder().withClientId(clientId).build();
-		} catch (Exception dve) {
+		} catch (DataIntegrityViolationException dve) {
 			dve.printStackTrace();
 			handleCodeDataIntegrityIssues(command, dve);
 			return new CommandProcessingResult(Long.valueOf(-1));

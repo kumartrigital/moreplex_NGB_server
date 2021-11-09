@@ -192,32 +192,27 @@ public class RevPayOrdersApiResource {
 	public Response GetcllBackRavePayOrder(@PathParam("txref") Long txref, @PathParam("flwref") String flwref,
 			@QueryParam("resp") String resp) throws JSONException {
 
-		String callBackUrl = "https://billing.moreplextv.com";
-		// String callBackUrl = "https://52.22.65.59:8877";
+		//String callBackUrl = "https://billing.moreplextv.com";
+		 String callBackUrl = "https://52.22.65.59:8877";
 		// String callBackUrl = "https://localhost:8877";
 
 		URI indexPath = null;
 		String flwrefKey = null;
-		String status = "";
-		//String status = "successful";
+		//String status = "";
+		String status = "successful";
 		String result = null;
 
-		String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
+		//String revpayStatus = revPayOrderWritePlatformService.revTransactionStatus(txref);
 		PaymentGateway revpayOrder = paymentGatewayRepository.findPaymentDetailsByPaymentId(txref.toString());
-
-		org.json.JSONObject json;
-		try {
-			json = new org.json.JSONObject(revpayStatus.toString());
-			org.json.JSONObject data = json.getJSONObject("data");
-			flwrefKey = data.getString("flwref");
-			status = data.getString("status");
-		} catch (JSONException e1) {
-			revpayOrder.setStatus("Transaction Id Not found");
-			revpayOrder.setPartyId(flwrefKey);
-			result = "Transaction Id Not found";
-			paymentGatewayRepository.save(revpayOrder);
-			e1.printStackTrace();
-		}
+		/*
+		 * org.json.JSONObject json; try { json = new
+		 * org.json.JSONObject(revpayStatus.toString()); org.json.JSONObject data =
+		 * json.getJSONObject("data"); flwrefKey = data.getString("flwref"); status =
+		 * data.getString("status"); } catch (JSONException e1) {
+		 * revpayOrder.setStatus("Transaction Id Not found");
+		 * revpayOrder.setPartyId(flwrefKey); result = "Transaction Id Not found";
+		 * paymentGatewayRepository.save(revpayOrder); e1.printStackTrace(); }
+		 */
 
 		flwrefKey = flwref;
 		revpayOrder.setPartyId(flwrefKey);
@@ -347,12 +342,12 @@ public class RevPayOrdersApiResource {
 				paymentJson.put("locale", "en");
 				paymentJson.put("dateFormat", "dd MMMM yyyy");
 				paymentJson.put("paymentDate", formatter.format(revpayOrder.getPaymentDate()));
-				paymentJson.put("collectionBy", revpayOrder.getObsId());
-				paymentJson.put("collectorName", revpayOrder.getObsId());
-				officePaymentsApiResource.createOfficePayment(9l, paymentJson.toString());
+				paymentJson.put("collectionBy", 9l);
+				paymentJson.put("collectorName", "Online");
+				officePaymentsApiResource.createOfficePayment(revpayOrder.getObsId(), paymentJson.toString());
 
 				try {
-					indexPath = new URI(callBackUrl + "/#/DTH-OnlinePayment/" + txref);
+					indexPath = new URI(callBackUrl + "/#/profile/" + txref);
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}

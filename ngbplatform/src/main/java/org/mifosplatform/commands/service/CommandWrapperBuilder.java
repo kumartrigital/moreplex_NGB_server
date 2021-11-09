@@ -2181,7 +2181,7 @@ public class CommandWrapperBuilder {
 	}
 	public CommandWrapperBuilder createOfficeOnlinePayment(Long officeId) {
 		this.actionName = "CREATE";
-		this.entityName = "OFFICEPAYMENT";
+		this.entityName = "OFFICEONLINEPAYMENT";
 		this.entityId = officeId;
 		this.href = "/onlinepayment/officepayments/" + officeId;
 		return this;
