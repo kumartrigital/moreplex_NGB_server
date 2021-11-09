@@ -85,6 +85,16 @@ public class OfficePaymentsApiResource {
 		return this.toApiJsonSerializer.serialize(result);
 	}
 	
+	@POST
+	@Path("onlinepayment/{officeId}")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	@Produces({ MediaType.APPLICATION_JSON })
+	public String createOfficeOnlinePayment(@PathParam("officeId") final Long officeId, final String apiRequestBodyAsJson) {
+		final CommandWrapper commandRequest = new CommandWrapperBuilder().createOfficeOnlinePayment(officeId).withJson(apiRequestBodyAsJson).build();
+		final CommandProcessingResult result = this.writePlatformService.logCommandSource(commandRequest);
+		return this.toApiJsonSerializer.serialize(result);
+	}
+	
 	
 	 @PUT
 	 @Path("cancelofficepayment/{paymentId}")

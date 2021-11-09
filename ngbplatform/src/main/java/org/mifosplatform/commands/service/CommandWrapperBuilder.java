@@ -2179,6 +2179,13 @@ public class CommandWrapperBuilder {
 		this.href = "/officepayments/" + officeId;
 		return this;
 	}
+	public CommandWrapperBuilder createOfficeOnlinePayment(Long officeId) {
+		this.actionName = "CREATE";
+		this.entityName = "OFFICEPAYMENT";
+		this.entityId = officeId;
+		this.href = "/onlinepayment/officepayments/" + officeId;
+		return this;
+	}
 
 	public CommandWrapperBuilder createRedemption() {
 		this.actionName = "CREATE";

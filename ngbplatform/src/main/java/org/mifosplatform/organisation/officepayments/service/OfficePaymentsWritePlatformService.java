@@ -6,6 +6,8 @@ import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 public interface OfficePaymentsWritePlatformService {
 
 	CommandProcessingResult createOfficePayment(JsonCommand command);
+	
+	CommandProcessingResult createOfficeOnlinePayment(JsonCommand command);
 
 	CommandProcessingResult cancelofficepayment(JsonCommand command, Long entityId);
 }

@@ -15,6 +15,8 @@ import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext
 import org.mifosplatform.organisation.officepayments.domain.OfficePayments;
 import org.mifosplatform.organisation.officepayments.domain.OfficePaymentsRepository;
 import org.mifosplatform.organisation.officepayments.exception.PaymentOfficeDetailsNotFoundException;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mifosplatform.cms.journalvoucher.domain.JournalVoucher;
 import org.mifosplatform.cms.journalvoucher.domain.JournalVoucherDetails;
 import org.mifosplatform.cms.journalvoucher.domain.JournalvoucherDetailsRepository;
@@ -180,6 +182,129 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 		}
 	}
 
+	@Transactional
+	@Override
+	public CommandProcessingResult createOfficeOnlinePayment(final JsonCommand command) {
+		
+	
+		
+//add currency code
+		try {
+			context.authenticatedUser();
+			this.fromApiJsonDeserializer.validateForCreate(command.json());
+			this.crmServices.createOfficePayment(command);
+			final OfficePayments officePayments = OfficePayments.fromJson(command);
+			this.officePaymentsRepository.save(officePayments);
+
+			Configuration onlinepayment = configurationRepository.findOneByName(ConfigurationConstants.ONLINE_PAYMENT);
+			System.out.println("NGB online collectorname" + onlinepayment.getValue());
+			
+			
+			if (null != onlinepayment && onlinepayment.isEnabled()) {
+				
+				final JSONObject object = new JSONObject(onlinepayment.getValue());
+				Long collectionBy = object.getLong("collectionBy");
+                String collectorName=object.getString("collectorName");
+			
+			
+		//	final String collectorName = command.stringValueOfParameterNamed("collectorName");
+		//	final Long collectionBy = command.longValueOfParameterNamed("collectionBy");
+			final BigDecimal amountPaid = command.bigDecimalValueOfParameterNamed("amountPaid");
+
+			if (!collectorName.equalsIgnoreCase("Service Provider")) {
+				JournalVoucher journalVoucher = new JournalVoucher(DateUtils.getDateOfTenant(), "officePayments");
+				this.journalvoucherRepository.saveAndFlush(journalVoucher);
+				JournalVoucherDetails journalVoucherDetail = new JournalVoucherDetails(journalVoucher.getId(),
+						officePayments.getOfficeId().toString(), "Entity", "Debit", "officePayments",
+						amountPaid.doubleValue());
+				JournalVoucherDetails journalVoucherDetails = new JournalVoucherDetails(journalVoucher.getId(),
+						collectionBy.toString(), "Entity", "Credit", "officePayments", amountPaid.doubleValue());
+				this.journalvoucherDetailsRepository.saveAndFlush(journalVoucherDetail);
+				this.journalvoucherDetailsRepository.saveAndFlush(journalVoucherDetails);
+			}
+
+/*			Configuration isPaywizard = configurationRepository
+					.findOneByName(ConfigurationConstants.PAYWIZARD_INTEGRATION);
+
+			if (null != isPaywizard && isPaywizard.isEnabled()) {
+				if (collectionBy != null) {
+					OfficeBalance officeBalance = this.officeBalanceRepository.findOneByOfficeId(collectionBy);
+
+					if (officeBalance != null) {
+						officeBalance.updateBalance("CREDIT", officePayments.getAmountPaid());
+
+					} else if (officeBalance == null) {
+
+						BigDecimal balance = BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
+						officeBalance = OfficeBalance.create(collectionBy, balance);
+					}
+					this.officeBalanceRepository.saveAndFlush(officeBalance);
+				}
+
+				if (officePayments.getOfficeId() != null) {
+					OfficeBalance officeBalances = this.officeBalanceRepository
+							.findOneByOfficeId(officePayments.getOfficeId());
+
+					if (officeBalances != null) {
+						officeBalances.updateBalance("DEBIT", officePayments.getAmountPaid());
+
+					} else if (officeBalances == null) {
+
+						BigDecimal balance = officePayments.getAmountPaid();
+						officeBalances = OfficeBalance.create(officePayments.getOfficeId(), balance);
+					}
+					this.officeBalanceRepository.saveAndFlush(officeBalances);
+				}
+			} else {*/
+				/* office payment's Balance update in office balance table*/
+				if(collectionBy != null){
+					OfficeBalance officeBalance =this.officeBalanceRepository.findOneByOfficeId(collectionBy);
+					
+					if(officeBalance != null){
+						officeBalance.updateBalance("CREDIT",officePayments.getAmountPaid());  
+					
+					}else if(officeBalance == null){
+						
+		                    BigDecimal balance=BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
+		                    officeBalance =OfficeBalance.create(collectionBy,balance);
+					}
+					this.officeBalanceRepository.saveAndFlush(officeBalance);
+				}
+				
+				if(officePayments.getOfficeId() != null){
+					OfficeBalance officeBalances =this.officeBalanceRepository.findOneByOfficeId(officePayments.getOfficeId());
+					
+					if(officeBalances != null){
+						officeBalances.updateBalance("CREDIT",officePayments.getAmountPaid());
+					
+					}else if(officeBalances == null){
+						
+		                    BigDecimal balance=BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
+		                    officeBalances =OfficeBalance.create(officePayments.getOfficeId(),balance);
+					}
+					this.officeBalanceRepository.saveAndFlush(officeBalances);
+				}
+		//}
+			
+			return new CommandProcessingResultBuilder().withCommandId(command.commandId())
+					.withEntityId(officePayments.getId()).withOfficeId(command.entityId()).build();
+		}
+		}
+		catch (DataIntegrityViolationException dve) {
+			handleCodeDataIntegrityIssues(command, dve);
+			return new CommandProcessingResult(Long.valueOf(-1));
+		} catch (JSONException e) {
+			
+			
+		}
+		return new CommandProcessingResult(Long.valueOf(-1));
+	}
+
+	
+	
+	
+	
+	
 	private void handleCodeDataIntegrityIssues(final JsonCommand command, final DataIntegrityViolationException dve) {
 
 		final Throwable realCause = dve.getMostSpecificCause();
