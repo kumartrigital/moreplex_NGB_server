@@ -78,16 +78,9 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 		this.configurationRepository = configurationRepository;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * #createOfficePayment(org.mifosplatform.infrastructure.core.api.JsonCommand)
-	 */
 	@Transactional
 	@Override
 	public CommandProcessingResult createOfficePayment(final JsonCommand command) {
-//add currency code
 		try {
 			context.authenticatedUser();
 			this.fromApiJsonDeserializer.validateForCreate(command.json());
@@ -111,69 +104,34 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 				this.journalvoucherDetailsRepository.saveAndFlush(journalVoucherDetails);
 			}
 
-/*			Configuration isPaywizard = configurationRepository
-					.findOneByName(ConfigurationConstants.PAYWIZARD_INTEGRATION);
+			if (collectionBy != null) {
+				OfficeBalance officeBalance = this.officeBalanceRepository.findOneByOfficeId(collectionBy);
 
-			if (null != isPaywizard && isPaywizard.isEnabled()) {
-				if (collectionBy != null) {
-					OfficeBalance officeBalance = this.officeBalanceRepository.findOneByOfficeId(collectionBy);
+				if (officeBalance != null) {
+					officeBalance.updateBalance("CREDIT", officePayments.getAmountPaid());
 
-					if (officeBalance != null) {
-						officeBalance.updateBalance("CREDIT", officePayments.getAmountPaid());
+				} else if (officeBalance == null) {
 
-					} else if (officeBalance == null) {
-
-						BigDecimal balance = BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
-						officeBalance = OfficeBalance.create(collectionBy, balance);
-					}
-					this.officeBalanceRepository.saveAndFlush(officeBalance);
+					BigDecimal balance = BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
+					officeBalance = OfficeBalance.create(collectionBy, balance);
 				}
+				this.officeBalanceRepository.saveAndFlush(officeBalance);
+			}
 
-				if (officePayments.getOfficeId() != null) {
-					OfficeBalance officeBalances = this.officeBalanceRepository
-							.findOneByOfficeId(officePayments.getOfficeId());
+			if (officePayments.getOfficeId() != null) {
+				OfficeBalance officeBalances = this.officeBalanceRepository
+						.findOneByOfficeId(officePayments.getOfficeId());
 
-					if (officeBalances != null) {
-						officeBalances.updateBalance("DEBIT", officePayments.getAmountPaid());
+				if (officeBalances != null) {
+					officeBalances.updateBalance("CREDIT", officePayments.getAmountPaid());
 
-					} else if (officeBalances == null) {
+				} else if (officeBalances == null) {
 
-						BigDecimal balance = officePayments.getAmountPaid();
-						officeBalances = OfficeBalance.create(officePayments.getOfficeId(), balance);
-					}
-					this.officeBalanceRepository.saveAndFlush(officeBalances);
+					BigDecimal balance = BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
+					officeBalances = OfficeBalance.create(officePayments.getOfficeId(), balance);
 				}
-			} else {*/
-				/* office payment's Balance update in office balance table*/
-				if(collectionBy != null){
-					OfficeBalance officeBalance =this.officeBalanceRepository.findOneByOfficeId(collectionBy);
-					
-					if(officeBalance != null){
-						officeBalance.updateBalance("CREDIT",officePayments.getAmountPaid());  
-					
-					}else if(officeBalance == null){
-						
-		                    BigDecimal balance=BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
-		                    officeBalance =OfficeBalance.create(collectionBy,balance);
-					}
-					this.officeBalanceRepository.saveAndFlush(officeBalance);
-				}
-				
-				if(officePayments.getOfficeId() != null){
-					OfficeBalance officeBalances =this.officeBalanceRepository.findOneByOfficeId(officePayments.getOfficeId());
-					
-					if(officeBalances != null){
-						officeBalances.updateBalance("CREDIT",officePayments.getAmountPaid());
-					
-					}else if(officeBalances == null){
-						
-		                    BigDecimal balance=BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
-		                    officeBalances =OfficeBalance.create(officePayments.getOfficeId(),balance);
-					}
-					this.officeBalanceRepository.saveAndFlush(officeBalances);
-				}
-		//}
-
+				this.officeBalanceRepository.saveAndFlush(officeBalances);
+			}
 			return new CommandProcessingResultBuilder().withCommandId(command.commandId())
 					.withEntityId(officePayments.getId()).withOfficeId(command.entityId()).build();
 		} catch (DataIntegrityViolationException dve) {
@@ -186,23 +144,24 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 	@Override
 	public CommandProcessingResult createOfficeOnlinePayment(final JsonCommand command) {
 		try {
+			Long collectionBy = null;
+			String collectorName = null;
+
 			context.authenticatedUser();
+			Configuration onlinepayment = configurationRepository.findOneByName(ConfigurationConstants.ONLINE_PAYMENT);
+
+			if (null != onlinepayment && onlinepayment.isEnabled()) {
+
+				final JSONObject object = new JSONObject(onlinepayment.getValue());
+				collectionBy = object.getLong("collectionBy");
+				collectorName = object.getString("collectorName");
+			}
 			this.fromApiJsonDeserializer.validateForCreate(command.json());
 			this.crmServices.createOfficePayment(command);
 			final OfficePayments officePayments = OfficePayments.fromJson(command);
+			officePayments.setCollectionBy(collectionBy);
 			this.officePaymentsRepository.save(officePayments);
 
-			Configuration onlinepayment = configurationRepository.findOneByName(ConfigurationConstants.ONLINE_PAYMENT);
-			System.out.println("NGB online collectorname" + onlinepayment.getValue());
-			
-			
-			if (null != onlinepayment && onlinepayment.isEnabled()) {
-				
-				final JSONObject object = new JSONObject(onlinepayment.getValue());
-				Long collectionBy = object.getLong("collectionBy");
-                String collectorName=object.getString("collectorName");
-			
-	
 			final BigDecimal amountPaid = command.bigDecimalValueOfParameterNamed("amountPaid");
 
 			if (!collectorName.equalsIgnoreCase("Service Provider")) {
@@ -216,55 +175,48 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 				this.journalvoucherDetailsRepository.saveAndFlush(journalVoucherDetail);
 				this.journalvoucherDetailsRepository.saveAndFlush(journalVoucherDetails);
 			}
-			
-				if(collectionBy != null){
-					OfficeBalance officeBalance =this.officeBalanceRepository.findOneByOfficeId(collectionBy);
-					
-					if(officeBalance != null){
-						officeBalance.updateBalance("CREDIT",officePayments.getAmountPaid());  
-					
-					}else if(officeBalance == null){
-						
-		                    BigDecimal balance=BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
-		                    officeBalance =OfficeBalance.create(collectionBy,balance);
-					}
-					this.officeBalanceRepository.saveAndFlush(officeBalance);
+
+			if (collectionBy != null) {
+				OfficeBalance officeBalance = this.officeBalanceRepository.findOneByOfficeId(collectionBy);
+
+				if (officeBalance != null) {
+					officeBalance.updateBalance("CREDIT", officePayments.getAmountPaid());
+
+				} else if (officeBalance == null) {
+
+					BigDecimal balance = BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
+					officeBalance = OfficeBalance.create(collectionBy, balance);
 				}
-				
-				if(officePayments.getOfficeId() != null){
-					OfficeBalance officeBalances =this.officeBalanceRepository.findOneByOfficeId(officePayments.getOfficeId());
-					
-					if(officeBalances != null){
-						officeBalances.updateBalance("CREDIT",officePayments.getAmountPaid());
-					
-					}else if(officeBalances == null){
-						
-		                    BigDecimal balance=BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
-		                    officeBalances =OfficeBalance.create(officePayments.getOfficeId(),balance);
-					}
-					this.officeBalanceRepository.saveAndFlush(officeBalances);
+				this.officeBalanceRepository.saveAndFlush(officeBalance);
+			}
+
+			if (officePayments.getOfficeId() != null) {
+				OfficeBalance officeBalances = this.officeBalanceRepository
+						.findOneByOfficeId(officePayments.getOfficeId());
+
+				if (officeBalances != null) {
+					officeBalances.updateBalance("CREDIT", officePayments.getAmountPaid());
+
+				} else if (officeBalances == null) {
+
+					BigDecimal balance = BigDecimal.ZERO.subtract(officePayments.getAmountPaid());
+					officeBalances = OfficeBalance.create(officePayments.getOfficeId(), balance);
 				}
-		//}
-			
+				this.officeBalanceRepository.saveAndFlush(officeBalances);
+			}
+
 			return new CommandProcessingResultBuilder().withCommandId(command.commandId())
 					.withEntityId(officePayments.getId()).withOfficeId(command.entityId()).build();
-		}
-		}
-		catch (DataIntegrityViolationException dve) {
+
+		} catch (DataIntegrityViolationException dve) {
 			handleCodeDataIntegrityIssues(command, dve);
 			return new CommandProcessingResult(Long.valueOf(-1));
 		} catch (JSONException e) {
-			
-			
+
 		}
 		return new CommandProcessingResult(Long.valueOf(-1));
 	}
 
-	
-	
-	
-	
-	
 	private void handleCodeDataIntegrityIssues(final JsonCommand command, final DataIntegrityViolationException dve) {
 
 		final Throwable realCause = dve.getMostSpecificCause();
@@ -293,34 +245,34 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 			final OfficePayments cancelPay = new OfficePayments(officePayments.getofficeId(),
 					officePayments.getAmountPaid(), DateUtils.getLocalDateOfTenant(), officePayments.getRemarks(),
 					officePayments.getPaymodeId(), officePayments.getReceiptNo(), officePayments.isWallet(),
-					officePayments.getId(),officePayments.getCollectionBy());
+					officePayments.getId(), officePayments.getCollectionBy());
 			cancelPay.cancelPayment(command);
 			this.officePaymentsRepository.save(cancelPay);
 			officePayments.cancelPayment(command);
 			this.officePaymentsRepository.save(officePayments);
-			final OfficeBalance officeBalance = officeBalanceRepository.findOneByOfficeId(officePayments.getOfficeId());	
-			BigDecimal initialBalance = officeBalance.getBalanceAmount(); 
-			
-			if(officeBalance.getBalanceAmount().intValue()<0)  
-			{	
-				officeBalance.updateBalance("DEBIT",officePayments.getAmountPaid());
+			final OfficeBalance officeBalance = officeBalanceRepository.findOneByOfficeId(officePayments.getOfficeId());
+			BigDecimal initialBalance = officeBalance.getBalanceAmount();
+
+			if (officeBalance.getBalanceAmount().intValue() < 0) {
+				officeBalance.updateBalance("DEBIT", officePayments.getAmountPaid());
 				initialBalance = officeBalance.getBalanceAmount().add(initialBalance.abs());
 				officeBalance.setBalanceAmount(initialBalance);
 				this.officeBalanceRepository.saveAndFlush(officeBalance);
 
-			}else {
-				officeBalance.updateBalance("DEBIT",officePayments.getAmountPaid());	
-			    this.officeBalanceRepository.saveAndFlush(officeBalance);
+			} else {
+				officeBalance.updateBalance("DEBIT", officePayments.getAmountPaid());
+				this.officeBalanceRepository.saveAndFlush(officeBalance);
 			}
-			final OfficeBalance collectedByOfficeBalance = officeBalanceRepository.findOneByOfficeId(officePayments.getCollectionBy());	
-			if(collectedByOfficeBalance != null)
-				collectedByOfficeBalance.updateBalance("DEBIT",officePayments.getAmountPaid());
+			final OfficeBalance collectedByOfficeBalance = officeBalanceRepository
+					.findOneByOfficeId(officePayments.getCollectionBy());
+			if (collectedByOfficeBalance != null)
+				collectedByOfficeBalance.updateBalance("DEBIT", officePayments.getAmountPaid());
 			this.officeBalanceRepository.saveAndFlush(collectedByOfficeBalance);
 
 			return new CommandProcessingResult(cancelPay.getId(), officeBalance.getofficeId());
 
 		} catch (DataIntegrityViolationException exception) {
-			System.out.println("Exception Message ::" +exception+"Get Message ::" +exception.getClass());
+			System.out.println("Exception Message ::" + exception + "Get Message ::" + exception.getClass());
 			handleDataIntegrityIssues(command, exception);
 			return CommandProcessingResult.empty();
 		}
