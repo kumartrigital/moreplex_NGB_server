@@ -23,6 +23,7 @@ import org.mifosplatform.cms.journalvoucher.domain.JournalvoucherDetailsReposito
 import org.mifosplatform.cms.journalvoucher.domain.JournalvoucherRepository;
 import org.mifosplatform.crm.service.CrmServices;
 import org.mifosplatform.finance.chargeorder.domain.BillItem;
+import org.mifosplatform.finance.clientbalance.data.ClientBalanceData;
 import org.mifosplatform.finance.clientbalance.domain.ClientBalance;
 import org.mifosplatform.finance.creditdistribution.domain.CreditDistribution;
 import org.mifosplatform.finance.creditdistribution.domain.CreditDistributionRepository;
@@ -32,6 +33,7 @@ import org.mifosplatform.finance.payments.domain.Payment;
 import org.mifosplatform.finance.payments.exception.PaymentDetailsNotFoundException;
 import org.mifosplatform.finance.payments.exception.ReceiptNoDuplicateException;
 import org.mifosplatform.organisation.officepayments.serialization.OfficePaymentsCommandFromApiJsonDeserializer;
+import org.mifosplatform.portfolio.client.service.ClientReadPlatformService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +58,7 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 	private final JournalvoucherRepository journalvoucherRepository;
 	private final JournalvoucherDetailsRepository journalvoucherDetailsRepository;
 	private final ConfigurationRepository configurationRepository;
+	private final ClientReadPlatformService clientReadPlatformService;
 
 	@Autowired
 	public OfficePaymentsWritePlatformServiceImpl(final PlatformSecurityContext context,
@@ -65,7 +68,8 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 			final CreditDistributionRepository creditDistributionRepository,
 			final JournalvoucherRepository journalvoucherRepository,
 			final JournalvoucherDetailsRepository journalvoucherDetailsRepository,
-			final ConfigurationRepository configurationRepository) {
+			final ConfigurationRepository configurationRepository,
+			final ClientReadPlatformService clientReadPlatformService) {
 
 		this.context = context;
 		this.officePaymentsRepository = officePaymentsRepository;
@@ -76,6 +80,7 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 		this.journalvoucherRepository = journalvoucherRepository;
 		this.journalvoucherDetailsRepository = journalvoucherDetailsRepository;
 		this.configurationRepository = configurationRepository;
+		this.clientReadPlatformService = clientReadPlatformService;
 	}
 
 	@Transactional
@@ -146,8 +151,28 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 		try {
 			Long collectionBy = null;
 			String collectorName = null;
+			BigDecimal clientAmount = null;
+			BigDecimal value = BigDecimal.ZERO;
 
 			context.authenticatedUser();
+			BigDecimal clientAmounts = BigDecimal.ZERO;
+
+			ClientBalanceData clientBalance = this.clientReadPlatformService.findClientBalance(command.entityId());
+			clientAmounts = clientBalance.getBalanceAmount();
+
+			if (clientAmounts == null) {
+				throw new PlatformDataIntegrityException("No client balance", "No client balance", "No client balance");
+			}
+			if (clientAmounts.compareTo(value) < 0) {
+				clientAmount = clientAmounts.abs();
+			} else {
+				clientAmount = clientAmounts.negate();
+			}
+			if (clientAmount.compareTo(command.bigDecimalValueOfParameterNamed("amountPaid")) < 0) {
+				throw new PlatformDataIntegrityException("Insufficient client balance", "Insufficient client balance",
+						"Insufficient client balance");
+			}
+
 			Configuration onlinepayment = configurationRepository.findOneByName(ConfigurationConstants.ONLINE_PAYMENT);
 
 			if (null != onlinepayment && onlinepayment.isEnabled()) {
@@ -155,6 +180,8 @@ public class OfficePaymentsWritePlatformServiceImpl implements OfficePaymentsWri
 				final JSONObject object = new JSONObject(onlinepayment.getValue());
 				collectionBy = object.getLong("collectionBy");
 				collectorName = object.getString("collectorName");
+				
+				
 			}
 			this.fromApiJsonDeserializer.validateForCreate(command.json());
 			this.crmServices.createOfficePayment(command);

@@ -112,8 +112,6 @@ public class RevPayOrderWritePlatformServiceImpl implements RevPayOrderWritePlat
 		JSONObject revorder = null;
 		//String base_URL = "https://billing.moreplextv.com";
 		 String base_URL = "https://52.22.65.59:8877";
-		// String base_URL = "https://localhost:8877";
-
 		try {
 
 			String type = command.stringValueOfParameterName("type");
