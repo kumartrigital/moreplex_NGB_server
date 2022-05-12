@@ -47,4 +47,8 @@ public interface SheduleJobWritePlatformService {
 
 	void inActiveCustomersWithSTBLease();
 
+	void processingAutoExipryEventOrders();
+	
+	void processingAutoActivationEventOrders();
+
 }

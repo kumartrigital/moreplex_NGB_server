@@ -11,4 +11,6 @@ public interface EventOrderWriteplatformService {
 
 	boolean checkClientBalance(Double bookedPrice, Long clientId,boolean isWalletEnable);
 
+	CommandProcessingResult disconnectEventOrder(JsonCommand command, Long orderId);
+
 }

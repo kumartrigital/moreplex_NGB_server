@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.mifosplatform.cms.eventmaster.data.EventMasterData;
 import org.mifosplatform.cms.eventprice.data.ClientTypeData;
 import org.mifosplatform.infrastructure.core.data.EnumOptionData;
@@ -19,6 +20,7 @@ public class EventOrderData {
 	private String chargeCode;
 	private String status;
 	private String eventdescription;
+	private LocalDateTime eventValidTill;
 	private List<EventOrderDeviceData> devices;
 	private List<EventMasterData> events;
 	private List<EnumOptionData> optType;
@@ -45,6 +47,19 @@ public class EventOrderData {
 		this.chargeCode=chargeCode;
 		this.status=status;
 		this.eventdescription = eventdescription;
+	}
+	
+	public EventOrderData(Long orderid, LocalDate bookedDate, String eventName,
+			BigDecimal bookedPrice, String chargeCode, String status,String eventdescription, LocalDateTime eventValidTill) {
+		
+		this.id=orderid;
+		this.eventName=eventName;
+		this.bookedDate=bookedDate;
+		this.eventPrice=bookedPrice;
+		this.chargeCode=chargeCode;
+		this.status=status;
+		this.eventdescription = eventdescription;
+		this.eventValidTill = eventValidTill;
 	}
 	
 
@@ -90,6 +105,12 @@ public class EventOrderData {
 
 	public String getStatus() {
 		return status;
+	}
+	public LocalDateTime getEventValidTill() {
+		return eventValidTill;
+	}
+	public void setEventValidTill(LocalDateTime eventValidTill) {
+		this.eventValidTill = eventValidTill;
 	}
 
 }

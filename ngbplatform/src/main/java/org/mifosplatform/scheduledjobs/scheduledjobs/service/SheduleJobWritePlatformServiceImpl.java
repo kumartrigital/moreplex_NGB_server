@@ -24,6 +24,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -33,6 +34,8 @@ import org.json.JSONObject;
 import org.mifosplatform.cms.eventmaster.domain.EventMaster;
 import org.mifosplatform.cms.eventmaster.domain.EventMasterRepository;
 import org.mifosplatform.cms.eventmaster.service.EventMasterWritePlatformService;
+import org.mifosplatform.cms.eventorder.data.EventOrderData;
+import org.mifosplatform.cms.eventorder.service.EventOrderReadplatformServie;
 import org.mifosplatform.cms.eventprice.domain.EventPrice;
 import org.mifosplatform.cms.eventprice.domain.EventPriceRepository;
 import org.mifosplatform.cms.eventprice.service.EventPriceWritePlatformService;
@@ -189,6 +192,8 @@ public class SheduleJobWritePlatformServiceImpl implements SheduleJobWritePlatfo
 	private final EventPriceRepository eventPricingRepository;
 	private final LCOWritePlatformService lCOWritePlatformService;
 	private final ChargingOrderApiResourse chargingOrderApiResourse;
+	private final EventOrderReadplatformServie eventOrderReadplatformServie;
+	
 
 	@Autowired
 	public SheduleJobWritePlatformServiceImpl(final ChargingCustomerOrders invoiceClient,
@@ -227,7 +232,8 @@ public class SheduleJobWritePlatformServiceImpl implements SheduleJobWritePlatfo
 			final EventPriceWritePlatformService eventPriceWritePlatformService, final PlatformSecurityContext context,
 			final EventMasterRepository eventMasterRepository, final EventPriceRepository eventPricingRepository,
 			final LCOWritePlatformService lCOWritePlatformService,
-			final ChargingOrderApiResourse chargingOrderApiResourse) {
+			final ChargingOrderApiResourse chargingOrderApiResourse,
+			final EventOrderReadplatformServie eventOrderReadplatformServie) {
 
 		this.sheduleJobReadPlatformService = sheduleJobReadPlatformService;
 		this.invoiceClient = invoiceClient;
@@ -273,6 +279,7 @@ public class SheduleJobWritePlatformServiceImpl implements SheduleJobWritePlatfo
 		this.eventPricingRepository = eventPricingRepository;
 		this.lCOWritePlatformService = lCOWritePlatformService;
 		this.chargingOrderApiResourse = chargingOrderApiResourse;
+		this.eventOrderReadplatformServie = eventOrderReadplatformServie;
 	}
 
 	@Override
@@ -870,6 +877,163 @@ public class SheduleJobWritePlatformServiceImpl implements SheduleJobWritePlatfo
 			}
 			System.out.println("Messanger Job is Completed..."
 					+ ThreadLocalContextUtil.getTenant().getTenantIdentifier() + " \r\n");
+		} catch (Exception dve) {
+			System.out.println(dve.getMessage());
+			handleCodeDataIntegrityIssues(null, dve);
+		}
+	}
+	/*******************************************************
+	 * siva
+	 */
+	@Override
+	@CronTarget(jobName = JobName.EVENTORDER_AUTO_ACTIVATION)
+	public void processingAutoActivationEventOrders() {
+
+		try {
+			System.out.println("Processing Event Order Auto Activation Details.......");
+			JobParameterData data = this.sheduleJobReadPlatformService
+					.getJobParameters(JobName.EVENTORDER_AUTO_ACTIVATION.toString());
+			if (data != null) {
+				MifosPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
+				final DateTimeZone zone = DateTimeZone.forID(tenant.getTimezoneId());
+				LocalTime date = new LocalTime(zone);
+				String dateTime = date.getHourOfDay() + "_" + date.getMinuteOfHour() + "_" + date.getSecondOfMinute();
+				String path = FileUtils.generateLogFileDirectory() + JobName.EVENTORDER_AUTO_ACTIVATION.toString() + File.separator
+						+ "EventOrderAutoActivation_" + DateUtils.getLocalDateOfTenant().toString().replace("-", "") + "_" + dateTime
+						+ ".log";
+				File fileHandler = new File(path.trim());
+				fileHandler.createNewFile();
+				FileWriter fw = new FileWriter(fileHandler);
+				FileUtils.BILLING_JOB_PATH = fileHandler.getAbsolutePath();
+				fw.append("Processing Event Order Auto Activation Details....... \r\n");
+				List<ScheduleJobData> sheduleDatas = this.sheduleJobReadPlatformService
+						.retrieveSheduleJobParameterDetails(data.getBatchName());
+				LocalDateTime activationdate = null;
+				if (sheduleDatas.isEmpty()) {
+					fw.append("ScheduleJobData Empty \r\n");
+				}
+				if (data.isDynamic().equalsIgnoreCase("Y")) {
+					activationdate = DateUtils.getLocalDateTimeOfTenant();
+				} else {
+					activationdate = data.getExipiryDateTime();
+				}
+				for (ScheduleJobData scheduleJobData : sheduleDatas) {
+					fw.append("ScheduleJobData id= " + scheduleJobData.getId() + " ,BatchName= "
+							+ scheduleJobData.getBatchName() + " ,query=" + scheduleJobData.getQuery() + "\r\n");
+					List<Long> clientIds = new ArrayList<Long>();
+					clientIds = this.sheduleJobReadPlatformService.getClientIds(scheduleJobData.getQuery(), data);
+					/*
+					 * String clientList[] = new String[clientIds.size()]; for(int j
+					 * =0;j<clientIds.size();j++){ clientList[j] = clientIds.get(j).toString(); }
+					 */
+					if (clientIds.isEmpty()) {
+						fw.append("no records are available for Event Order Auto Activation \r\n");
+					}
+					for (Long clientId : clientIds) {
+
+						fw.append("processing client id :" + clientId + "\r\n");
+						List<EventOrderData> orderDatas = this.eventOrderReadplatformServie.retrieveClientAutoActivationEventOrderDetails(clientId);
+
+						if (orderDatas.isEmpty()) {
+							fw.append("No Orders are Found for :" + clientId + "\r\n");
+						}
+						for (EventOrderData orderData : orderDatas) {
+							
+							System.out.println("Processing event Activation .......");
+							this.scheduleJob.ProcessEventAutoActivationDetails(orderData, fw, activationdate, data, clientId);
+						}
+					}
+				}
+				
+				fw.append("Event Auto Activation Job is Completed..." + ThreadLocalContextUtil.getTenant().getTenantIdentifier()
+						+ " . \r\n");
+
+				fw.flush();
+				fw.close();
+				System.out.println(
+						"Event Auto Activation Job is Completed..." + ThreadLocalContextUtil.getTenant().getTenantIdentifier());
+			}
+		} catch (IOException exception) {
+			System.out.println(exception);
+		} catch (Exception dve) {
+			System.out.println(dve.getMessage());
+			handleCodeDataIntegrityIssues(null, dve);
+		}
+	}
+	/*******************************************************
+	 * siva
+	 */
+	
+	@Override
+	@CronTarget(jobName = JobName.EVENT_ORDER_AUTO_EXPIRY)
+	public void processingAutoExipryEventOrders() {
+
+		try {
+			System.out.println("Processing Event Order Auto Exipiry Details.......");
+			JobParameterData data = this.sheduleJobReadPlatformService
+					.getJobParameters(JobName.EVENT_ORDER_AUTO_EXPIRY.toString());
+			if (data != null) {
+				MifosPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
+				final DateTimeZone zone = DateTimeZone.forID(tenant.getTimezoneId());
+				LocalTime date = new LocalTime(zone);
+				String dateTime = date.getHourOfDay() + "_" + date.getMinuteOfHour() + "_" + date.getSecondOfMinute();
+				String path = FileUtils.generateLogFileDirectory() + JobName.EVENT_ORDER_AUTO_EXPIRY.toString() + File.separator
+						+ "EventOrderAutoExpiry_" + DateUtils.getLocalDateOfTenant().toString().replace("-", "") + "_" + dateTime
+						+ ".log";
+				File fileHandler = new File(path.trim());
+				fileHandler.createNewFile();
+				FileWriter fw = new FileWriter(fileHandler);
+				FileUtils.BILLING_JOB_PATH = fileHandler.getAbsolutePath();
+				fw.append("Processing Event Order Auto Exipiry Details....... \r\n");
+				List<ScheduleJobData> sheduleDatas = this.sheduleJobReadPlatformService
+						.retrieveSheduleJobParameterDetails(data.getBatchName());
+				LocalDateTime exipirydate = null;
+				if (sheduleDatas.isEmpty()) {
+					fw.append("ScheduleJobData Empty \r\n");
+				}
+				if (data.isDynamic().equalsIgnoreCase("Y")) {
+					exipirydate = DateUtils.getLocalDateTimeOfTenant();
+				} else {
+					exipirydate = data.getExipiryDateTime();
+				}
+				for (ScheduleJobData scheduleJobData : sheduleDatas) {
+					fw.append("ScheduleJobData id= " + scheduleJobData.getId() + " ,BatchName= "
+							+ scheduleJobData.getBatchName() + " ,query=" + scheduleJobData.getQuery() + "\r\n");
+					List<Long> clientIds = new ArrayList<Long>();
+					clientIds = this.sheduleJobReadPlatformService.getClientIds(scheduleJobData.getQuery(), data);
+					/*
+					 * String clientList[] = new String[clientIds.size()]; for(int j
+					 * =0;j<clientIds.size();j++){ clientList[j] = clientIds.get(j).toString(); }
+					 */
+					if (clientIds.isEmpty()) {
+						fw.append("no records are available for Event Order Auto Expiry \r\n");
+					}
+					for (Long clientId : clientIds) {
+
+						fw.append("processing client id :" + clientId + "\r\n");
+						List<EventOrderData> orderDatas = this.eventOrderReadplatformServie.retrieveClientExpiredEventOrderDetails(clientId);
+
+						if (orderDatas.isEmpty()) {
+							fw.append("No Orders are Found for :" + clientId + "\r\n");
+						}
+						for (EventOrderData orderData : orderDatas) {
+							
+							System.out.println("Processing event autoexpire .......");
+							this.scheduleJob.ProcessEventAutoExipiryDetails(orderData, fw, exipirydate, data, clientId);
+						}
+					}
+				}
+				
+				fw.append("Event Auto Exipiry Job is Completed..." + ThreadLocalContextUtil.getTenant().getTenantIdentifier()
+						+ " . \r\n");
+
+				fw.flush();
+				fw.close();
+				System.out.println(
+						"Event Auto Exipiry Job is Completed..." + ThreadLocalContextUtil.getTenant().getTenantIdentifier());
+			}
+		} catch (IOException exception) {
+			System.out.println(exception);
 		} catch (Exception dve) {
 			System.out.println(dve.getMessage());
 			handleCodeDataIntegrityIssues(null, dve);

@@ -6,6 +6,7 @@ public class JobParametersConstants {
 	public static final String PARAM_PROCESSDATE="ProcessDate";
 	public static final String PARAM_DUEDATE="dueDate";
 	public static final String PARAM_EXIPIRYDATE="exipiryDate";
+	public static final String PARAM_EXIPIRYDATETIME="exipiryDatetime";
 	public static final String PARAM_ADDON_EXIPIRY="addonExipiry";
 	public static final String PARAM_PROMTIONALMESSAGE="promotionalMessage";
 	public static final String PARAM_SENDMESSAGE="SendMessage";

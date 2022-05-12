@@ -3,6 +3,7 @@ package org.mifosplatform.scheduledjobs.scheduledjobs.data;
 import java.util.List;
 
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.mifosplatform.scheduledjobs.scheduledjobs.domain.JobParameters;
 import org.mifosplatform.scheduledjobs.scheduledjobs.service.JobParametersConstants;
@@ -14,6 +15,7 @@ public class JobParameterData {
 	private LocalDate dueDate;
 	private LocalDate processDate;
 	private LocalDate exipiryDate;
+	private LocalDateTime exipiryDateTime;
 	private String defaultValue;
 	private String url;
 	private String username;
@@ -60,6 +62,10 @@ public class JobParameterData {
 			}else if(parameter.getParamName().equalsIgnoreCase(JobParametersConstants.PARAM_EXIPIRYDATE) && parameter.getParamValue()!=null){
 			    this.exipiryDate= DateTimeFormat.forPattern("dd MMMM yyyy")
 		                 .parseLocalDate(parameter.getParamValue());
+			    
+			}else if(parameter.getParamName().equalsIgnoreCase(JobParametersConstants.PARAM_EXIPIRYDATETIME) && parameter.getParamValue()!=null){
+			    this.exipiryDateTime= DateTimeFormat.forPattern("dd MMMM yyyy")
+		                 .parseLocalDateTime(parameter.getParamValue());
 
 			   // this.isDynamic=parameter.isDynamic();
 			}else if(parameter.getParamName().equalsIgnoreCase(JobParametersConstants.PARAM_URL)){
@@ -113,6 +119,14 @@ public class JobParameterData {
 		}
 		
 		
+	}
+
+	public LocalDateTime getExipiryDateTime() {
+		return exipiryDateTime;
+	}
+
+	public void setExipiryDateTime(LocalDateTime exipiryDateTime) {
+		this.exipiryDateTime = exipiryDateTime;
 	}
 
 	public String getBatchName() {

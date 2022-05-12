@@ -61,6 +61,8 @@ public class ProvisioningRequest extends AbstractAuditableCustom<AppUser, Long>{
 	@Column(name = "version")
 	private int version='1';
 	
+	@Column(name = "is_event_order_req")
+	private char isEventOrderReq ='N';
 	
 	
 	@LazyCollection(LazyCollectionOption.FALSE)
@@ -117,6 +119,22 @@ public class ProvisioningRequest extends AbstractAuditableCustom<AppUser, Long>{
 	
 		
 	}
+	
+	public ProvisioningRequest(Long clientId, Long clientServiceId, String requestType, String provisioningSystem,char status,
+			Date startDate, Date endDate,int priority,int version,char isEventOrderReq) {
+
+		this.clientId = clientId;
+		this.clientServiceId = clientServiceId;
+		this.requestType = requestType;
+		this.provisioningSystem = provisioningSystem;
+		this.status = status;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.priority = priority;
+		this.version=version;
+		this.isEventOrderReq = isEventOrderReq;		
+	}
+	
 	public Long getClientId() {
 		return clientId;
 	}
@@ -208,6 +226,18 @@ public class ProvisioningRequest extends AbstractAuditableCustom<AppUser, Long>{
 	public void setEndDate(Date endDate) {
 		this.endDate = endDate;
 	}
+	
+	public char getIsEventOrderReq() {
+		return isEventOrderReq;
+	}
+
+
+
+	public void setIsEventOrderReq(char isEventOrderReq) {
+		this.isEventOrderReq = isEventOrderReq;
+	}
+
+
 	
 	
 	

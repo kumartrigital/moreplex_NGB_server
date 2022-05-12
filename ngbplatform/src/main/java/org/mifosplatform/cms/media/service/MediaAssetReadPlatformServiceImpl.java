@@ -255,7 +255,7 @@ public class MediaAssetReadPlatformServiceImpl implements MediaAssetReadPlatform
 			final String contentProviderValue = resultSet.getString("contentProviderValue");
 			final BigDecimal share = resultSet.getBigDecimal("share");
 			final LocalDate releaseDate = JdbcSupport.getLocalDate(resultSet, "releaseDate");
-			final Double price = resultSet.getDouble("price");
+			final Double price = 0.0;//resultSet.getDouble("price");
 
 			return new MediaAssetData(mediaId, mediaTitle, status, releaseDate, share, EventCategory, mediaCategory,
 					contentProviderValue, price);
@@ -267,9 +267,10 @@ public class MediaAssetReadPlatformServiceImpl implements MediaAssetReadPlatform
 					+ "(select code_value from m_code_value v where v.id=m.type) as EventCategory,"
 					+ "(select code_value from m_code_value v where v.id=m.category_id) as mediaCategory,"
 					+ "(select code_value from m_code_value v where v.id=m.content_provider) as contentProviderValue,"
-					+ "(select price from b_mod_pricing mp where mp.event_id=bm.id) as price,"
-					+ "m.cp_share as share,m.release_date as releaseDate FROM b_media_asset m, b_mod_master bm "
-					+ " where m.title=bm.event_description ";
+				//	+ "(select price from b_mod_pricing mp where mp.event_id=bm.id) as price,"
+					+ "m.cp_share as share,m.release_date as releaseDate FROM b_media_asset m";
+					//+ ", b_mod_master bm "
+					//+ " where m.title=bm.event_description ";
 		}
 	}
 
@@ -300,16 +301,18 @@ public class MediaAssetReadPlatformServiceImpl implements MediaAssetReadPlatform
 			final String status = resultSet.getString("status");
 			final String duration = resultSet.getString("duration");
 			final BigDecimal cpShareValue = resultSet.getBigDecimal("cpShareValue");
+			final Long mediaSequence = resultSet.getLong("mediaSequence");
 
 			return new MediaAssetData(mediaId, mediatitle, type, genre, catageoryId, releaseDate, subject, overview,
-					image, contentProvider, rated, rating, ratingCount, status, duration, cpShareValue);
+					image, contentProvider, rated, rating, ratingCount, status, duration, cpShareValue, mediaSequence);
 		}
 
 		public String scheme() {
 
 			return " m.id as id,m.title as title,m.type as type,m.category_id as catageoryId,m.genre as genre,m.release_date as releaseDate,"
 					+ "m.overview as overview,m.subject as subject,m.image as image,m.content_provider as contentProvider,m.rated as rated, "
-					+ "m.rating as rating,m.rating_count as ratingCount,m.status as status,m.duration as duration,m.cp_share as cpShareValue FROM b_media_asset m where m.is_deleted='N' and ";
+					+ "m.rating as rating,m.rating_count as ratingCount,m.status as status,m.duration as duration,m.cp_share as cpShareValue,"
+					+"m.media_sequence as mediaSequence FROM b_media_asset m where m.is_deleted='N' and ";
 		}
 	}
 

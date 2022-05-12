@@ -3,6 +3,7 @@ package org.mifosplatform.provisioning.provisioning.service;
 import java.util.List;
 import java.util.Map;
 
+import org.mifosplatform.cms.eventorder.domain.EventOrder;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.portfolio.clientservice.domain.ClientService;
@@ -45,5 +46,8 @@ public interface ProvisioningWritePlatformService {
 	CommandProcessingResult createProvisioningRequestForCommandCenter(JsonCommand command);
 
 	CommandProcessingResult updateProvisioningRequestDetailsData(JsonCommand command, Long entityId);
+
+	CommandProcessingResult createProvisioningRequestForEventOrder(List<EventOrder> orders, JsonCommand command,
+			boolean checkValidate, Long clientId);
 
 }

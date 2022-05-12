@@ -53,6 +53,7 @@ public class MediaAssetData {
 	private String mediaCategory;
 	private String contentProviderValue;
 	private Double moviePrice;
+	private Long mediaSequence;
 	
 public MediaAssetData(final Long mediaId, final String mediaTitle, final String image, final BigDecimal rating,
 		final Long eventId, final String assetTag, final String quality, final String optType, final BigDecimal price){
@@ -119,7 +120,7 @@ public MediaAssetData(final Long mediaId, final String mediaTitle, final String 
 public MediaAssetData(final Long mediaId, final String mediatitle, final String type,final String genre, final Long catageoryId,
 		final LocalDate releaseDate, final String subject, final String overview, final String image, final Long contentProvider,
 		final String rated, final BigDecimal rating, final Long ratingCount, final String status, final String duration, 
-		final BigDecimal cpShareValue) {
+		final BigDecimal cpShareValue, final Long mediaSequence) {
 	
 	 this.mediaId = mediaId;
      this.mediaTitle = mediatitle;
@@ -139,6 +140,15 @@ public MediaAssetData(final Long mediaId, final String mediatitle, final String 
      this.status = status;
      this.cpShareValue = cpShareValue;
  	 this.eventId = null;
+ 	 this.mediaSequence= mediaSequence;
+}
+
+public Long getMediaSequence() {
+	return mediaSequence;
+}
+
+public void setMediaSequence(Long mediaSequence) {
+	this.mediaSequence = mediaSequence;
 }
 
 public Long getMediaId() {

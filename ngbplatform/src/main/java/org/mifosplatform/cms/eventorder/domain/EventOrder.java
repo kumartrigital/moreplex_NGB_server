@@ -56,6 +56,9 @@ public class EventOrder extends AbstractAuditableCustom<AppUser, Long> {
 	@Column(name="is_invoiced")
 	private char isInvoiced='N';
 	
+	@Column(name="network_system_code")
+	private String networkSystemCode;
+	
 	@LazyCollection(LazyCollectionOption.FALSE)
 	@OneToMany(cascade = CascadeType.ALL , mappedBy = "eventOrder" , orphanRemoval = true)
 	private List<EventOrderdetials> eventOrderdetials = new ArrayList<EventOrderdetials>();
@@ -67,7 +70,7 @@ public class EventOrder extends AbstractAuditableCustom<AppUser, Long> {
 	}
 
 	public EventOrder(Long eventId, LocalDate eventBookedDate,Date eventValidtill, Long eventPriceId, Double bookedPrice,
-			Long clientId, int status, String chargeCode) {
+			Long clientId, int status, String chargeCode, String networkSystemCode) {
 
 	       this.eventId=eventId;
 	       this.eventBookedDate=eventBookedDate.toDate();
@@ -78,6 +81,7 @@ public class EventOrder extends AbstractAuditableCustom<AppUser, Long> {
 	       this.eventpriceId=eventPriceId;
 	       this.eventStatus=status;
 	       this.chargeCode=chargeCode;
+	       this.networkSystemCode=networkSystemCode;
 	}
 
 	public static EventOrder fromJson(JsonCommand command, EventMaster eventMaster,Long clientTypeId) {
@@ -111,8 +115,17 @@ public class EventOrder extends AbstractAuditableCustom<AppUser, Long> {
 			
 		 final int status=eventMaster.getStatus();
 		 final String chargeCode=eventMaster.getChargeCode();
+		 final String networkSystemCode=eventMaster.getNetworkSystemCode();
 		 
-		 return new EventOrder(eventId,eventBookedDate,eventValidtill,eventPriceId,bookedPrice,clientId,status,chargeCode);
+		 return new EventOrder(eventId,eventBookedDate,eventValidtill,eventPriceId,bookedPrice,clientId,status,chargeCode,networkSystemCode);
+	}
+
+	public String getNetworkSystemCode() {
+		return networkSystemCode;
+	}
+
+	public void setNetworkSystemCode(String networkSystemCode) {
+		this.networkSystemCode = networkSystemCode;
 	}
 
 	public Long getClientId() {
@@ -172,6 +185,10 @@ public class EventOrder extends AbstractAuditableCustom<AppUser, Long> {
 
 	public List<EventOrderdetials> getEventOrderdetials() {
 		return eventOrderdetials;
+	}
+	
+	public void setEventStatus(int eventStatus) {
+		this.eventStatus = eventStatus;
 	}
 
 	
