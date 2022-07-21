@@ -32,7 +32,7 @@ import com.google.gson.JsonElement;
 @SuppressWarnings("serial")
 public class EventMasterFromApiJsonDeserializer {
 
-	private final Set<String> supportedParameters = new HashSet<String> (Arrays.asList("eventName","chargeCode","eventStartDate","eventDescription","status","eventEndDate","allowCancellation","eventValidity","mediaData","locale","dateFormat","eventCategory"));
+	private final Set<String> supportedParameters = new HashSet<String> (Arrays.asList("eventName","chargeCode","eventStartDate","eventDescription","status","eventEndDate","allowCancellation","eventValidity","mediaData","locale","dateFormat","eventCategory","eventStartTime","eventDuration","networkSystemCode"));
 	private final FromJsonHelper fromApiJsonHelper;
 	
 	@Autowired
@@ -74,6 +74,15 @@ public class EventMasterFromApiJsonDeserializer {
 	    final String eventCategory = fromApiJsonHelper.extractStringNamed("eventCategory", element);
 		baseDataValidator.reset().parameter("eventCategory").value(eventCategory).notBlank().notExceedingLengthOf(50);  
 		
+		final String eventStartTime = fromApiJsonHelper.extractStringNamed("eventStartTime", element);
+        baseDataValidator.reset().parameter("eventStartTime").value(eventStartTime).notBlank();
+        
+        final Long eventDuration = fromApiJsonHelper.extractLongNamed("eventDuration", element);
+	    baseDataValidator.reset().parameter("eventDuration").value(eventDuration).notNull();
+		
+	    final String networkSystemCode = fromApiJsonHelper.extractStringNamed("networkSystemCode", element);
+	    baseDataValidator.reset().parameter("networkSystemCode").value(networkSystemCode).notBlank();
+	    
 		if("Live Event".equalsIgnoreCase(eventCategory)){
 			final String eventEndDate = fromApiJsonHelper.extractStringNamed("eventEndDate", element);
 	        baseDataValidator.reset().parameter("eventEndDate").value(eventEndDate).notNull();

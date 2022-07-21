@@ -86,11 +86,14 @@ public class MediaAsset extends  AbstractPersistable<Long> {
 	@Column(name = "is_deleted")
 	private char isDeleted = 'N';
 
+	@Column(name = "media_sequence")
+	private Long mediaSequence;
+	
 	public  MediaAsset() {
 		// TODO Auto-generated constructor stub
 	}
 	 public MediaAsset(final String mediaTitle, final String mediaType, final Long mediaCategoryId, final Date releaseDate, 
-			 final Long contentProvider, final String status, final BigDecimal cpShareValue) {
+			 final Long contentProvider, final String status, final BigDecimal cpShareValue, final Long mediaSequence) {
 		 
 		this.title = mediaTitle;
 		this.type = mediaType;
@@ -99,6 +102,7 @@ public class MediaAsset extends  AbstractPersistable<Long> {
 		this.contentProvider = contentProvider;
 		this.status = status;
 		this.cpShareValue = cpShareValue;
+		this.mediaSequence = mediaSequence;
 
 	 }
 
@@ -171,6 +175,13 @@ public class MediaAsset extends  AbstractPersistable<Long> {
 		return cpShareValue;
 	}
 	
+	public Long getMediaSequence() {
+		return mediaSequence;
+	}
+	
+	public void setMediaSequence(Long mediaSequence) {
+		this.mediaSequence = mediaSequence;
+	}
 	public static MediaAsset fromJson(final JsonCommand command) {
 		
 		 final String mediaTitle = command.stringValueOfParameterNamed("mediaTitle");
@@ -180,6 +191,7 @@ public class MediaAsset extends  AbstractPersistable<Long> {
 		 final String status=command.stringValueOfParameterNamed("status");
 		 final BigDecimal cpShareValue=command.bigDecimalValueOfParameterNamed("cpShareValue");
 		 final Long contentProvider=command.longValueOfParameterNamed("contentProvider");
+		 final Long mediaSequence =command.longValueOfParameterNamed("mediaSequence");
 		 
 		 /*final String genre = command.stringValueOfParameterNamed("genre");
 		 final Long ratingCount = command.longValueOfParameterNamed("ratingCount");
@@ -191,7 +203,7 @@ public class MediaAsset extends  AbstractPersistable<Long> {
 		 final BigDecimal rating=command.bigDecimalValueOfParameterNamed("mediaRating");*/
 		 
 		 return new MediaAsset(mediaTitle, null, mediaCategoryId, releaseDate.toDate(),
-					contentProvider, status, cpShareValue);
+					contentProvider, status, cpShareValue, mediaSequence);
 	}
 
 	public void add(final MediaassetAttributes attributes) {
@@ -314,6 +326,12 @@ public class MediaAsset extends  AbstractPersistable<Long> {
 			actualChanges.put(genre, newValue);
 			this.genre = StringUtils.defaultIfEmpty(newValue, null);
 		}*/
+		final String mediaSequence = "mediaSequence";
+		if (command.isChangeInLongParameterNamed(mediaSequence, this.mediaSequence)) {
+			final Long newValue = command.longValueOfParameterNamed("mediaSequence");
+			actualChanges.put(mediaSequence, newValue);
+			this.mediaSequence = newValue ;
+		}
 		
 		return actualChanges;
 	}
@@ -330,7 +348,7 @@ public class MediaAsset extends  AbstractPersistable<Long> {
 				+ subject + ", image=" + image + ", duration=" + duration + ", contentProvider=" + contentProvider
 				+ ", rated=" + rated + ", ratingCount=" + ratingCount + ", rating=" + rating + ", cpShareValue="
 				+ cpShareValue + ", mediaassetAttributes=" + mediaassetAttributes + ", mediaassetLocations="
-				+ mediaassetLocations + ", isDeleted=" + isDeleted + "]";
+				+ mediaassetLocations + ", isDeleted=" + isDeleted + ", mediaSequence=" + mediaSequence + "]";
 	}
 	public void setOverview(String overview) {
 		this.overview = overview;

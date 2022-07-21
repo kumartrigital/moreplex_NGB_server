@@ -54,7 +54,7 @@ public class MediaAssestApiResource {
 			"type", "classType", "overview", "subject", "mediaImage", "duration", "contentProvider", "rated",
 			"mediaRating", "ratingCount", "location", "status", "releaseDate", "genres", "languages", "filmLocations",
 			"writers", "directors", "actors", "countries", "noOfPages", "mediaDetails", "mediaStatus",
-			"mediaAttributes", "mediaFormat", "mediaTypeData", "mediaCategeorydata", "mediaLanguageData"));
+			"mediaAttributes", "mediaFormat", "mediaTypeData", "mediaCategeorydata", "mediaLanguageData", "mediaSequence"));
 
 	private final String resourceNameForPermissions = "MEDIAASSET";
 	private final PlatformSecurityContext context;

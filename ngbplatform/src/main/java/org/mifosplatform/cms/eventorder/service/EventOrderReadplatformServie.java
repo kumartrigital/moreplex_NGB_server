@@ -23,5 +23,11 @@ public interface EventOrderReadplatformServie {
 	BigDecimal retriveEventPrice(String fType, String oType, Long clientId);
 
 	Long getCurrentRow(String fType, String oType, Long clientId);
+
+	List<EventOrderData> retrieveClientActiveEventOrderDetails(Long clientId);
+
+	List<EventOrderData> retrieveClientExpiredEventOrderDetails(Long clientId);
+
+	List<EventOrderData> retrieveClientAutoActivationEventOrderDetails(Long clientId);
 	
 }

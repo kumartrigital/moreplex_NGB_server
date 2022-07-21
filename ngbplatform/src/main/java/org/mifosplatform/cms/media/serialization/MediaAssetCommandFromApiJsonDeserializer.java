@@ -35,7 +35,8 @@ public final class MediaAssetCommandFromApiJsonDeserializer {
     private final Set<String> supportedParameters = new HashSet<String>(Arrays.asList("mediaTitle", "mediatype",
     		  "catageoryId", "genre", "releaseDate", "overview", "subject", "mediaImage", "duration", "contentProvider",
     		  "rated", "mediaRating", "ratingCount", "status", "mediaassetAttributes", "mediaAssetLocations", "locale",
-    		  "dateFormat", "attributeName", "formatType", "languageId", "cpShareValue", "mediaTypeCheck", "mediaDetailType", "location","attributevalue","attributeNickname"));
+    		  "dateFormat", "attributeName", "formatType", "languageId", "cpShareValue", "mediaTypeCheck", "mediaDetailType", 
+    		  "location","attributevalue","attributeNickname", "mediaSequence"));
     private final FromJsonHelper fromApiJsonHelper;
 
     @Autowired

@@ -1,9 +1,12 @@
 package org.mifosplatform.cms.eventorder.service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.mifosplatform.cms.eventmaster.domain.EventDetails;
 import org.mifosplatform.cms.eventmaster.domain.EventDetailsRepository;
 import org.mifosplatform.cms.eventmaster.domain.EventMaster;
@@ -33,6 +36,7 @@ import org.mifosplatform.infrastructure.configuration.domain.ConfigurationReposi
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
+import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.mifosplatform.infrastructure.core.service.DateUtils;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.mifosplatform.inview.service.InviewWritePlatformService;
@@ -42,7 +46,20 @@ import org.mifosplatform.logistics.onetimesale.service.InvoiceOneTimeSale;
 import org.mifosplatform.logistics.onetimesale.service.OneTimeSaleReadPlatformService;
 import org.mifosplatform.portfolio.client.domain.Client;
 import org.mifosplatform.portfolio.client.domain.ClientRepository;
+import org.mifosplatform.portfolio.client.domain.ClientStatus;
 import org.mifosplatform.portfolio.client.service.ClientReadPlatformService;
+import org.mifosplatform.portfolio.clientservice.domain.ClientService;
+import org.mifosplatform.portfolio.clientservice.domain.ClientServiceRepository;
+import org.mifosplatform.portfolio.order.data.OrderStatusEnumaration;
+import org.mifosplatform.portfolio.order.domain.Order;
+import org.mifosplatform.portfolio.order.domain.OrderHistory;
+import org.mifosplatform.portfolio.order.domain.OrderPrice;
+import org.mifosplatform.portfolio.order.domain.StatusTypeEnum;
+import org.mifosplatform.portfolio.order.domain.UserActionStatusTypeEnum;
+import org.mifosplatform.portfolio.order.serialization.OrderCommandFromApiJsonDeserializer;
+import org.mifosplatform.portfolio.plan.domain.Plan;
+import org.mifosplatform.provisioning.provisioning.api.ProvisioningApiConstants;
+import org.mifosplatform.provisioning.provisioning.service.ProvisioningWritePlatformService;
 import org.mifosplatform.useradministration.domain.AppUser;
 import org.mifosplatform.workflow.eventaction.data.ActionDetaislData;
 import org.mifosplatform.workflow.eventaction.service.ActionDetailsReadPlatformService;
@@ -55,6 +72,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.gson.JsonObject;
 
 @Service
 public class EventOrderWriteplatformServiceImpl implements EventOrderWriteplatformService {
@@ -78,6 +97,10 @@ public class EventOrderWriteplatformServiceImpl implements EventOrderWriteplatfo
 	private final ActiondetailsWritePlatformService actiondetailsWritePlatformService;
 	private final ClientReadPlatformService clientReadPlatformService;
 	private final InviewWritePlatformService inviewWritePlatformService;
+	private final ClientServiceRepository clientServiceRepository;
+	private final FromJsonHelper fromJsonHelper;
+	private final ProvisioningWritePlatformService provisioningWritePlatformService;
+	private final OrderCommandFromApiJsonDeserializer fromApiJsonDeserializer;
 
 
 	@Autowired
@@ -89,7 +112,10 @@ public class EventOrderWriteplatformServiceImpl implements EventOrderWriteplatfo
 			final ConfigurationRepository configurationRepository,final ActionDetailsReadPlatformService actionDetailsReadPlatformService,
 			final ActiondetailsWritePlatformService actiondetailsWritePlatformService,final ClientBalanceRepository clientBalanceRepository,
 			final ClientRepository clientRepository,final EventValidationReadPlatformService eventValidationReadPlatformService,
-			final JournalvoucherRepository journalvoucherRepository,final ClientReadPlatformService clientReadPlatformService,final InviewWritePlatformService inviewWritePlatformService) {
+			final JournalvoucherRepository journalvoucherRepository,final ClientReadPlatformService clientReadPlatformService,
+			final InviewWritePlatformService inviewWritePlatformService,final ClientServiceRepository clientServiceRepository,
+			final FromJsonHelper fromJsonHelper,final ProvisioningWritePlatformService provisioningWritePlatformService,
+			final OrderCommandFromApiJsonDeserializer fromApiJsonDeserializer) {
 		
 		this.context = context;
 		this.configurationRepository=configurationRepository;
@@ -110,6 +136,10 @@ public class EventOrderWriteplatformServiceImpl implements EventOrderWriteplatfo
 		this.actiondetailsWritePlatformService=actiondetailsWritePlatformService;
 		this.clientReadPlatformService = clientReadPlatformService;
 		this.inviewWritePlatformService = inviewWritePlatformService;
+		this.clientServiceRepository = clientServiceRepository;
+		this.fromJsonHelper = fromJsonHelper;
+		this.provisioningWritePlatformService = provisioningWritePlatformService;
+		this.fromApiJsonDeserializer = fromApiJsonDeserializer;
 	}
 
 	private void handleCodeDataIntegrityIssues(JsonCommand command,DataIntegrityViolationException dve) {
@@ -128,7 +158,7 @@ public class EventOrderWriteplatformServiceImpl implements EventOrderWriteplatfo
 
 			// Check Client Custome Validation
 			this.eventValidationReadPlatformService.checkForCustomValidations(clientId,
-					EventActionConstants.EVENT_EVENT_ORDER, command.json(), getUserId());
+					EventActionConstants.EVENT_ADD_PLAN, command.json(), getUserId());
 			EventOrder eventOrder = assembleEventOrderDetails(command, clientId);
 			Configuration walletConfiguration = this.configurationRepository
 					.findOneByName(ConfigurationConstants.CONFIG_PROPERTY_WALLET_ENABLE);
@@ -148,13 +178,15 @@ public class EventOrderWriteplatformServiceImpl implements EventOrderWriteplatfo
 					  JournalVoucher journalVoucher=new JournalVoucher(DateUtils.getDateOfTenant(),"Event Sale");
 						this.journalvoucherRepository.save(journalVoucher);
 				  }
-			}
-
+			}	
+			  //siva
+			//provisioningRequestingForEventOrder(eventOrder) ;
+                //siva
 			  //Add New Action 
-			List<ActionDetaislData> actionDetaislDatas=this.actionDetailsReadPlatformService.retrieveActionDetails(EventActionConstants.EVENT_EVENT_ORDER);
-			if(!actionDetaislDatas.isEmpty()){
-				this.actiondetailsWritePlatformService.AddNewActions(actionDetaislDatas,clientId,eventOrder.getId().toString(),null);
-			}
+			//List<ActionDetaislData> actionDetaislDatas=this.actionDetailsReadPlatformService.retrieveActionDetails(EventActionConstants.EVENT_EVENT_ORDER);
+			//if(!actionDetaislDatas.isEmpty()){
+			//	this.actiondetailsWritePlatformService.AddNewActions(actionDetaislDatas,clientId,eventOrder.getId().toString(),null);
+			//}
 			
 			return new CommandProcessingResult(eventOrder.getEventOrderdetials().get(0).getMovieLink(),eventOrder.getClientId());
 			
@@ -163,7 +195,18 @@ public class EventOrderWriteplatformServiceImpl implements EventOrderWriteplatfo
 			return new CommandProcessingResult(Long.valueOf(-1));
 		}
 	}
-
+	
+	private void provisioningRequestingForEventOrder(EventOrder order) {
+		JsonObject provisioningObject = new JsonObject();
+		provisioningObject.addProperty("requestType", ProvisioningApiConstants.REQUEST_ADD_PLAN);
+		provisioningObject.addProperty("clientServiceId", clientServiceRepository.findClientServicewithClientId(order.getClientId()).getServiceId());
+		JsonCommand com = new JsonCommand(null, provisioningObject.toString(), provisioningObject,
+							fromJsonHelper, null, null, null, null, null, null, null, null, null, null, null, null);
+		List<EventOrder> orders = new ArrayList<EventOrder>();
+		orders.add(order);
+		this.provisioningWritePlatformService.createProvisioningRequestForEventOrder(orders, com, true,order.getClientId());
+	}
+				
 private EventOrder assembleEventOrderDetails(JsonCommand command, Long clientId) {
 	
 	Configuration configuration=this.configurationRepository.findOneByName(ConfigurationConstants.CONFIR_PROPERTY_REGISTRATION_DEVICE);
@@ -197,6 +240,7 @@ private EventOrder assembleEventOrderDetails(JsonCommand command, Long clientId)
 	}
 	List<EventDetails> eventDetails=eventMaster.getEventDetails();
 	EventOrder eventOrder = EventOrder.fromJson(command,eventMaster,clientType);
+	eventOrder.setEventStatus(OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.NEW).getId().intValue());
 	for(EventDetails detail:eventDetails){
 		EventDetails eventDetail=this.eventDetailsRepository.findOne(detail.getId());
 		MediaAsset mediaAsset = this.mediaAssetRepository.findOne(eventDetail.getMediaId());
@@ -267,6 +311,33 @@ private Long getUserId() {
 		EventOrder oneTimeSale = eventOrderRepository.findOne(oneTimeSaleData.getId());
 		oneTimeSale.setInvoiced();
 		eventOrderRepository.save(oneTimeSale);
+
+	}
+	
+	@Override
+	public CommandProcessingResult disconnectEventOrder(final JsonCommand command, final Long orderId) {
+
+		try {
+			this.fromApiJsonDeserializer.validateForDisconnectOrder(command.json());
+			EventOrder order = this.eventOrderRepository.findOne(orderId);
+			final LocalDateTime disconnectionDate = command.localDateTimeValueOfParameterNamed("disconnectionDate");
+			Long orderStatus = null;
+			orderStatus = OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.PENDING).getId();
+			order.setEventStatus(orderStatus.intValue());
+			this.eventOrderRepository.save(order);
+			JsonObject provisioningObject = new JsonObject();
+			provisioningObject.addProperty("requestType", UserActionStatusTypeEnum.DISCONNECTION.toString());
+			provisioningObject.addProperty("clientServiceId",  clientServiceRepository.findClientServicewithClientId(order.getClientId()).getServiceId());
+			JsonCommand com = new JsonCommand(null, provisioningObject.toString(), provisioningObject,
+						fromJsonHelper, null, null, null, null, null, null, null, null, null, null, null, null);
+			List<EventOrder> orders = new ArrayList<EventOrder>();
+			orders.add(order);
+			this.provisioningWritePlatformService.createProvisioningRequestForEventOrder(orders, com, false,order.getClientId());
+			return new CommandProcessingResult(Long.valueOf(order.getId()), order.getClientId());
+		} catch (DataIntegrityViolationException dve) {
+			handleCodeDataIntegrityIssues(null, dve);
+			return new CommandProcessingResult(Long.valueOf(-1));
+		}
 
 	}
 }

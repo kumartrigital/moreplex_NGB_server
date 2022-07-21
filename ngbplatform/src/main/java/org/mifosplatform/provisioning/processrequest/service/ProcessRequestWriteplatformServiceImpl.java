@@ -7,6 +7,10 @@ import java.util.List;
 import org.joda.time.LocalDate;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.mifosplatform.cms.eventorder.data.EventOrderData;
+import org.mifosplatform.cms.eventorder.domain.EventOrder;
+import org.mifosplatform.cms.eventorder.domain.EventOrderRepository;
+import org.mifosplatform.cms.eventorder.service.EventOrderReadplatformServie;
 import org.mifosplatform.finance.chargeorder.api.ChargingOrderApiResourse;
 import org.mifosplatform.finance.chargeorder.domain.BillItem;
 import org.mifosplatform.finance.chargeorder.service.ChargingCustomerOrders;
@@ -69,6 +73,7 @@ public class ProcessRequestWriteplatformServiceImpl implements ProcessRequestWri
       private final OrderRepository orderRepository;
       private final ClientRepository clientRepository;
       private final OrderReadPlatformService orderReadPlatformService;
+      private final EventOrderReadplatformServie eventOrderReadplatformServie; 
       private final ProcessRequestRepository processRequestRepository;
       private final EnumDomainServiceRepository enumDomainServiceRepository;
       private final ServiceParametersRepository serviceParametersRepository;
@@ -76,7 +81,8 @@ public class ProcessRequestWriteplatformServiceImpl implements ProcessRequestWri
       private final OrderAssembler orderAssembler;
       private final ChargingCustomerOrders invoiceClient;
       private final ClientServiceRepository clientServiceRepository;
-  	private final ChargingOrderApiResourse chargingOrderApiResourse;
+  	  private final ChargingOrderApiResourse chargingOrderApiResourse;
+  	  private final EventOrderRepository eventOrderRepository;
 
       
 
@@ -88,7 +94,7 @@ public class ProcessRequestWriteplatformServiceImpl implements ProcessRequestWri
                 final EnumDomainServiceRepository enumDomainServiceRepository,final ServiceParametersRepository parametersRepository,
                 final IpPoolManagementJpaRepository ipPoolManagementJpaRepository,final OrderAddonsRepository orderAddonsRepository,
                 final ChargingCustomerOrders invoiceClient,final ClientServiceRepository clientServiceRepository,
-            	 final ChargingOrderApiResourse chargingOrderApiResourse
+            	 final ChargingOrderApiResourse chargingOrderApiResourse,final EventOrderRepository eventOrderRepository,final EventOrderReadplatformServie eventOrderReadplatformServie
 ) {
 
             
@@ -108,6 +114,8 @@ public class ProcessRequestWriteplatformServiceImpl implements ProcessRequestWri
                 this.invoiceClient = invoiceClient;
                 this.clientServiceRepository = clientServiceRepository;
                 this.chargingOrderApiResourse = chargingOrderApiResourse;
+                this.eventOrderRepository = eventOrderRepository;
+                this.eventOrderReadplatformServie = eventOrderReadplatformServie;
 
                  
         }
@@ -144,7 +152,67 @@ public class ProcessRequestWriteplatformServiceImpl implements ProcessRequestWri
 
         @Override
         public void notifyProcessingDetails(ProvisioningRequest provisioningRequest,char status) {
+        	
+        	
                 try{
+                	if(provisioningRequest!=null && (provisioningRequest.getIsEventOrderReq()=='Y')) {
+                		 List<EventOrder> orders = new ArrayList<>();
+                		 Client client=null;
+                         List<ProvisioningRequestDetail>provisioningRequestDetails=provisioningRequest.getProvisioningRequestDetail();
+                         boolean action=true;
+                         for(ProvisioningRequestDetail provisioningRequestDetail : provisioningRequestDetails){
+                             JSONObject jsonObject = new JSONObject(provisioningRequestDetail.getRequestMessage());
+                             if(jsonObject.opt("Action")!=null){
+                                 action=false;
+                             }
+                         }
+                         //action will be false for command center operations
+                         if(action){
+                             client=this.clientRepository.findOne(provisioningRequest.getClientId());
+                         }
+                		 orders= this.retriveEventOrdersfromProvisioningRequest(provisioningRequest);
+                		 for(EventOrder order:orders) {
+                			 switch(provisioningRequest.getRequestType()){
+                             
+                             case ProvisioningApiConstants.REQUEST_ADD_PLAN  :
+                            	 System.out.println(UserActionStatusTypeEnum.ADD_PLAN.toString());
+                                 if(provisioningRequest.getRequestType().equalsIgnoreCase(UserActionStatusTypeEnum.ADD_PLAN.toString())){
+                                     
+                                	 order.setEventStatus((OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.ACTIVE).getId().intValue()));
+                                	 
+                                     client.setStatus(ClientStatus.ACTIVE.getValue());
+                                     ClientService clientService = this.clientServiceRepository.findClientServicewithClientId(provisioningRequest.getClientId());
+                                     if("PROCESSING".equalsIgnoreCase(clientService.getStatus())){
+                                         clientService.setStatus("ACTIVE");
+                                         this.clientServiceRepository.saveAndFlush(clientService);
+                                     }
+                                     this.eventOrderRepository.saveAndFlush(order);
+                                     
+                                     //Need to implement this part for notifying customer about vod activation
+                                     //List<ActionDetaislData> actionDetaislDatas=this.actionDetailsReadPlatformService.retrieveActionDetails(EventActionConstants.EVENT_ADD_PLAN);
+                                     //if(actionDetaislDatas.size() != 0){
+                                     //        this.actiondetailsWritePlatformService.AddNewActions(actionDetaislDatas,order.getClientId(), order.getId().toString(),null);
+                                     //}
+                                     
+                                     
+                                 }
+                                 break;
+                                 
+                                 //need to add logic for disconnection
+                                 case ProvisioningApiConstants.REQUEST_DISCONNECTION :                                	 
+                                	 System.out.println(UserActionStatusTypeEnum.DISCONNECTION.toString());
+                                	 order.setEventStatus(OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.DISCONNECTED).getId().intValue()); 
+                                	 this.eventOrderRepository.saveAndFlush(order);                   
+                                     break;
+                                 
+                                 default:
+                                	 break;
+                            	}
+                			 
+                		 }
+                	
+                }else {
+                
                     if(provisioningRequest!=null && !(provisioningRequest.getRequestType().equalsIgnoreCase(ProvisioningApiConstants.REQUEST_TERMINATE)) && status != 'F'){
                         Plan plan = new Plan();
                         Client client=null;
@@ -468,6 +536,7 @@ public class ProcessRequestWriteplatformServiceImpl implements ProcessRequestWri
                         //detailsData.setNotify();
                     }
                         //this.processRequestRepository.saveAndFlush(detailsData);
+                }
                 }catch(Exception exception){
                     exception.printStackTrace();
                 }
@@ -499,6 +568,32 @@ public class ProcessRequestWriteplatformServiceImpl implements ProcessRequestWri
                         for(int i=0;i<orderArray.length();i++){
                             object = orderArray.getJSONObject(i);
                             orders.add(this.orderRepository.findOne(object.getLong("orderId")));
+                        }
+                    }
+                }
+                return orders;
+            }catch(Exception e){
+                throw new PlatformDataIntegrityException("exception.occured", e.getMessage());
+            }
+        }
+        
+        @Override
+        public List<EventOrder> retriveEventOrdersfromProvisioningRequest(ProvisioningRequest provisioningRequest) {
+            List<EventOrder> orders = new ArrayList<EventOrder>();
+            JSONObject requestMessageObject = null;
+            try{
+                List<ProvisioningRequestDetail> details = provisioningRequest.getProvisioningRequestDetail();
+            
+                for(ProvisioningRequestDetail detail:details){
+                    requestMessageObject = new JSONObject(detail.getRequestMessage());
+                    JSONArray orderArray = null;
+                    if(requestMessageObject.has("newOrderList")){
+                        orderArray = new JSONArray();
+                        orderArray = requestMessageObject.getJSONArray("newOrderList");
+                        JSONObject object = null;
+                        for(int i=0;i<orderArray.length();i++){
+                            object = orderArray.getJSONObject(i);
+                            orders.add(this.eventOrderRepository.findOne(object.getLong("orderId")));
                         }
                     }
                 }

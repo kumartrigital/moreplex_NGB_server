@@ -5,11 +5,14 @@ package org.mifosplatform.cms.eventmaster.service;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.mifosplatform.cms.eventmaster.data.EventDetailsData;
 import org.mifosplatform.cms.eventmaster.data.EventMasterData;
 import org.mifosplatform.cms.eventmaster.domain.EventMaster;
@@ -66,7 +69,7 @@ public class EventMasterReadPlatformServiceImpl implements
 	public List<EventMasterData> retrieveEventMasterDataForEventOrders() {
 		try {
 			final EventMasterMapper eventMasterMapper = new EventMasterMapper();
-			final String sql = "SELECT " + eventMasterMapper.eventMasterSchema() + " where  evnt.event_end_date > now() or evnt.event_end_date is null";
+			final String sql = "SELECT " + eventMasterMapper.eventMasterSchema() + " where evnt.event_validity > now()";//where  evnt.event_end_date > now() or evnt.event_end_date is null";
 			return jdbcTemplate.query(sql, eventMasterMapper, new Object[] {});
 		} catch (EmptyResultDataAccessException e) {
 			return null;
@@ -77,7 +80,7 @@ public class EventMasterReadPlatformServiceImpl implements
 	public List<EventMasterData> retrieveEventMasterData() {
 		try {
 			final EventMasterMapper eventMasterMapper = new EventMasterMapper();
-			final String sql = "SELECT " + eventMasterMapper.eventMasterSchema() + " where evnt.event_end_date > now() or evnt.event_end_date is null";
+			final String sql = "SELECT " + eventMasterMapper.eventMasterSchema() + " where evnt.event_validity > now()";//evnt.event_end_date > now() or evnt.event_end_date is null";
 			return jdbcTemplate.query(sql, eventMasterMapper, new Object[] {});
 		} catch (EmptyResultDataAccessException e) {
 			return null;
@@ -106,7 +109,8 @@ public class EventMasterReadPlatformServiceImpl implements
 	@Override
 	public EventMasterData retrieveEventMasterDetails(final Integer eventId){
 		final String sql = " select evnt.id as id, evnt.event_name as eventName, evnt.event_description as eventDescription, evnt.status as status, evnt.event_start_date as eventStartDate, " +
-						" evnt.event_end_date as eventEndDate, evnt.event_validity as eventValidity, charge_code as chargeCode, evnt.event_category as eventCategory "
+						" evnt.event_end_date as eventEndDate, evnt.event_validity as eventValidity, charge_code as chargeCode, evnt.event_category as eventCategory, "
+						+" evnt.event_start_time as eventStartTime,evnt.event_duration as eventDuration, evnt.network_system_code as networkSystemCode"
 						+ " from b_mod_master evnt "
 						+ "where evnt.id='"+eventId+"'";
 		RowMapper<EventMasterData> rowMap = new EventMapper();
@@ -125,7 +129,15 @@ public class EventMasterReadPlatformServiceImpl implements
 			final Long status = resultSet.getLong("status");
 			final String chargeData = resultSet.getString("chargeCode"); 
 			final String eventCategory = resultSet.getString("eventCategory");
-			return new EventMasterData(id, eventName, eventDescription, status, null, eventStartDate, eventEndDate, eventValidity, chargeData, eventCategory);
+			final Date eventStartTime = resultSet.getTimestamp("eventStartTime");
+			final Long eventDuration = resultSet.getLong("eventDuration");
+			final String networkSystemCode = resultSet.getString("networkSystemCode");
+			
+			SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");  
+		    String strEventStartTime= formatter.format(eventStartTime);  
+            
+			return new EventMasterData(id, eventName, eventDescription, status, null, eventStartDate, eventEndDate, eventValidity, chargeData, eventCategory,
+					strEventStartTime, eventDuration, networkSystemCode);
 		}
 	}
 	

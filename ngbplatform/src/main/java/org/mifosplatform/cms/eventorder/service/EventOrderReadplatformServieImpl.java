@@ -5,11 +5,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.sql.DataSource;
 
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.mifosplatform.cms.eventmaster.data.EventMasterData;
 import org.mifosplatform.cms.eventorder.data.EventOrderData;
 import org.mifosplatform.cms.eventorder.data.EventOrderDeviceData;
@@ -158,14 +162,77 @@ public class EventOrderReadplatformServieImpl implements EventOrderReadplatformS
 	           return null;	
 	}
 	}
+	
+	@Override
+	public List<EventOrderData> retrieveClientActiveEventOrderDetails(Long clientId) {
+		
+		try{
+		EventOrderMapper mapper = new EventOrderMapper();
+		String sql = "select " + mapper.schemaLiveOrders()
+				+ " and eo.client_id = ? ";
+
+		return this.jdbcTemplate.query(sql, mapper, new Object[] { clientId });
+	}catch(EmptyResultDataAccessException accessException){
+	           return null;	
+	}
+	}
+	
+	@Override
+	public List<EventOrderData> retrieveClientExpiredEventOrderDetails(Long clientId) {
+		
+		try{
+		EventOrderMapper mapper = new EventOrderMapper();
+		String sql = "select " + mapper.schemaExpiredOrders()
+				+ " and eo.client_id = ? ";
+
+		return this.jdbcTemplate.query(sql, mapper, new Object[] { clientId });
+	}catch(EmptyResultDataAccessException accessException){
+	           return null;	
+	}
+	}
+	
+	@Override
+	public List<EventOrderData> retrieveClientAutoActivationEventOrderDetails(Long clientId) {
+		
+		try{
+		EventOrderMapper mapper = new EventOrderMapper();
+		String sql = "select " + mapper.schemaAutoActivateOrders()
+				+ " and eo.client_id = ? ";
+
+		return this.jdbcTemplate.query(sql, mapper, new Object[] { clientId });
+	}catch(EmptyResultDataAccessException accessException){
+	           return null;	
+	}
+	}
 
 	private static final class EventOrderMapper implements
 			RowMapper<EventOrderData> {
 
 		public String schema() {
 
-			return " eo.id AS id,eo.event_bookeddate AS bookedDate,em.event_name AS eventName,eo.charge_code AS chargeCode,em.status as status,eo.booked_price AS price,em.event_description as eventdescription" +
+			return " eo.id AS id,eo.event_bookeddate AS bookedDate,em.event_name AS eventName,eo.charge_code AS chargeCode,eo.event_status as status,eo.booked_price AS price,em.event_description as eventdescription, eo.event_validtill as eventValidTill" +
 					" FROM b_modorder eo, b_mod_master em WHERE eo.event_id = em.id ";
+
+		}
+		
+		public String schemaLiveOrders() {
+
+			return " eo.id AS id,eo.event_bookeddate AS bookedDate,em.event_name AS eventName,eo.charge_code AS chargeCode,eo.event_status as status,eo.booked_price AS price,em.event_description as eventdescription, eo.event_validtill as eventValidTill" +
+					" FROM b_modorder eo, b_mod_master em WHERE eo.event_id = em.id  and eo.event_validtill > now() ";
+
+		}
+		
+		public String schemaExpiredOrders() {
+
+			return " eo.id AS id,eo.event_bookeddate AS bookedDate,em.event_name AS eventName,eo.charge_code AS chargeCode,eo.event_status as status,eo.booked_price AS price,em.event_description as eventdescription, eo.event_validtill as eventValidTill" +
+					" FROM b_modorder eo, b_mod_master em WHERE eo.event_id = em.id  and event_validtill < now() and event_status=1  ";
+
+		}
+		
+		public String schemaAutoActivateOrders() {
+
+			return " eo.id AS id,eo.event_bookeddate AS bookedDate,em.event_name AS eventName,eo.charge_code AS chargeCode,eo.event_status as status,eo.booked_price AS price,em.event_description as eventdescription, eo.event_validtill as eventValidTill"+
+					" FROM b_modorder eo, b_mod_master em WHERE eo.event_id = em.id  and em.event_start_time <= (NOW() + INTERVAL 10 MINUTE)and eo.event_status=9  ";
 
 		}
 
@@ -182,11 +249,12 @@ public class EventOrderReadplatformServieImpl implements EventOrderReadplatformS
 			EnumOptionData Enumstatus=OrderStatusEnumaration.OrderStatusType(statusId);
 			String status=Enumstatus.getValue();
 			String eventdescription = rs.getString("eventdescription");
-			return new EventOrderData(orderid,bookedDate,eventName,bookedPrice,chargeCode,status,eventdescription);
-
+			LocalDateTime eventValidTill = JdbcSupport.getLocalDateTime(rs,"eventValidTill");
+			return new EventOrderData(orderid,bookedDate,eventName,bookedPrice,chargeCode,status,eventdescription,eventValidTill);
 		}
 		}
 }
+
 @SuppressWarnings("unused")
 final class CustomValidationProcedure extends StoredProcedure {
         

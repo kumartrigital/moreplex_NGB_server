@@ -26,6 +26,8 @@ import org.mifosplatform.cms.eventmaster.data.EventDetailsData;
 import org.mifosplatform.cms.eventmaster.data.EventMasterData;
 import org.mifosplatform.cms.eventmaster.domain.EventMaster;
 import org.mifosplatform.cms.eventmaster.service.EventMasterReadPlatformService;
+import org.mifosplatform.cms.eventprice.data.EventPriceData;
+import org.mifosplatform.cms.eventprice.service.EventPriceReadPlatformService;
 import org.mifosplatform.cms.media.data.MediaAssetData;
 import org.mifosplatform.cms.media.service.MediaAssetReadPlatformService;
 import org.mifosplatform.commands.domain.CommandWrapper;
@@ -42,6 +44,8 @@ import org.mifosplatform.logistics.item.service.ItemReadPlatformService;
 import org.mifosplatform.organisation.mcodevalues.api.CodeNameConstants;
 import org.mifosplatform.organisation.mcodevalues.data.MCodeData;
 import org.mifosplatform.organisation.mcodevalues.service.MCodeReadPlatformService;
+import org.mifosplatform.provisioning.networkelement.data.NetworkElementData;
+import org.mifosplatform.provisioning.networkelement.service.NetworkElementReadPlatformServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -59,7 +63,7 @@ import org.springframework.stereotype.Component;
 public class EventMasterApiResource {
 	
 	private final Set<String> RESPONSE_PARAMETERS = new HashSet<String>(Arrays.asList("id", "eventName", "eventDescription", "status", 
-			"eventStartDate", "eventEndDate", "chargeData", "eventValidity"));
+			"eventStartDate", "eventEndDate", "chargeData", "eventValidity", "networkElementData"));
 	
 	private final String resourceNameForPermissions = "EVENT";
 	private final PortfolioCommandSourceWritePlatformService commandSourceWritePlatformService;
@@ -70,6 +74,8 @@ public class EventMasterApiResource {
 	private final MediaAssetReadPlatformService assetReadPlatformService;
 	private final ItemReadPlatformService itemReadPlatformService;
 	private final MCodeReadPlatformService mCodeReadPlatformService;
+	private final NetworkElementReadPlatformServiceImpl networkElementReadPlatformServiceImpl;
+	private final EventPriceReadPlatformService eventPriceReadPlatformService;
 	/**
 	 * @param commandSourceWritePlatformService
 	 * @param toApiJsonSerializer
@@ -86,7 +92,9 @@ public class EventMasterApiResource {
 								  final MediaAssetReadPlatformService assetReadPlatformService,
 								  final EventMasterReadPlatformService eventMasterReadPlatformService,
 								  final ItemReadPlatformService itemReadPlatformService,
-								  final MCodeReadPlatformService mCodeReadPlatformService) {
+								  final MCodeReadPlatformService mCodeReadPlatformService,
+								  final NetworkElementReadPlatformServiceImpl networkElementReadPlatformServiceImpl,
+								  final EventPriceReadPlatformService eventPriceReadPlatformService) {
 		this.commandSourceWritePlatformService = commandSourceWritePlatformService;
 		this.toApiJsonSerializer = toApiJsonSerializer;
 		this.apiRequestParameterHelper =  apiRequestParameterHelper;
@@ -95,6 +103,8 @@ public class EventMasterApiResource {
 		this.eventMasterReadPlatformService = eventMasterReadPlatformService;
 		this.itemReadPlatformService = itemReadPlatformService;
 		this.mCodeReadPlatformService = mCodeReadPlatformService;
+		this.networkElementReadPlatformServiceImpl = networkElementReadPlatformServiceImpl;
+		this.eventPriceReadPlatformService = eventPriceReadPlatformService;
 	}
 	
 	/**
@@ -123,7 +133,8 @@ public class EventMasterApiResource {
 		final List<EnumOptionData> statusData = this.eventMasterReadPlatformService.retrieveNewStatus();
 		final List<ChargesData> chargeDatas = this.itemReadPlatformService.retrieveChargeCode();
 		final Collection<MCodeData> eventCategeorydata = this.mCodeReadPlatformService.getCodeValue(CodeNameConstants.CODE_EVENT_CATEGORY);
-		final EventMasterData singleEvent  = new EventMasterData(mediaData, statusData, null, chargeDatas, eventCategeorydata);
+		final List<NetworkElementData> networkElementData = networkElementReadPlatformServiceImpl.retrieveNetworkElements();
+		final EventMasterData singleEvent  = new EventMasterData(mediaData, statusData, null, chargeDatas, eventCategeorydata, networkElementData);
 		
 		return singleEvent;	
 	}
@@ -150,7 +161,8 @@ public class EventMasterApiResource {
 		final List<ChargesData> chargeDatas = this.itemReadPlatformService.retrieveChargeCode();
 		final Collection<MCodeData> eventCategeorydata = this.mCodeReadPlatformService.getCodeValue(CodeNameConstants.CODE_EVENT_CATEGORY);
 		final EventMasterData event = this.eventMasterReadPlatformService.retrieveEventMasterDetails(eventId);
-		
+		final List<NetworkElementData> networkElementData = networkElementReadPlatformServiceImpl.retrieveNetworkElements();
+		final List<EventPriceData> eventPriceData = eventPriceReadPlatformService.retrieventPriceData(eventId.longValue()); 
 		int mediaDataSize = mediaData.size();
 		final int eventdetailsSize = eventdetails.size();
 		for(int i = 0; i < eventdetailsSize; i++) {
@@ -168,6 +180,8 @@ public class EventMasterApiResource {
 		event.setSelectedMedia(eventdetails);
 		event.setChargeData(chargeDatas);
 		event.setEventCategeorydata(eventCategeorydata);
+		event.setNetworkElementData(networkElementData);
+		event.setEventPriceData(eventPriceData);
 		final ApiRequestJsonSerializationSettings settings = apiRequestParameterHelper.process(uriInfo.getQueryParameters());
 	
 		return this.toApiJsonSerializer.serialize(settings, event, RESPONSE_PARAMETERS);

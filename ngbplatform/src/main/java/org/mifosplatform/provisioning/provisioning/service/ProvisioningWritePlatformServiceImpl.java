@@ -21,6 +21,16 @@ import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.mifosplatform.cms.eventmaster.domain.EventDetails;
+import org.mifosplatform.cms.eventmaster.domain.EventDetailsRepository;
+import org.mifosplatform.cms.eventmaster.domain.EventMaster;
+import org.mifosplatform.cms.eventmaster.domain.EventMasterRepository;
+import org.mifosplatform.cms.eventorder.domain.EventOrder;
+import org.mifosplatform.cms.eventorder.domain.EventOrderdetials;
+import org.mifosplatform.cms.media.domain.MediaAsset;
+import org.mifosplatform.cms.media.exceptions.NoMoviesFoundException;
+import org.mifosplatform.cms.mediadetails.domain.MediaAssetRepository;
+import org.mifosplatform.cms.mediadetails.domain.MediaassetLocation;
 import org.mifosplatform.commands.domain.CommandWrapper;
 import org.mifosplatform.commands.service.CommandWrapperBuilder;
 import org.mifosplatform.crm.ticketmaster.domain.PriorityTypeEnum;
@@ -61,9 +71,11 @@ import org.mifosplatform.portfolio.client.domain.ClientRepository;
 import org.mifosplatform.portfolio.clientservice.domain.ClientService;
 import org.mifosplatform.portfolio.clientservice.domain.ClientServiceRepository;
 import org.mifosplatform.portfolio.clientservice.service.ClientServiceReadPlatformService;
+import org.mifosplatform.portfolio.order.data.OrderStatusEnumaration;
 import org.mifosplatform.portfolio.order.domain.Order;
 import org.mifosplatform.portfolio.order.domain.OrderLine;
 import org.mifosplatform.portfolio.order.domain.OrderRepository;
+import org.mifosplatform.portfolio.order.domain.StatusTypeEnum;
 import org.mifosplatform.portfolio.order.domain.UserActionStatusTypeEnum;
 import org.mifosplatform.portfolio.order.service.OrderReadPlatformService;
 import org.mifosplatform.portfolio.plan.domain.Plan;
@@ -149,6 +161,9 @@ public class ProvisioningWritePlatformServiceImpl implements ProvisioningWritePl
 	private final NetworkElementReadPlatformService networkElementReadPlatformService;
 	private final NetworkElementRepository networkElementRepository;
 	private final ClientServiceReadPlatformService clientServiceReadPlatformService;
+	private final EventMasterRepository eventMasterRepository;
+	private final EventDetailsRepository eventDetailsRepository;
+	private final MediaAssetRepository mediaAssetRepository;
 
 	@Autowired
 	public ProvisioningWritePlatformServiceImpl(final PlatformSecurityContext context,
@@ -177,7 +192,10 @@ public class ProvisioningWritePlatformServiceImpl implements ProvisioningWritePl
 			final ClientRepository clientRepository, final ConfigurationRepository configurationRepository,
 			final NetworkElementReadPlatformService networkElementReadPlatformService,
 			final NetworkElementRepository networkElementRepository,
-			final ClientServiceReadPlatformService clientServiceReadPlatformService) {
+			final ClientServiceReadPlatformService clientServiceReadPlatformService,
+			final EventMasterRepository eventMasterRepository,
+			final EventDetailsRepository eventDetailsRepository,
+			final MediaAssetRepository mediaAssetRepository) {
 
 		this.context = context;
 		this.fromJsonHelper = fromJsonHelper;
@@ -211,6 +229,9 @@ public class ProvisioningWritePlatformServiceImpl implements ProvisioningWritePl
 		this.networkElementReadPlatformService = networkElementReadPlatformService;
 		this.networkElementRepository = networkElementRepository;
 		this.clientServiceReadPlatformService = clientServiceReadPlatformService;
+		this.eventMasterRepository = eventMasterRepository;
+		this.eventDetailsRepository = eventDetailsRepository;
+		this.mediaAssetRepository = mediaAssetRepository;
 
 	}
 
@@ -779,7 +800,54 @@ public class ProvisioningWritePlatformServiceImpl implements ProvisioningWritePl
 			return new CommandProcessingResult(Long.valueOf(-1));
 		}
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public CommandProcessingResult createProvisioningRequestForEventOrder(List<EventOrder> orders, JsonCommand command,
+			boolean checkValidate,Long clientId) {
+		String provisioningSystemId = null;
+		JSONArray deviceDetails = null;
+		try {
+			String requestType = command.stringValueOfParameterNamed("requestType");
+			Long clientServiceId = command.longValueOfParameterNamed("clientServiceId");
+			Long oldOrderId = command.longValueOfParameterNamed("oldOrderId");
+			String type = command.stringValueOfParameterNamed("type");
+			//String sub_action = command.stringValueOfParameterName("sub_action");
+			ClientService clientService = this.clientServiceRepository.findClientServicewithClientId(clientId);
 
+			Map<String, Object> hardwareAndDeviceDetails = this.retriveHardwareMappingAndSalesDetails(clientService);
+			List<OneTimeSaleData> deviceDatas = (List<OneTimeSaleData>) hardwareAndDeviceDetails.get("deviceDetails");
+			if (!deviceDatas.isEmpty()) {
+				if (checkValidate) {
+					this.fromApiJsonDeserializer.validateForHardwareAndDevice(hardwareAndDeviceDetails);
+				}
+				deviceDetails = this.retrivedeviceDetailsforProvisioningRequest(
+						(List<HardwarePlanData>) hardwareAndDeviceDetails.get("hardwareMappingDetails"),
+						(List<OneTimeSaleData>) hardwareAndDeviceDetails.get("deviceDetails"), command);
+			}
+
+			Map<String, Object> provAndSpDetails = this.getProvisioningRequestIdAndSP(clientService, null);
+			provisioningSystemId = provAndSpDetails.get("provisioningSystemId").toString();
+			JSONArray extraJsonArray = this.PreRequiresOfProvisioningFunctionality(requestType, provisioningSystemId,
+					type);
+
+			ProvisioningRequest provisioningRequest = new ProvisioningRequest(clientService.getClientId(),
+					clientService.getId(), requestType, provisioningSystemId, 'N',
+					DateUtils.getLocalDateOfTenant().toDate(), null, PriorityEnum.fromName(requestType), 1,'Y');
+
+			provisioningRequest.addDetails(
+					new ProvisioningRequestDetail(this.retriveRequestMessageForEventOrder(orders, clientService, provAndSpDetails,
+							deviceDetails, oldOrderId, extraJsonArray, requestType, command), null, null, "1"));
+
+			this.provisioningRequestRepository.saveAndFlush(provisioningRequest);
+
+			return new CommandProcessingResult(provisioningRequest.getId());
+		} catch (DataIntegrityViolationException dve) {
+			this.handleCodeDataIntegrityIssues(null, dve);
+			return new CommandProcessingResult(Long.valueOf(-1));
+		}
+	}
+	
 	@Override
 	public CommandProcessingResult createProvisioningRequestForCommandCenter(JsonCommand command) {
 		try {
@@ -1231,7 +1299,69 @@ public class ProvisioningWritePlatformServiceImpl implements ProvisioningWritePl
 		}
 
 	}
+	
+	
+	private String retriveRequestMessageForEventOrder(final List<EventOrder> orders, ClientService clientService,
+			Map<String, Object> provAndSpdetails, JSONArray deviceDetails, Long oldOrderId, JSONArray extraJsonArray,
+			String requestType, JsonCommand command) {
+		String provisioningSystemId = provAndSpdetails.get("provisioningSystemId").toString();
+		Collection<MCodeData> mcodeDatas = (Collection<MCodeData>) provAndSpdetails.get("spMcode");
+		try {
+			JSONObject object = new JSONObject();
+			object.put("request_type", requestType);
+			object.put("clientInfo", String.valueOf(this.clientInfoJsonPreparation(clientService.getClientId())));
+			object.put("serviceInfo",
+					String.valueOf(this.serviceInfoJsonPreparation(clientService, provisioningSystemId, mcodeDatas)));
+			object.put("newDeviceInfo", String.valueOf(deviceDetails));
+			if (extraJsonArray.length() > 0) {
+				object.put("TaskList", String.valueOf(extraJsonArray));
+			}
+			JSONArray orderInfo = new JSONArray();
+			JSONObject object1 = null;
+			EventMaster event = null;
+			for (EventOrder order : orders) {
+				event = this.eventMasterRepository.findOne(order.getEventId());
+				object1 = new JSONObject();
+				object1.put("orderId", order.getId());
+				object1.put("planId", event.getId());
+				object1.put("orderStartDate",formattedDate(event.getEventStartTime()));
+				object1.put("orderEndDate", formattedDate(event.getEventValidity()));
+				object1.put("products",String.valueOf(this.retriveEventDetails(event)));
+				orderInfo.put(object1);
+			}
+			object.put("newOrderList",String.valueOf(orderInfo));
+			return object.toString();
+		} catch (Exception e) {
+			throw new PlatformDataIntegrityException("parse.exception.occur",
+					"Parse Exception occured" + e.getMessage());
+		}
 
+	}
+	
+	private String formattedDate(Date date) {
+		String pattern = "MM/dd/yyyy HH:mm:ss";
+		DateFormat df = new SimpleDateFormat(pattern);
+		return df.format(date);
+	}
+
+	private JSONArray retriveEventDetails(EventMaster event) {
+		JSONArray array = new JSONArray();
+		JSONObject object = null;
+		List<EventDetails> eventDetails=event.getEventDetails();
+		for(EventDetails detail:eventDetails){
+			object = new JSONObject();
+			EventDetails eventDetail=this.eventDetailsRepository.findOne(detail.getId());
+			MediaAsset mediaAsset = this.mediaAssetRepository.findOne(eventDetail.getMediaId());
+			object.put("neProductId", mediaAsset.getMediaSequence());
+			object.put("productName", mediaAsset.getTitle());
+			object.put("paramName",event.getNetworkSystemCode());
+			array.put(object);
+		}
+		
+		return array;
+	}
+	
+	
 	private JSONArray deviceInfoJsonPreparation(JsonCommand command) {
 
 		JSONArray array = new JSONArray();

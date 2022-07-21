@@ -8,11 +8,14 @@ import java.util.Date;
 import java.util.List;
 
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.mifosplatform.billing.chargecode.data.ChargesData;
 import org.mifosplatform.cms.eventmaster.domain.EventMaster;
+import org.mifosplatform.cms.eventprice.data.EventPriceData;
 import org.mifosplatform.cms.media.data.MediaAssetData;
 import org.mifosplatform.infrastructure.core.data.EnumOptionData;
 import org.mifosplatform.organisation.mcodevalues.data.MCodeData;
+import org.mifosplatform.provisioning.networkelement.data.NetworkElementData;
 
 /**
  * POJO for {@link EventMaster}
@@ -46,6 +49,11 @@ public class EventMasterData {
 	private Collection<MCodeData> eventCategeorydata;
 	@SuppressWarnings("unused")
 	private String eventCategory;
+	private List<NetworkElementData> networkElementData;
+	private String eventStartTime;
+	private Long eventDuration;
+	private String networkSystemCode;
+	private List<EventPriceData> eventPriceData;
 	
 	/** Default Constructor */
 	public EventMasterData() {
@@ -64,13 +72,14 @@ public class EventMasterData {
      */
 	public EventMasterData (final List<MediaAssetData> mediaAsset, final List<EnumOptionData> statusData,
 							final List<EnumOptionData> optType, final List<ChargesData> chargeDatas, 
-							final Collection<MCodeData> eventCategeorydata) {
+							final Collection<MCodeData> eventCategeorydata, final List<NetworkElementData> networkElementData) {
 		
 		this.mediaAsset = mediaAsset;
 		this.statusData = statusData;
 		this.optType = optType;
 		this.chargeData=chargeDatas;
 		this.eventCategeorydata=eventCategeorydata;
+		this.networkElementData = networkElementData;
 	}
 	
 	/**
@@ -113,7 +122,8 @@ public class EventMasterData {
      */
 	public EventMasterData(final Long id, final String eventName, final String eventDescription, 
 						   final Long status, final String mediaTitle, final Date eventStartDate,
-						   final Date eventEndDate, final LocalDate eventValidity, final String chargeData, final String eventCategory) {
+						   final Date eventEndDate, final LocalDate eventValidity, final String chargeData, final String eventCategory,
+						   final String eventStartTime, final Long eventDuration, final String networkSystemCode) {
 		this.id= id;
 		this.eventName= eventName;
 		this.eventDescription = eventDescription;
@@ -124,7 +134,25 @@ public class EventMasterData {
 		this.eventValidity = eventValidity;
 		this.chargeCode = chargeData;
 		this.eventCategory = eventCategory;
+		this.eventStartTime =eventStartTime;
+		this.eventDuration = eventDuration;
+		this.networkSystemCode = networkSystemCode;
 	}
+	
+	public EventMasterData(final Long id, final String eventName, final String eventDescription, 
+			   final Long status, final String mediaTitle, final Date eventStartDate,
+			   final Date eventEndDate, final LocalDate eventValidity, final String chargeData, final String eventCategory) {
+		this.id= id;
+		this.eventName= eventName;
+		this.eventDescription = eventDescription;
+		this.statusId = status;
+		this.mediaTitle = mediaTitle;
+		this.eventStartDate = eventStartDate;
+		this.eventEndDate = eventEndDate;
+		this.eventValidity = eventValidity;
+		this.chargeCode = chargeData;
+		this.eventCategory = eventCategory;
+}
 	
 	/**
      * <p> The behavior of this constructor when the given @param's are called
@@ -418,5 +446,47 @@ public class EventMasterData {
 	public void setEventCategeorydata(final Collection<MCodeData> eventCategeorydata) {
 		this.eventCategeorydata = eventCategeorydata;
 	}
+
+	public List<NetworkElementData> getNetworkElementData() {
+		return networkElementData;
+	}
+
+	public void setNetworkElementData(List<NetworkElementData> networkElementData) {
+		this.networkElementData = networkElementData;
+	}
+
+	public String getEventStartTime() {
+		return eventStartTime;
+	}
+
+	public void setEventStartTime(String eventStartTime) {
+		this.eventStartTime = eventStartTime;
+	}
+
+	public Long getEventDuration() {
+		return eventDuration;
+	}
+
+	public void setEventDuration(Long eventDuration) {
+		this.eventDuration = eventDuration;
+	}
+
+	public String getNetworkSystemCode() {
+		return networkSystemCode;
+	}
+
+	public void setNetworkSystemCode(String networkSystemCode) {
+		this.networkSystemCode = networkSystemCode;
+	}
+
+	public List<EventPriceData> getEventPriceData() {
+		return eventPriceData;
+	}
+
+	public void setEventPriceData(List<EventPriceData> eventPriceData) {
+		this.eventPriceData = eventPriceData;
+	}
+	
+	
 	
 }

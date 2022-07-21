@@ -4,12 +4,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.json.JSONObject;
 import org.mifosplatform.billing.planprice.domain.Price;
 import org.mifosplatform.billing.planprice.domain.PriceRepository;
+import org.mifosplatform.cms.eventorder.data.EventOrderData;
+import org.mifosplatform.cms.eventorder.domain.EventOrder;
+import org.mifosplatform.cms.eventorder.domain.EventOrderRepository;
+import org.mifosplatform.cms.eventorder.service.EventOrderWriteplatformService;
 import org.mifosplatform.finance.chargeorder.service.ChargingOrderReadPlatformService;
 import org.mifosplatform.finance.chargeorder.service.GenerateCharges;
 import org.mifosplatform.finance.clientbalance.domain.ClientBalance;
@@ -18,6 +24,7 @@ import org.mifosplatform.finance.paymentsgateway.domain.PaypalRecurringBillingRe
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.mifosplatform.infrastructure.core.service.DateUtils;
+import org.mifosplatform.portfolio.clientservice.domain.ClientServiceRepository;
 import org.mifosplatform.portfolio.contract.domain.Contract;
 import org.mifosplatform.portfolio.contract.domain.ContractRepository;
 import org.mifosplatform.portfolio.contract.service.ContractPeriodReadPlatformService;
@@ -33,11 +40,14 @@ import org.mifosplatform.portfolio.product.domain.Product;
 import org.mifosplatform.portfolio.product.domain.ProductRepository;
 import org.mifosplatform.portfolio.service.domain.ServiceMaster;
 import org.mifosplatform.portfolio.service.domain.ServiceMasterRepository;
+import org.mifosplatform.provisioning.provisioning.api.ProvisioningApiConstants;
+import org.mifosplatform.provisioning.provisioning.service.ProvisioningWritePlatformService;
 import org.mifosplatform.scheduledjobs.scheduledjobs.data.JobParameterData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 @Service
 public class ScheduleJob {
@@ -46,6 +56,7 @@ private final ClientBalanceRepository clientBalanceRepository;
 private final ChargingOrderReadPlatformService chargingOrderReadPlatformService;
 private final GenerateCharges generateCharges;
 private final OrderRepository orderRepository;
+private final EventOrderRepository eventOrderRepository;
 private final ContractPeriodReadPlatformService contractPeriodReadPlatformService;
 private final FromJsonHelper fromApiJsonHelper;
 private final OrderWritePlatformService orderWritePlatformService;
@@ -55,13 +66,19 @@ private final ServiceMasterRepository serviceMasterRepository;
 private final ContractRepository contractRepository;
 private final PaypalRecurringBillingRepository paypalRecurringBillingRepository;
 private final ProductRepository productRepository;
+private final EventOrderWriteplatformService eventOrderWriteplatformService;
+private final ClientServiceRepository clientServiceRepository;
+private final FromJsonHelper fromJsonHelper;
+private final ProvisioningWritePlatformService provisioningWritePlatformService;
 
 @Autowired
 public ScheduleJob(final ClientBalanceRepository clientBalanceRepository,final ChargingOrderReadPlatformService chargingOrderReadPlatformService,
 final GenerateCharges generateCharges,final OrderRepository orderRepository,final ContractPeriodReadPlatformService contractPeriodReadPlatformService,
 final FromJsonHelper fromApiJsonHelper,final OrderWritePlatformService orderWritePlatformService,final PriceRepository priceRepository,
 final PaypalRecurringBillingRepository paypalRecurringBillingRepository,final PlanRepository planRepository,
-final ServiceMasterRepository serviceMasterRepository,final ContractRepository contractRepository,final ProductRepository productRepository){
+final ServiceMasterRepository serviceMasterRepository,final ContractRepository contractRepository,final ProductRepository productRepository,
+final EventOrderWriteplatformService eventOrderWriteplatformService, final EventOrderRepository eventOrderRepository,final ClientServiceRepository clientServiceRepository,
+final FromJsonHelper fromJsonHelper,final ProvisioningWritePlatformService provisioningWritePlatformService){
 
 	this.clientBalanceRepository=clientBalanceRepository;
 	this.chargingOrderReadPlatformService=chargingOrderReadPlatformService;
@@ -76,6 +93,11 @@ final ServiceMasterRepository serviceMasterRepository,final ContractRepository c
 	this.planRepository = planRepository;
 	this.contractRepository = contractRepository;
 	this.productRepository = productRepository;
+	this.eventOrderWriteplatformService = eventOrderWriteplatformService;
+	this.eventOrderRepository = eventOrderRepository;
+	this.clientServiceRepository = clientServiceRepository;
+	this.fromJsonHelper = fromJsonHelper;
+	this.provisioningWritePlatformService = provisioningWritePlatformService;
 
 }
 
@@ -221,6 +243,53 @@ public void ProcessAutoExipiryDetails(OrderData orderData, FileWriter fw, LocalD
 }
 
 
+public void ProcessEventAutoExipiryDetails(EventOrderData orderData, FileWriter fw, LocalDateTime exipirydate, JobParameterData data, Long clientId) {
+	  
+	 try{
+		 if(!(orderData.getStatus().equalsIgnoreCase(StatusTypeEnum.DISCONNECTED.toString()) || orderData.getStatus().equalsIgnoreCase(StatusTypeEnum.PENDING.toString()))){
+			 if (exipirydate.isAfter(orderData.getEventValidTill())){
+				 JSONObject jsonobject = new JSONObject();
+				 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	             jsonobject.put("disconnectReason","Date Expired");
+	             jsonobject.put("disconnectionDate",dateFormat.format(orderData.getEventValidTill().toDate()));
+	             jsonobject.put("dateFormat","yyyy-MM-dd HH:mm:ss");
+	             jsonobject.put("locale","en");
+	             final JsonElement parsedCommand = this.fromApiJsonHelper.parse(jsonobject.toString());
+	             final JsonCommand command = JsonCommand.from(jsonobject.toString(),parsedCommand,this.fromApiJsonHelper,"DissconnectOrder",clientId, null,
+	            		 	null,clientId, null, null, null,null, null, null,null);
+	             this.eventOrderWriteplatformService.disconnectEventOrder(command, orderData.getId());
+	             fw.append("Client Id"+clientId+" With this Orde"+orderData.getId()+" has been disconnected via Auto Exipiry on Dated"+exipirydate);
+	             }
+	      }
+	 } catch(IOException exception){    
+		 exception.printStackTrace();     
+	 } catch(Exception exception){
+		 exception.printStackTrace();  
+	 }	
+}
+
+public void ProcessEventAutoActivationDetails(EventOrderData orderData, FileWriter fw, LocalDateTime activationdate, JobParameterData data, Long clientId) {
+	  
+	 try{
+		 if(!(orderData.getStatus().equalsIgnoreCase(StatusTypeEnum.DISCONNECTED.toString()) || orderData.getStatus().equalsIgnoreCase(StatusTypeEnum.PENDING.toString()))){
+			 EventOrder order = this.eventOrderRepository.findOne(orderData.getId());
+			 JsonObject provisioningObject = new JsonObject();
+				provisioningObject.addProperty("requestType", ProvisioningApiConstants.REQUEST_ADD_PLAN);
+				provisioningObject.addProperty("clientServiceId", clientServiceRepository.findClientServicewithClientId(order.getClientId()).getServiceId());
+				JsonCommand com = new JsonCommand(null, provisioningObject.toString(), provisioningObject,
+									fromJsonHelper, null, null, null, null, null, null, null, null, null, null, null, null);
+				List<EventOrder> orders = new ArrayList<EventOrder>();
+				orders.add(order);
+				this.provisioningWritePlatformService.createProvisioningRequestForEventOrder(orders, com, true,order.getClientId());
+	         fw.append("Client Id"+clientId+" With this Orde"+orderData.getId()+" has been Activated via Auto activation on Dated"+activationdate);
+	             
+	      }
+	 } catch(IOException exception){    
+		 exception.printStackTrace();     
+	 } catch(Exception exception){
+		 exception.printStackTrace();  
+	 }	
+}
 
 /**
  * @param order

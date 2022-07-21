@@ -2,6 +2,7 @@ package org.mifosplatform.provisioning.processrequest.service;
 
 import java.util.List;
 
+import org.mifosplatform.cms.eventorder.domain.EventOrder;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.portfolio.order.domain.Order;
@@ -18,4 +19,6 @@ public interface ProcessRequestWriteplatformService {
 	//void postProvisioningdetails(Client client, EventOrder eventOrder,String requestType, String provsystem, String response);
 
 	List<Order> retriveOrdersfromProvisioningRequest(ProvisioningRequest provisioningRequest);
+
+	List<EventOrder> retriveEventOrdersfromProvisioningRequest(ProvisioningRequest provisioningRequest);
 }

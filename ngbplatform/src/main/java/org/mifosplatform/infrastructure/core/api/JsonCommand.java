@@ -167,6 +167,18 @@ public final class JsonCommand {
 
         return differenceExists;
     }
+	
+	private boolean differenceExists(final LocalDateTime baseValue, final LocalDateTime workingCopyValue) {
+        boolean differenceExists = false;
+
+        if (baseValue != null) {
+            differenceExists = !baseValue.equals(workingCopyValue);
+        } else {
+            differenceExists = workingCopyValue != null;
+        }
+
+        return differenceExists;
+    }
 
     private boolean differenceExists(final String baseValue, final String workingCopyValue) {
         boolean differenceExists = false;
@@ -263,6 +275,15 @@ public final class JsonCommand {
         boolean isChanged = false;
         if (parameterExists(parameterName)) {
             final LocalDate workingValue = localDateValueOfParameterNamed(parameterName);
+            isChanged = differenceExists(existingValue, workingValue);
+        }
+        return isChanged;
+    }
+    
+    public boolean isChangeInLocalDateTimeParameterNamed(final String parameterName, final LocalDateTime existingValue) {
+        boolean isChanged = false;
+        if (parameterExists(parameterName)) {
+            final LocalDateTime workingValue = localDateTimeValueOfParameterNamed(parameterName);
             isChanged = differenceExists(existingValue, workingValue);
         }
         return isChanged;

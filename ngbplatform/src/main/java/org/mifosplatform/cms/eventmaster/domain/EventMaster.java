@@ -3,6 +3,7 @@ package org.mifosplatform.cms.eventmaster.domain;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -18,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.mifosplatform.annotation.ComparableFields;
 import org.mifosplatform.cms.eventprice.domain.EventPrice;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
@@ -29,7 +31,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
  * @author pavani
  *
  */
-@ComparableFields(on={"eventName", "eventDescription", "status", "eventStartDate", "eventEndDate", "eventValidity", "eventCategory"})
+@ComparableFields(on={"eventName", "eventDescription", "status", "eventStartDate", "eventStartTime", "eventEndDate", "eventDuration", "networkSystemCode", "eventValidity", "eventCategory"})
 @Entity
 @Table(name = "b_mod_master")
 public class EventMaster extends AbstractPersistable<Long> {
@@ -51,8 +53,17 @@ public class EventMaster extends AbstractPersistable<Long> {
 	@Column(name = "event_start_date")
 	private Date eventStartDate;
 	
+	@Column(name = "event_start_time")
+	private Date eventStartTime;
+	
 	@Column(name = "event_end_date")
 	private Date eventEndDate;
+	
+	@Column(name = "event_duration")
+	private Integer eventDuration;
+	
+	@Column(name = "network_system_code")
+	private String networkSystemCode;
 		
 	@Column(name = "event_validity")
 	private Date eventValidity;
@@ -85,12 +96,17 @@ public class EventMaster extends AbstractPersistable<Long> {
 		final String eventDescription = command.stringValueOfParameterNamed("eventDescription");
 		final Integer status = command.integerValueOfParameterNamed("status");
 		final String startDate = command.stringValueOfParameterNamed("eventStartDate"); 
+		final String startTime = command.stringValueOfParameterNamed("eventStartTime"); 
 		final String endDate = command.stringValueOfParameterNamed("eventEndDate"); 
+		final Integer eventDuration = command.integerValueOfParameterNamed("eventDuration");
+		final String networkSystemCode = command.stringValueOfParameterNamed("networkSystemCode"); 
 		Date eventStartDate = null;
+		Date eventStartTime = null;
 		Date eventEndDate = null;
 		final String chargeCode = command.stringValueOfParameterNamed("chargeCode");
 		final String eventCategory = command.stringValueOfParameterNamed("eventCategory");
 		DateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy");
+		DateFormat dateFormat2 = new SimpleDateFormat("dd MMMM yyyy HH:mm");
 		
 		if("Live Event".equalsIgnoreCase(eventCategory)){
 			dateFormat = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss");
@@ -106,19 +122,28 @@ public class EventMaster extends AbstractPersistable<Long> {
 		}else{
 			eventEndDate = dateFormat.parse(endDate);
 		}
-		final LocalDate eventValidity = command.localDateValueOfParameterNamed("eventValidity");
+		if(startTime.equalsIgnoreCase("")){
+			eventStartTime = null;
+		}else{
+			eventStartTime = dateFormat2.parse(startTime);
+		}
+		LocalDateTime eventValidity = command.localDateTimeValueOfParameterNamed("eventValidity");
+		eventValidity = (new LocalDateTime(eventStartTime)).plusMinutes(eventDuration);
 		
-		return new EventMaster(eventName, eventDescription, status, eventStartDate, eventEndDate, eventValidity, eventCategory, chargeCode);
+		return new EventMaster(eventName, eventDescription, status, eventStartDate, eventStartTime, eventEndDate, eventDuration, networkSystemCode, eventValidity, eventCategory, chargeCode);
 	}
 	
-	public EventMaster (final String eventName, final String eventDescription, final Integer status, final Date eventStartDate,
-			final Date eventEndDate, final LocalDate eventValidity, final String eventCategory, final String chargeCode) {
+	public EventMaster (final String eventName, final String eventDescription, final Integer status, final Date eventStartDate, final Date eventStartTime,
+			final Date eventEndDate, final Integer eventDuration, final String networkSystemCode, final LocalDateTime eventValidity, final String eventCategory, final String chargeCode) {
 
 		this.eventName = eventName;
 		this.eventDescription = eventDescription;
 		this.status = status;
 		this.eventStartDate = eventStartDate;
 		this.eventEndDate = eventEndDate != null ? eventEndDate : null;
+		this.eventStartTime = eventStartTime;
+		this.eventDuration = eventDuration;
+		this.networkSystemCode = networkSystemCode;
 		this.eventValidity = eventValidity.toDate();
 		this.createdDate = DateUtils.getDateOfTenant();
 		this.eventCategory = eventCategory;
@@ -286,6 +311,30 @@ public class EventMaster extends AbstractPersistable<Long> {
 	public String getChargeCode() {
 		return chargeCode;
 	}
+	
+	public Date getEventStartTime() {
+		return eventStartTime;
+	}
+
+	public void setEventStartTime(Date eventStartTime) {
+		this.eventStartTime = eventStartTime;
+	}
+
+	public Integer getEventDuration() {
+		return eventDuration;
+	}
+
+	public void setEventDuration(Integer eventDuration) {
+		this.eventDuration = eventDuration;
+	}
+
+	public String getNetworkSystemCode() {
+		return networkSystemCode;
+	}
+
+	public void setNetworkSystemCode(String networkSystemCode) {
+		this.networkSystemCode = networkSystemCode;
+	}
 
 	public java.util.Map<String, Object> updateEventDetails(final JsonCommand command) throws ParseException {
 
@@ -298,7 +347,11 @@ public class EventMaster extends AbstractPersistable<Long> {
 		String eventValidityNamedParamName = "eventValidity";
 		String eventCategoryNamedParamName = "eventCategory";
 		String chargeCodeNamedParamName = "chargeCode";
+		String eventStartTimeNamedParamName = "eventStartTime";
+		String eventDurationNamedParamName = "eventDuration";
+		String networkSystemCodeNamedParamName = "networkSystemCode";
 		DateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy");
+		DateFormat dateFormat2 = new SimpleDateFormat("dd MMMM yyyy HH:mm"); 
 		
 		if(command.isChangeInStringParameterNamed(eventCategoryNamedParamName, this.eventCategory)){
 				final String newEventCategoryValue = command.stringValueOfParameterNamed(eventCategoryNamedParamName);
@@ -342,15 +395,37 @@ public class EventMaster extends AbstractPersistable<Long> {
 		}
 		actualChanges.put(eventEndDateNamedParamName, endDate);	
 		
-		if(command.isChangeInDateParameterNamed(eventValidityNamedParamName, this.eventValidity)){
-			final Date newEventValidityValue = command.DateValueOfParameterNamed(eventValidityNamedParamName);
-			actualChanges.put(eventValidityNamedParamName, newEventValidityValue);
-			this.eventValidity = newEventValidityValue;
+		if(command.isChangeInStringParameterNamed(eventStartTimeNamedParamName, this.eventStartTime.toString())){
+			final String startTime = command.stringValueOfParameterNamed(eventStartTimeNamedParamName); 
+			if(startTime.equalsIgnoreCase("")){
+				this.eventStartTime = null;
+			}else{
+				this.eventStartTime = dateFormat2.parse(startTime);
+			}
+			actualChanges.put(eventStartTimeNamedParamName, startTime);
 		}
+		
+		if(command.isChangeInIntegerParameterNamed(eventDurationNamedParamName, this.eventDuration)){	
+			final Integer newEventDuration= command.integerValueOfParameterNamed(eventDurationNamedParamName);
+			actualChanges.put(eventDurationNamedParamName, newEventDuration);
+			this.eventDuration=newEventDuration;
+		}
+		
+		LocalDateTime newEventValidityValue = command.localDateTimeValueOfParameterNamed(eventValidityNamedParamName);
+		newEventValidityValue = new LocalDateTime(this.eventStartTime).plusMinutes(this.eventDuration);
+		actualChanges.put(eventValidityNamedParamName, newEventValidityValue);
+		this.eventValidity = newEventValidityValue.toDate();
+			
 		if(command.isChangeInStringParameterNamed(chargeCodeNamedParamName, this.chargeCode)){
 			final String newChargeCodeValue = command.stringValueOfParameterNamed(chargeCodeNamedParamName);
 			actualChanges.put(chargeCodeNamedParamName, newChargeCodeValue);
 			this.chargeCode = StringUtils.defaultIfEmpty(newChargeCodeValue,null);
+		}
+		
+		if(command.isChangeInStringParameterNamed(networkSystemCodeNamedParamName, this.networkSystemCode)){
+			final String newNetworkSystemCode = command.stringValueOfParameterNamed(networkSystemCodeNamedParamName);
+			actualChanges.put(networkSystemCodeNamedParamName, newNetworkSystemCode);
+			this.networkSystemCode = StringUtils.defaultIfEmpty(newNetworkSystemCode,null);
 		}
 		
 		return actualChanges;
